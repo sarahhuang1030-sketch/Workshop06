@@ -1,0 +1,9 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Light green background -->
+    <solid android:color="#ECFDF3"/>
+
+    <!-- Rounded pill shape -->
+    <corners android:radius="20dp"/>
+
+</shape>

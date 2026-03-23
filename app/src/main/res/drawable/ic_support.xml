@@ -1,0 +1,16 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Bubble -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M12,2C6.48,2 2,5.58 2,10C2,12.38 3.4,14.5 5.6,15.86L5,20L9.5,17.5C10.31,17.66 11.15,17.75 12,17.75C17.52,17.75 22,14.17 22,10C22,5.58 17.52,2 12,2Z"/>
+
+    <!-- Question mark -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M11,7H13V9H11V7ZM12,15C11.45,15 11,14.55 11,14C11,13.45 11.45,13 12,13C12.55,13 13,13.45 13,14C13,14.55 12.55,15 12,15ZM12,5C10.34,5 9,6.34 9,8H11C11,7.45 11.45,7 12,7C12.55,7 13,7.45 13,8C13,9 11.5,9.25 11.5,11H13C13,9.75 15,9.5 15,8C15,6.34 13.66,5 12,5Z"/>
+</vector>

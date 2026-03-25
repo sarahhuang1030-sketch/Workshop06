@@ -23,7 +23,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".PlansActivity" />
+
         <activity android:name=".SupportActivity"/>
         <activity android:name=".UsageActivity" />
         <activity android:name=".BillingActivity" />

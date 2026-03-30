@@ -6,11 +6,19 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.workshop06.api.ApiService;
+import com.example.workshop06.api.RetrofitClient;
+import com.example.workshop06.model.MeResponse;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.switchmaterial.SwitchMaterial;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -20,6 +28,11 @@ public class SettingsActivity extends AppCompatActivity {
 
     private LinearLayout itemPersonalInfo, itemSecurity, itemPayment, itemNotifications, itemDarkMode, itemLanguage;
     private SwitchMaterial switchNotifications, switchDarkMode;
+
+    private TextView tvProfileName, tvProfileEmail;
+
+    private SessionManager sessionManager;
+    private ApiService apiService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,13 +54,20 @@ public class SettingsActivity extends AppCompatActivity {
         switchNotifications = findViewById(R.id.switchNotifications);
         switchDarkMode = findViewById(R.id.switchDarkMode);
 
+        tvProfileName = findViewById(R.id.tvProfileName);
+        tvProfileEmail = findViewById(R.id.tvProfileEmail);
+
+        // ✅ initialize these
+        sessionManager = new SessionManager(this);
+        apiService = RetrofitClient.getApiService();
+
         btnBack.setOnClickListener(v -> finish());
 
         btnEditProfile.setOnClickListener(v ->
-                Toast.makeText(this, "Edit Profile clicked", Toast.LENGTH_SHORT).show());
+                startActivity(new Intent(SettingsActivity.this, EditProfileActivity.class)));
 
         itemPersonalInfo.setOnClickListener(v ->
-                Toast.makeText(this, "Personal Information clicked", Toast.LENGTH_SHORT).show());
+                startActivity(new Intent(SettingsActivity.this, AddressActivity.class)));
 
         itemSecurity.setOnClickListener(v ->
                 Toast.makeText(this, "Security & Password clicked", Toast.LENGTH_SHORT).show());
@@ -70,6 +90,9 @@ public class SettingsActivity extends AppCompatActivity {
 
         btnLogout.setOnClickListener(v -> {
             Toast.makeText(this, "Logging out...", Toast.LENGTH_SHORT).show();
+
+            // ✅ clear JWT
+            sessionManager.clearToken();
 
             Intent intent = new Intent(SettingsActivity.this, LoginActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -103,13 +126,41 @@ public class SettingsActivity extends AppCompatActivity {
                 finish();
                 return true;
             } else if (id == R.id.nav_settings) {
-                startActivity(new Intent(this,SettingsActivity.class));
-                overridePendingTransition(0, 0);
-                finish();
-                return true;
+                return true; // ✅ FIX: don’t reopen itself
             }
 
             return false;
+        });
+
+        // ✅ IMPORTANT: call it here
+        loadProfile();
+    }
+
+    private void loadProfile() {
+        String token = sessionManager.getToken();
+
+        if (token == null || token.isEmpty()) {
+            Toast.makeText(this, "No token found. Please login again.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        apiService.getMe("Bearer " + token).enqueue(new Callback<MeResponse>() {
+            @Override
+            public void onResponse(Call<MeResponse> call, Response<MeResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    MeResponse me = response.body();
+
+                    tvProfileName.setText(me.getDisplayName());
+                    tvProfileEmail.setText(me.getEmail());
+                } else {
+                    Toast.makeText(SettingsActivity.this, "Failed to load profile", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<MeResponse> call, Throwable t) {
+                Toast.makeText(SettingsActivity.this, "Failed to load profile", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 }

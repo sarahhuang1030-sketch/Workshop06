@@ -72,9 +72,11 @@ public class LoginActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     LoginResponse loginResponse = response.body();
 
+                    SessionManager sessionManager = new SessionManager(LoginActivity.this);
+                    sessionManager.saveToken(loginResponse.getToken());
+
                     SharedPreferences prefs = getSharedPreferences("teleconnect_prefs", MODE_PRIVATE);
                     prefs.edit()
-                            .putString("jwt_token", loginResponse.getToken())
                             .putString("role", loginResponse.getRole())
                             .putString("firstName", loginResponse.getFirstName())
                             .putString("username", loginResponse.getUsername())

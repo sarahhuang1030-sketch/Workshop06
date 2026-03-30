@@ -31,6 +31,8 @@
         <activity android:name=".BillingActivity" />
         <activity android:name=".SettingsActivity" />
         <activity android:name=".RegisterActivity" />
+        <activity android:name=".EditProfileActivity" />
+        <activity android:name=".AddressActivity" />
     </application>
 
 </manifest>

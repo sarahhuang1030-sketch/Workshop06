@@ -1,19 +1,33 @@
 package com.example.workshop06.api;
 
+import com.example.workshop06.model.AddOnRequest;
+import com.example.workshop06.model.AddOnResponse;
 import com.example.workshop06.model.AddressRequest;
 import com.example.workshop06.model.AddressResponse;
+import com.example.workshop06.model.CurrentPlanItemResponse;
 import com.example.workshop06.model.CurrentPlanResponse;
+import com.example.workshop06.model.EmployeeDashboardResponse;
+import com.example.workshop06.model.LocationRequest;
+import com.example.workshop06.model.LocationResponse;
 import com.example.workshop06.model.LoginRequest;
 import com.example.workshop06.model.LoginResponse;
 import com.example.workshop06.model.MeResponse;
+import com.example.workshop06.model.MyAddonResponse;
+import com.example.workshop06.model.ToggleActiveRequest;
 import com.example.workshop06.model.UpdateProfileRequest;
+import com.example.workshop06.model.*;
+
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
+import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
+import retrofit2.http.Path;
 
 public interface ApiService {
     @POST("api/auth/login")
@@ -46,5 +60,86 @@ public interface ApiService {
             @Body AddressRequest body
     );
 
+    @GET("api/me/plans")
+    Call<List<CurrentPlanItemResponse>> getMyPlans(@Header("Authorization") String token);
+
+    @GET("api/me/addons")
+    Call<List<MyAddonResponse>> getMyAddOns(@Header("Authorization") String token);
+
+    // this is to get the employeedashboard
+    @GET("/api/employee/dashboard")
+    Call<EmployeeDashboardResponse> getEmployeeDashboard();
+
+    //endpoints for location
+    @GET("/api/manager/location")
+    Call<List<LocationResponse>> getLocations();
+
+    @GET("/api/manager/location/{id}")
+    Call<LocationResponse> getLocationById(@Path("id") int id);
+
+    @POST("/api/manager/location")
+    Call<LocationResponse> createLocation(@Body LocationRequest request);
+
+    @PUT("/api/manager/location/{id}")
+    Call<LocationResponse> updateLocation(@Path("id") int id, @Body LocationRequest request);
+
+    @DELETE("/api/manager/location/{id}")
+    Call<Void> deleteLocation(@Path("id") int id);
+
+
+    //endpoints for addons
+    @GET("/api/manager/addons")
+    Call<List<AddOnResponse>> getAddOns();
+
+    @GET("/api/manager/addons/{id}")
+    Call<AddOnResponse> getAddOnById(@Path("id") int id);
+
+    @POST("/api/manager/addons")
+    Call<Void> createAddOn(@Body AddOnRequest request);
+
+    @PUT("/api/manager/addons/{id}")
+    Call<Void> updateAddOn(@Path("id") int id, @Body AddOnRequest request);
+
+    @DELETE("/api/manager/addons/{id}")
+    Call<Void> deleteAddOn(@Path("id") int id);
+
+    @PATCH("/api/manager/addons/{id}/active")
+    Call<Void> updateAddOnActive(@Path("id") int id, @Body ToggleActiveRequest request);
+
+
+    // SUBSCRIPTIONS
+    @GET("/api/manager/subscriptions")
+    Call<List<SubscriptionResponse>> getSubscriptions();
+
+    @GET("/api/manager/subscriptions/{id}")
+    Call<SubscriptionRequest> getSubscriptionById(@Path("id") int id);
+
+    @POST("/api/manager/subscriptions")
+    Call<SubscriptionRequest> createSubscription(@Body SubscriptionRequest request);
+
+    @PUT("/api/manager/subscriptions/{id}")
+    Call<SubscriptionRequest> updateSubscription(@Path("id") int id, @Body SubscriptionRequest request);
+
+    @DELETE("/api/manager/subscriptions/{id}")
+    Call<Void> deleteSubscription(@Path("id") int id);
+
+    @PATCH("/api/manager/subscriptions/{id}/status")
+    Call<SubscriptionRequest> updateSubscriptionStatus(@Path("id") int id, @Body SubscriptionStatusRequest request);
+
+    // INVOICES
+    @GET("/api/invoices/admin/all")
+    Call<List<InvoiceResponse>> getAllInvoicesAdmin();
+
+    @GET("/api/invoices/{invoiceNumber}")
+    Call<InvoiceResponse> getInvoiceByNumber(@Path("invoiceNumber") String invoiceNumber);
+
+    @POST("/api/invoices/admin")
+    Call<InvoiceResponse> createInvoice(@Body InvoiceRequest request);
+
+    @PUT("/api/invoices/admin/{invoiceNumber}")
+    Call<InvoiceResponse> updateInvoice(@Path("invoiceNumber") String invoiceNumber, @Body InvoiceRequest request);
+
+    @DELETE("/api/invoices/admin/{invoiceNumber}")
+    Call<Void> deleteInvoice(@Path("invoiceNumber") String invoiceNumber);
 
 }

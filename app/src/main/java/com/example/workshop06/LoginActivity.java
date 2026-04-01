@@ -80,11 +80,20 @@ public class LoginActivity extends AppCompatActivity {
                             .putString("role", loginResponse.getRole())
                             .putString("firstName", loginResponse.getFirstName())
                             .putString("username", loginResponse.getUsername())
+                            .putString("email", etEmail.getText().toString().trim())
                             .apply();
 
                     Toast.makeText(LoginActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
 
-                    startActivity(new Intent(LoginActivity.this, DashboardActivity.class));
+                    Intent intent;
+
+                    if (loginResponse.getEmployeeId() != null) {
+                        intent = new Intent(LoginActivity.this, EmployeeDashboardActivity.class);
+                    } else {
+                        intent = new Intent(LoginActivity.this, DashboardActivity.class);
+                    }
+
+                    startActivity(intent);
                     finish();
                 } else {
                     Toast.makeText(LoginActivity.this, "Invalid email or password", Toast.LENGTH_SHORT).show();

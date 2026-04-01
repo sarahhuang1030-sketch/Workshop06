@@ -56,119 +56,12 @@
                     android:contentDescription="Info" />
             </LinearLayout>
 
-            <!-- Banner -->
-<!--            <ImageView-->
-<!--                android:id="@+id/ivUsageBanner"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="160dp"-->
-<!--                android:layout_marginTop="18dp"-->
-<!--                android:scaleType="centerCrop"-->
-<!--                android:background="@drawable/bg_usage_banner"-->
-<!--                android:contentDescription="Usage Banner" />-->
-
-            <!-- Current Plan Card -->
-            <com.google.android.material.card.MaterialCardView
+            <!-- Swipable Current Plan Card -->
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/planPager"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardCornerRadius="18dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="@android:color/white">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="CURRENT PLAN"
-                            android:textColor="#A855F7"
-                            android:textStyle="bold"
-                            android:textSize="10sp"
-                            android:background="@drawable/bg_tag_light_purple"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp"
-                            android:paddingTop="4dp"
-                            android:paddingBottom="4dp" />
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="end"
-                            android:text="$65"
-                            android:textColor="#A855F7"
-                            android:textStyle="bold"
-                            android:textSize="22sp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="/mo"
-                            android:textColor="#9CA3AF"
-                            android:textSize="12sp"
-                            android:layout_marginTop="6dp" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Unlimited Pro"
-                        android:textColor="#111827"
-                        android:textStyle="bold"
-                        android:textSize="28sp"
-                        android:layout_marginTop="10dp" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginTop="12dp">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Next bill: Oct 12, 2023"
-                                android:textColor="#6B7280"
-                                android:textSize="13sp" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Auto-pay: Enabled"
-                                android:textColor="#9CA3AF"
-                                android:textSize="13sp"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-
-                        <Button
-                            android:id="@+id/btnManagePlan"
-                            android:layout_width="84dp"
-                            android:layout_height="40dp"
-                            android:text="Manage"
-                            android:textAllCaps="false"
-                            android:textColor="@android:color/white"
-                            android:textStyle="bold"
-                            android:textSize="12sp"
-                            android:background="@drawable/bg_button_gradient" />
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+                android:layout_height="170dp"
+                android:layout_marginTop="18dp" />
 
             <!-- Summary cards -->
             <LinearLayout
@@ -323,6 +216,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:id="@+id/tvPlanSubInfo"
                             android:text="Extra 5GB Data"
                             android:textColor="#111827"
                             android:textStyle="bold"

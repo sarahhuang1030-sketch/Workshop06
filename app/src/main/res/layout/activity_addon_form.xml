@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F3EEFF">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add-On Details"
+            android:textColor="#2D1F5E"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="Create or update an add-on"
+            android:textColor="#8A89C8"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/etServiceTypeId"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:backgroundTint="#6F56B3"
+            android:hint="Service Type Id"
+            android:inputType="number"
+            android:textColor="#2D1F5E"
+            android:textColorHint="#9A96B0" />
+
+        <EditText
+            android:id="@+id/etAddOnName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:backgroundTint="#6F56B3"
+            android:hint="Add-On Name"
+            android:inputType="textCapWords"
+            android:textColor="#2D1F5E"
+            android:textColorHint="#9A96B0" />
+
+        <EditText
+            android:id="@+id/etMonthlyPrice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:backgroundTint="#6F56B3"
+            android:hint="Monthly Price"
+            android:inputType="numberDecimal"
+            android:textColor="#2D1F5E"
+            android:textColorHint="#9A96B0" />
+
+        <EditText
+            android:id="@+id/etDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:backgroundTint="#6F56B3"
+            android:gravity="top|start"
+            android:hint="Description"
+            android:inputType="textMultiLine"
+            android:minLines="3"
+            android:textColor="#2D1F5E"
+            android:textColorHint="#9A96B0" />
+
+        <CheckBox
+            android:id="@+id/cbActive"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Active"
+            android:textColor="#2D1F5E" />
+
+        <Button
+            android:id="@+id/btnSaveAddOn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="#6F56B3"
+            android:text="Save"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white" />
+
+    </LinearLayout>
+</ScrollView>

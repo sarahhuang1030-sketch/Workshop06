@@ -33,6 +33,20 @@
         <activity android:name=".RegisterActivity" />
         <activity android:name=".EditProfileActivity" />
         <activity android:name=".AddressActivity" />
+        <activity android:name=".EmployeeDashboardActivity" />
+        <activity android:name=".CustomerListActivity" />
+        <activity android:name=".PlanListActivity" />
+        <activity android:name=".EmployeeProfileActivity" />
+        <activity android:name=".LocationListActivity" />
+        <activity android:name=".LocationFormActivity" />
+        <activity android:name=".AddOnListActivity" />
+        <activity android:name=".AddOnFormActivity" />
+        <activity android:name=".SubscriptionListActivity" />
+        <activity android:name=".SubscriptionFormActivity" />
+        <activity android:name=".InvoiceListActivity" />
+        <activity android:name=".InvoiceDetailActivity" />
+        <activity android:name=".InvoiceFormActivity" />
+
     </application>
 
 </manifest>

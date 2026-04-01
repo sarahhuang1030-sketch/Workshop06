@@ -1,0 +1,27 @@
+<resources>
+
+
+
+        <style name="InputLabel">
+            <item name="android:layout_width">match_parent</item>
+            <item name="android:layout_height">wrap_content</item>
+
+            <item name="android:textColor">#6B7280</item> <!-- softer gray -->
+            <item name="android:textSize">13sp</item>
+            <item name="android:layout_marginTop">12dp</item>
+        </style>
+
+
+    <style name="InputField">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:background">@drawable/input_bg</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:textColor">#2D2D2D</item>
+        <item name="android:textColorHint">#9AA0B4</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:layout_marginTop">4dp</item>
+    </style>
+
+</resources>

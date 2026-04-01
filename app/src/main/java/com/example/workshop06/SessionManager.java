@@ -25,4 +25,6 @@ public class SessionManager {
     public void clearToken() {
         prefs.edit().remove(KEY_TOKEN).apply();
     }
+
+
 }

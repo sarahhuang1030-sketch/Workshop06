@@ -36,8 +36,8 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
     private MaterialCardView cardInvoices;
     private MaterialCardView cardReports;
     private MaterialCardView cardActivityLogs;
-
     private MaterialCardView cardPlanFeatures;
+    private MaterialCardView cardServiceRequests;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +62,7 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
         cardReports = findViewById(R.id.cardReports);
         cardActivityLogs = findViewById(R.id.cardActivityLogs);
         cardPlanFeatures = findViewById(R.id.cardPlanFeatures);
-
+        cardServiceRequests = findViewById(R.id.cardServiceRequests);
         setupNav();
         setupQuickMenu();
         loadDashboard();
@@ -156,13 +156,15 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
                 startActivity(new Intent(this, InvoiceListActivity.class)));
 
         cardReports.setOnClickListener(v ->
-                startActivity(new Intent(this, LocationListActivity.class)));
+                startActivity(new Intent(this, ManagerEmployeeSalesActivity.class)));
+
+        cardServiceRequests.setOnClickListener(v ->
+                startActivity(new Intent(this, ServiceRequestListActivity.class)));
 
         cardActivityLogs.setOnClickListener(v ->
                 startActivity(new Intent(this, LocationListActivity.class)));
 
-        cardReports.setOnClickListener(v ->
-                startActivity(new Intent(this, LocationListActivity.class)));
+
 
         cardPlanFeatures.setOnClickListener(v ->
                 startActivity(new Intent(this, LocationListActivity.class)));

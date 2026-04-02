@@ -16,6 +16,7 @@ import com.example.workshop06.model.MyAddonResponse;
 import com.example.workshop06.model.ToggleActiveRequest;
 import com.example.workshop06.model.UpdateProfileRequest;
 import com.example.workshop06.model.*;
+import com.example.workshop06.model.ServiceRequestResponse;
 
 import java.util.List;
 
@@ -141,5 +142,52 @@ public interface ApiService {
 
     @DELETE("/api/invoices/admin/{invoiceNumber}")
     Call<Void> deleteInvoice(@Path("invoiceNumber") String invoiceNumber);
+
+//    this is for sales report
+@GET("api/manager/reports/employee-sales")
+Call<List<EmployeeSalesResponse>> getEmployeeSales();
+
+    //service requests
+    @GET("/api/manager/service-requests")
+    Call<List<ServiceRequestResponse>> getServiceRequests();
+
+    @GET("/api/manager/service-requests/{id}")
+    Call<ServiceRequestResponse> getServiceRequestById(@Path("id") int id);
+
+
+    @POST("/api/manager/service-requests")
+    Call<Void> createServiceRequest(@Body ServiceRequestCreateUpdateRequest request);
+
+    @PUT("/api/manager/service-requests/{id}")
+    Call<Void> updateServiceRequest(
+            @Path("id") int id,
+            @Body ServiceRequestCreateUpdateRequest request
+    );
+
+    @DELETE("/api/manager/service-requests/{id}")
+    Call<Void> deleteServiceRequest(@Path("id") int id);
+
+    //service appointment
+    @GET("/api/manager/service-requests/{requestId}/appointments")
+    Call<List<ServiceAppointmentResponse>> getServiceAppointments(@Path("requestId") int requestId);
+
+    @POST("/api/manager/service-requests/{requestId}/appointments")
+    Call<ServiceAppointmentResponse> createServiceAppointment(
+            @Path("requestId") int requestId,
+            @Body ServiceAppointmentCreateUpdateRequest request
+    );
+
+    @PUT("/api/manager/service-requests/{requestId}/appointments/{appointmentId}")
+    Call<ServiceAppointmentResponse> updateServiceAppointment(
+            @Path("requestId") int requestId,
+            @Path("appointmentId") int appointmentId,
+            @Body ServiceAppointmentCreateUpdateRequest request
+    );
+
+    @DELETE("/api/manager/service-requests/{requestId}/appointments/{appointmentId}")
+    Call<Void> deleteServiceAppointment(
+            @Path("requestId") int requestId,
+            @Path("appointmentId") int appointmentId
+    );
 
 }

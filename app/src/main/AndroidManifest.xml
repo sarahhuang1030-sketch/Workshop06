@@ -46,7 +46,11 @@
         <activity android:name=".InvoiceListActivity" />
         <activity android:name=".InvoiceDetailActivity" />
         <activity android:name=".InvoiceFormActivity" />
-
+        <activity android:name=".ManagerEmployeeSalesActivity" />
+        <activity android:name=".ServiceRequestFormActivity" />
+        <activity android:name=".ServiceRequestListActivity" />
+        <activity android:name=".ServiceAppointmentListActivity" />
+        <activity android:name=".ServiceAppointmentFormActivity" />
     </application>
 
 </manifest>

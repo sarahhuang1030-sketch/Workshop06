@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8F1FA">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Appointment Form"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="#111827"
+                android:layout_marginStart="12dp" />
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/etTechnicianUserId"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Technician User ID"
+            android:inputType="number"
+            android:layout_marginTop="18dp" />
+
+        <EditText
+            android:id="@+id/etAddressId"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Address ID"
+            android:inputType="number"
+            android:layout_marginTop="12dp" />
+
+        <EditText
+            android:id="@+id/etLocationId"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Location ID"
+            android:inputType="number"
+            android:layout_marginTop="12dp" />
+
+        <Spinner
+            android:id="@+id/spinnerLocationType"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp" />
+
+        <EditText
+            android:id="@+id/etScheduledStart"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Scheduled Start (e.g. 2026-04-02T14:30:00)"
+            android:layout_marginTop="12dp" />
+
+        <EditText
+            android:id="@+id/etScheduledEnd"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Scheduled End (e.g. 2026-04-02T15:30:00)"
+            android:layout_marginTop="12dp" />
+
+        <Spinner
+            android:id="@+id/spinnerStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp" />
+
+        <EditText
+            android:id="@+id/etNotes"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:hint="Notes"
+            android:gravity="top"
+            android:inputType="textMultiLine"
+            android:layout_marginTop="12dp" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btnSave"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save"
+            android:layout_marginTop="16dp" />
+
+    </LinearLayout>
+</ScrollView>

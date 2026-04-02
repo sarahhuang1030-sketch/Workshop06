@@ -1,0 +1,122 @@
+package com.example.workshop06.adapter;
+
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.workshop06.R;
+import com.example.workshop06.model.ServiceAppointmentResponse;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
+public class ServiceAppointmentAdapter extends RecyclerView.Adapter<ServiceAppointmentAdapter.ViewHolder> {
+
+    public interface OnAppointmentActionListener {
+        void onEdit(ServiceAppointmentResponse item);
+        void onDelete(ServiceAppointmentResponse item);
+    }
+
+    private final List<ServiceAppointmentResponse> fullList = new ArrayList<>();
+    private final List<ServiceAppointmentResponse> filteredList = new ArrayList<>();
+    private final OnAppointmentActionListener listener;
+
+    public ServiceAppointmentAdapter(OnAppointmentActionListener listener) {
+        this.listener = listener;
+    }
+
+    public void setData(List<ServiceAppointmentResponse> data) {
+        fullList.clear();
+        filteredList.clear();
+        if (data != null) {
+            fullList.addAll(data);
+            filteredList.addAll(data);
+        }
+        notifyDataSetChanged();
+    }
+
+    public void filter(String keyword) {
+        filteredList.clear();
+
+        if (keyword == null || keyword.trim().isEmpty()) {
+            filteredList.addAll(fullList);
+        } else {
+            String q = keyword.toLowerCase(Locale.US).trim();
+            for (ServiceAppointmentResponse item : fullList) {
+                String tech = item.getTechnicianName() != null ? item.getTechnicianName().toLowerCase(Locale.US) : "";
+                String status = item.getStatus() != null ? item.getStatus().toLowerCase(Locale.US) : "";
+                String locationType = item.getLocationType() != null ? item.getLocationType().toLowerCase(Locale.US) : "";
+                String address = item.getAddressText() != null ? item.getAddressText().toLowerCase(Locale.US) : "";
+
+                if (tech.contains(q) || status.contains(q) || locationType.contains(q) || address.contains(q)) {
+                    filteredList.add(item);
+                }
+            }
+        }
+
+        notifyDataSetChanged();
+    }
+
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_service_appointment, parent, false);
+        return new ViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        ServiceAppointmentResponse item = filteredList.get(position);
+
+        holder.tvAppointmentId.setText(item.getAppointmentId() != null
+                ? "Appointment #" + item.getAppointmentId()
+                : "Appointment #-");
+
+        holder.tvTechnician.setText(item.getTechnicianName() != null ? item.getTechnicianName() : "—");
+        holder.tvLocationType.setText(item.getLocationType() != null ? item.getLocationType() : "—");
+        holder.tvAddress.setText(item.getAddressText() != null ? item.getAddressText() : "—");
+        holder.tvStart.setText(item.getScheduledStart() != null ? item.getScheduledStart() : "—");
+        holder.tvEnd.setText(item.getScheduledEnd() != null ? item.getScheduledEnd() : "—");
+        holder.tvStatus.setText(item.getStatus() != null ? item.getStatus() : "—");
+        holder.tvNotes.setText(item.getNotes() != null ? item.getNotes() : "—");
+
+        holder.btnEdit.setOnClickListener(v -> {
+            if (listener != null) listener.onEdit(item);
+        });
+
+        holder.btnDelete.setOnClickListener(v -> {
+            if (listener != null) listener.onDelete(item);
+        });
+    }
+
+    @Override
+    public int getItemCount() {
+        return filteredList.size();
+    }
+
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        TextView tvAppointmentId, tvTechnician, tvLocationType, tvAddress, tvStart, tvEnd, tvStatus, tvNotes;
+        ImageButton btnEdit, btnDelete;
+
+        public ViewHolder(@NonNull View itemView) {
+            super(itemView);
+            tvAppointmentId = itemView.findViewById(R.id.tvAppointmentId);
+            tvTechnician = itemView.findViewById(R.id.tvTechnician);
+            tvLocationType = itemView.findViewById(R.id.tvLocationType);
+            tvAddress = itemView.findViewById(R.id.tvAddress);
+            tvStart = itemView.findViewById(R.id.tvStart);
+            tvEnd = itemView.findViewById(R.id.tvEnd);
+            tvStatus = itemView.findViewById(R.id.tvStatus);
+            tvNotes = itemView.findViewById(R.id.tvNotes);
+            btnEdit = itemView.findViewById(R.id.btnEdit);
+            btnDelete = itemView.findViewById(R.id.btnDelete);
+        }
+    }
+}

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8F1FA">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@android:color/transparent"
+                android:src="@android:drawable/ic_media_previous"
+                android:contentDescription="Back" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Plan Form"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="#111827"
+                android:layout_marginStart="12dp" />
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/etServiceTypeId"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Service Type ID"
+            android:inputType="number"
+            android:layout_marginTop="18dp" />
+
+        <EditText
+            android:id="@+id/etPlanName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Plan Name"
+            android:layout_marginTop="12dp" />
+
+        <EditText
+            android:id="@+id/etMonthlyPrice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Monthly Price"
+            android:inputType="numberDecimal"
+            android:layout_marginTop="12dp" />
+
+        <EditText
+            android:id="@+id/etContractTermMonths"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Contract Term Months"
+            android:inputType="number"
+            android:layout_marginTop="12dp" />
+
+        <EditText
+            android:id="@+id/etDescription"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:hint="Description"
+            android:gravity="top"
+            android:inputType="textMultiLine"
+            android:layout_marginTop="12dp" />
+
+        <Spinner
+            android:id="@+id/spinnerIsActive"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp" />
+
+        <EditText
+            android:id="@+id/etTagline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Tagline"
+            android:layout_marginTop="12dp" />
+
+        <EditText
+            android:id="@+id/etBadge"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Badge"
+            android:layout_marginTop="12dp" />
+
+        <EditText
+            android:id="@+id/etIconKey"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Icon Key"
+            android:layout_marginTop="12dp" />
+
+        <EditText
+            android:id="@+id/etThemeKey"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Theme Key"
+            android:layout_marginTop="12dp" />
+
+        <EditText
+            android:id="@+id/etDataLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Data Label"
+            android:layout_marginTop="12dp" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btnSave"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save"
+            android:layout_marginTop="16dp" />
+
+    </LinearLayout>
+</ScrollView>

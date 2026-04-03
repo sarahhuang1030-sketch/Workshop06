@@ -43,18 +43,37 @@ public class LocationAdapter extends RecyclerView.Adapter<LocationAdapter.Locati
 
         holder.tvName.setText(item.getLocationName());
         holder.tvType.setText(item.getLocationType());
-        holder.tvCity.setText(
-                (item.getCity() == null ? "" : item.getCity()) +
-                        (item.getProvince() == null ? "" : ", " + item.getProvince())
-        );
 
-        holder.btnEdit.setOnClickListener(v -> listener.onEdit(item));
-        holder.btnDelete.setOnClickListener(v -> listener.onDelete(item));
+        String city = item.getCity() == null ? "" : item.getCity();
+        String province = item.getProvince() == null ? "" : item.getProvince();
+
+        String cityProvince;
+        if (!city.isEmpty() && !province.isEmpty()) {
+            cityProvince = city + ", " + province;
+        } else if (!city.isEmpty()) {
+            cityProvince = city;
+        } else {
+            cityProvince = province;
+        }
+
+        holder.tvCity.setText(cityProvince);
+
+        holder.btnEdit.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onEdit(item);
+            }
+        });
+
+        holder.btnDelete.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onDelete(item);
+            }
+        });
     }
 
     @Override
     public int getItemCount() {
-        return items.size();
+        return items != null ? items.size() : 0;
     }
 
     static class LocationViewHolder extends RecyclerView.ViewHolder {

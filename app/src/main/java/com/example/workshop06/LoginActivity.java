@@ -15,6 +15,7 @@ import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.LoginRequest;
 import com.example.workshop06.model.LoginResponse;
+import com.example.workshop06.util.ValidationUtils;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -23,7 +24,7 @@ import retrofit2.Retrofit;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private EditText etEmail, etPassword;
+    private EditText etPassword, etUsername;
     private Button btnLogin;
     private TextView tvGoRegister;
 
@@ -31,8 +32,7 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
-        etEmail = findViewById(R.id.etEmail);
+        etUsername = findViewById(R.id.etUsername);
         etPassword = findViewById(R.id.etPassword);
         btnLogin = findViewById(R.id.btnLogin);
         tvGoRegister = findViewById(R.id.tvGoRegister);
@@ -46,25 +46,17 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void doLogin() {
-        String email = etEmail.getText().toString().trim();
+
         String password = etPassword.getText().toString().trim();
+        String username = etUsername.getText().toString().trim();
 
-        if (TextUtils.isEmpty(email)) {
-            etEmail.setError("Email is required");
-            etEmail.requestFocus();
-            return;
-        }
-
-        if (TextUtils.isEmpty(password)) {
-            etPassword.setError("Password is required");
-            etPassword.requestFocus();
-            return;
-        }
+        if (!ValidationUtils.username(etUsername)) return;
+        if (!ValidationUtils.required(etPassword, "Password is required")) return;
 
         Retrofit retrofit = RetrofitClient.getRetrofitInstance(this);
         ApiService apiService = retrofit.create(ApiService.class);
 
-        LoginRequest request = new LoginRequest(email, password);
+        LoginRequest request = new LoginRequest(username, password);
 
         apiService.login(request).enqueue(new Callback<LoginResponse>() {
             @Override
@@ -77,17 +69,22 @@ public class LoginActivity extends AppCompatActivity {
 
                     SharedPreferences prefs = getSharedPreferences("teleconnect_prefs", MODE_PRIVATE);
                     prefs.edit()
-                            .putString("role", loginResponse.getRole())
-                            .putString("firstName", loginResponse.getFirstName())
+                            .putString("jwt_token", loginResponse.getToken())
+                            .putString("user_role", loginResponse.getRole())
+                            .putString("first_name", loginResponse.getFirstName())
+                            .putString("last_name", loginResponse.getLastName())
                             .putString("username", loginResponse.getUsername())
-                            .putString("email", etEmail.getText().toString().trim())
+
+//                            .putString("email", etEmail.getText().toString().trim())
                             .apply();
 
                     Toast.makeText(LoginActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
 
                     Intent intent;
 
-                    if (loginResponse.getEmployeeId() != null) {
+                    if (Boolean.TRUE.equals(loginResponse.getMustChangePassword())) {
+                        intent = new Intent(LoginActivity.this, ChangePasswordFirstLoginActivity.class);
+                    } else if (loginResponse.getEmployeeId() != null) {
                         intent = new Intent(LoginActivity.this, EmployeeDashboardActivity.class);
                     } else {
                         intent = new Intent(LoginActivity.this, DashboardActivity.class);
@@ -95,6 +92,7 @@ public class LoginActivity extends AppCompatActivity {
 
                     startActivity(intent);
                     finish();
+
                 } else {
                     Toast.makeText(LoginActivity.this, "Invalid email or password", Toast.LENGTH_SHORT).show();
                 }

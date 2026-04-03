@@ -34,8 +34,6 @@
         <activity android:name=".EditProfileActivity" />
         <activity android:name=".AddressActivity" />
         <activity android:name=".EmployeeDashboardActivity" />
-        <activity android:name=".CustomerListActivity" />
-        <activity android:name=".PlanListActivity" />
         <activity android:name=".EmployeeProfileActivity" />
         <activity android:name=".LocationListActivity" />
         <activity android:name=".LocationFormActivity" />
@@ -51,6 +49,17 @@
         <activity android:name=".ServiceRequestListActivity" />
         <activity android:name=".ServiceAppointmentListActivity" />
         <activity android:name=".ServiceAppointmentFormActivity" />
+        <activity android:name=".PlanFeatureFormActivity" />
+        <activity android:name=".PlanFeatureListActivity" />
+        <activity android:name=".ActivityLogListActivity" />
+        <activity android:name=".EmployeeFormActivity" />
+        <activity android:name=".EmployeeListActivity" />
+        <activity android:name=".CustomerAddressFormActivity" />
+        <activity android:name=".CustomerFormActivity" />
+        <activity android:name=".CustomerListActivity" />
+        <activity android:name=".PlanFormActivity" />
+        <activity android:name=".PlanListActivity" />
+        <activity android:name=".ChangePasswordFirstLoginActivity"/>
     </application>
 
 </manifest>

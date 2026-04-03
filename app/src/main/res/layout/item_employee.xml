@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="14dp"
+    app:cardCornerRadius="18dp"
+    app:cardElevation="4dp"
+    app:cardUseCompatPadding="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvEmployeeId"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Employee #1"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#111827" />
+
+            <ImageButton
+                android:id="@+id/btnEdit"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@android:color/transparent"
+                android:src="@android:drawable/ic_menu_edit"
+                android:contentDescription="Edit"
+                app:tint="#6F56B3"/>
+
+            <ImageButton
+                android:id="@+id/btnDelete"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@android:color/transparent"
+                android:src="@android:drawable/ic_menu_delete"
+                android:contentDescription="Delete"
+                app:tint="#D94B7D"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvEmployeeName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Employee Name"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#374151"
+            android:layout_marginTop="4dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Email"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:layout_marginTop="10dp" />
+
+        <TextView
+            android:id="@+id/tvEmail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Phone"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:layout_marginTop="10dp" />
+
+        <TextView
+            android:id="@+id/tvPhone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Role"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:layout_marginTop="10dp" />
+
+        <TextView
+            android:id="@+id/tvRole"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Salary"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:layout_marginTop="10dp" />
+
+        <TextView
+            android:id="@+id/tvSalary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hire Date"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:layout_marginTop="10dp" />
+
+        <TextView
+            android:id="@+id/tvHireDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Status"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:layout_marginTop="10dp" />
+
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Active"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:layout_marginTop="10dp" />
+
+        <TextView
+            android:id="@+id/tvActive"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Primary Location ID"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:layout_marginTop="10dp" />
+
+        <TextView
+            android:id="@+id/tvPrimaryLocationId"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Manager ID"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:layout_marginTop="10dp" />
+
+        <TextView
+            android:id="@+id/tvManagerId"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

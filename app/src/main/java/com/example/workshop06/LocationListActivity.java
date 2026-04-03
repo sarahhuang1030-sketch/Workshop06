@@ -37,7 +37,9 @@ public class LocationListActivity extends AppCompatActivity {
 
     private final ActivityResultLauncher<Intent> formLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-                loadLocations();
+                if (result.getResultCode() == RESULT_OK) {
+                    loadLocations();
+                }
             });
 
     @Override

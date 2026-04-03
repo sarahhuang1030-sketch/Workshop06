@@ -7,9 +7,13 @@ public class LoginResponse {
     private Integer customerId;   // null if not a customer
     private Integer employeeId;   // null if not an employee
     private String firstName;
+    private String lastName;
     private String username;
     private String role;
+    private Boolean mustChangePassword;
 
+
+    public Boolean getMustChangePassword() { return mustChangePassword; }
     public String getToken() {
         return token;
     }
@@ -32,6 +36,14 @@ public class LoginResponse {
 
     public void setEmployeeId(Integer employeeId) {
         this.employeeId = employeeId;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public String getFirstName() {

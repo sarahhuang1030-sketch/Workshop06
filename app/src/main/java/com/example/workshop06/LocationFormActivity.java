@@ -1,6 +1,7 @@
 package com.example.workshop06;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -13,6 +14,12 @@ import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.LocationRequest;
 import com.example.workshop06.model.LocationResponse;
+import com.example.workshop06.util.FormFormatUtils;
+import com.example.workshop06.util.ValidationUtils;
+
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
+
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -20,29 +27,45 @@ import retrofit2.Response;
 
 public class LocationFormActivity extends AppCompatActivity {
 
-    private EditText etLocationName, etLocationType, etStreet1, etStreet2, etCity,
+    private EditText etLocationName, etStreet1, etStreet2, etCity,
             etProvince, etPostalCode, etCountry, etPhone;
     private CheckBox cbActive;
     private Button btnSave;
 
     private Integer locationId = null;
 
+    private Spinner spinnerLocationType;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_location_form);
 
+        spinnerLocationType = findViewById(R.id.spinnerLocationType);
+
+        String[] locationTypes = {"SalesPoint", "Warehouse", "Office"};
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                locationTypes
+        );
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerLocationType.setAdapter(adapter);
+
         etLocationName = findViewById(R.id.etLocationName);
-        etLocationType = findViewById(R.id.etLocationType);
+        //  etLocationType = findViewById(R.id.etLocationType);
         etStreet1 = findViewById(R.id.etStreet1);
         etStreet2 = findViewById(R.id.etStreet2);
         etCity = findViewById(R.id.etCity);
         etProvince = findViewById(R.id.etProvince);
-        etPostalCode = findViewById(R.id.etPostalCode);
+        FormFormatUtils.attachCanadianPhoneFormatter(etPhone);
+        FormFormatUtils.attachCanadianPostalCodeFormatter(etPostalCode);
         etCountry = findViewById(R.id.etCountry);
-        etPhone = findViewById(R.id.etPhone);
         cbActive = findViewById(R.id.cbActive);
         btnSave = findViewById(R.id.btnSaveLocation);
+        etPostalCode = findViewById(R.id.etPostalCode);
+        etPhone = findViewById(R.id.etPhone);
 
         if (getIntent() != null && getIntent().hasExtra("locationId")) {
             locationId = getIntent().getIntExtra("locationId", -1);
@@ -50,6 +73,9 @@ public class LocationFormActivity extends AppCompatActivity {
                 loadLocation(locationId);
             }
         }
+
+        FormFormatUtils.attachCanadianPhoneFormatter(etPhone);
+        FormFormatUtils.attachCanadianPostalCodeFormatter(etPostalCode);
 
         btnSave.setOnClickListener(v -> saveLocation());
     }
@@ -69,14 +95,16 @@ public class LocationFormActivity extends AppCompatActivity {
                             "Loaded: " + item.getLocationName(), Toast.LENGTH_SHORT).show();
                     //LocationResponse item = response.body();
                     etLocationName.setText(item.getLocationName());
-                    etLocationType.setText(item.getLocationType());
-                    etStreet1.setText(item.getStreet1());
-                    etStreet2.setText(item.getStreet2());
+//                    etLocationType.setText(item.getLocationType());
+                    setSpinnerSelection(item.getLocationType());
+
+                    etStreet1.setText(item.getStreet1() != null ? item.getStreet1() : "");
+                    etStreet2.setText(item.getStreet2() != null ? item.getStreet2() : "");
+                    etPostalCode.setText(item.getPostalCode() != null ? item.getPostalCode() : "");
                     etCity.setText(item.getCity());
                     etProvince.setText(item.getProvince());
-                    etPostalCode.setText(item.getPostalCode());
                     etCountry.setText(item.getCountry());
-                    etPhone.setText(item.getPhone());
+                    etPhone.setText(item.getPhone() != null ? item.getPhone() : "");
                     cbActive.setChecked(Boolean.TRUE.equals(item.getIsActive()));
                 }
             }
@@ -89,14 +117,35 @@ public class LocationFormActivity extends AppCompatActivity {
     }
 
     private void saveLocation() {
+
+        // ✅ VALIDATION FIRST
+        if (!ValidationUtils.required(etLocationName, "Location name is required")) return;
+        if (!ValidationUtils.required(etStreet1, "Street 1 is required")) return;
+        if (!ValidationUtils.required(etCity, "City is required")) return;
+        if (!ValidationUtils.required(etProvince, "Province is required")) return;
+        if (!ValidationUtils.canadianPostalCode(etPostalCode)) return;
+        if (!ValidationUtils.required(etCountry, "Country is required")) return;
+        if (!ValidationUtils.phone(etPhone)) return;
+
+        // ✅ SPINNER VALUE
+        String locationType = spinnerLocationType.getSelectedItem() != null
+                ? spinnerLocationType.getSelectedItem().toString()
+                : "";
+
+        if (locationType.isEmpty()) {
+            Toast.makeText(this, "Please select a location type", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // ✅ CREATE REQUEST (AFTER validation)
         LocationRequest request = new LocationRequest(
                 etLocationName.getText().toString().trim(),
-                etLocationType.getText().toString().trim(),
+                locationType,
                 etStreet1.getText().toString().trim(),
                 etStreet2.getText().toString().trim(),
                 etCity.getText().toString().trim(),
                 etProvince.getText().toString().trim(),
-                etPostalCode.getText().toString().trim(),
+                etPostalCode.getText().toString().trim().toUpperCase(),
                 etCountry.getText().toString().trim(),
                 etPhone.getText().toString().trim(),
                 cbActive.isChecked()
@@ -110,6 +159,7 @@ public class LocationFormActivity extends AppCompatActivity {
                 public void onResponse(Call<LocationResponse> call, Response<LocationResponse> response) {
                     if (response.isSuccessful()) {
                         Toast.makeText(LocationFormActivity.this, "Location created", Toast.LENGTH_SHORT).show();
+                        setResult(RESULT_OK);
                         finish();
                     } else {
                         Toast.makeText(LocationFormActivity.this, "Create failed", Toast.LENGTH_SHORT).show();
@@ -127,6 +177,7 @@ public class LocationFormActivity extends AppCompatActivity {
                 public void onResponse(Call<LocationResponse> call, Response<LocationResponse> response) {
                     if (response.isSuccessful()) {
                         Toast.makeText(LocationFormActivity.this, "Location updated", Toast.LENGTH_SHORT).show();
+                        setResult(RESULT_OK);
                         finish();
                     } else {
                         Toast.makeText(LocationFormActivity.this, "Update failed", Toast.LENGTH_SHORT).show();
@@ -138,6 +189,18 @@ public class LocationFormActivity extends AppCompatActivity {
                     Toast.makeText(LocationFormActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
                 }
             });
+        }
+    }
+
+    private void setSpinnerSelection(String locationType) {
+        if (locationType == null) return;
+
+        for (int i = 0; i < spinnerLocationType.getCount(); i++) {
+            String value = spinnerLocationType.getItemAtPosition(i).toString();
+            if (value.equalsIgnoreCase(locationType)) {
+                spinnerLocationType.setSelection(i);
+                break;
+            }
         }
     }
 }

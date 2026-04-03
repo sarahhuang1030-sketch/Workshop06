@@ -3,41 +3,32 @@ package com.example.workshop06;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.TextView;
-import android.widget.Toast;
-
+import android.content.SharedPreferences;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.workshop06.api.RetrofitClient;
-import com.example.workshop06.model.EmployeeDashboardResponse;
+import com.example.workshop06.adapter.DashboardMenuAdapter;
 import com.example.workshop06.api.ApiService;
+import com.example.workshop06.api.RetrofitClient;
+import com.example.workshop06.model.DashboardMenuItem;
+import com.example.workshop06.model.ManagerSummaryResponse;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.card.MaterialCardView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import android.widget.Toast;
 
 public class EmployeeDashboardActivity extends AppCompatActivity {
 
     private TextView tvAgentName;
-    private TextView tvBranchesCount;
-    private TextView tvAddonsCount;
-    private TextView tvSubscriptionsCount;
-    private TextView tvInvoicesCount;
-    private TextView tvReportsSubtitle;
-    private TextView tvLogsSubtitle;
-    private TextView tvPlanFeatureCount;
-
+    private RecyclerView rvDashboardCards;
     private BottomNavigationView bottomNavigation;
-
-    private MaterialCardView cardBranches;
-    private MaterialCardView cardAddons;
-    private MaterialCardView cardSubscriptions;
-    private MaterialCardView cardInvoices;
-    private MaterialCardView cardReports;
-    private MaterialCardView cardActivityLogs;
-    private MaterialCardView cardPlanFeatures;
-    private MaterialCardView cardServiceRequests;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,142 +36,159 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
         setContentView(R.layout.activity_employee_dashboard);
 
         tvAgentName = findViewById(R.id.tvAgentName);
-        tvBranchesCount = findViewById(R.id.tvBranchesCount);
-        tvAddonsCount = findViewById(R.id.tvAddonsCount);
-        tvSubscriptionsCount = findViewById(R.id.tvSubscriptionsCount);
-        tvInvoicesCount = findViewById(R.id.tvInvoicesCount);
-        tvReportsSubtitle = findViewById(R.id.tvReportsSubtitle);
-        tvLogsSubtitle = findViewById(R.id.tvLogsSubtitle);
-        tvPlanFeatureCount = findViewById(R.id.tvPlanFeatureCount);
-
+        rvDashboardCards = findViewById(R.id.rvDashboardCards);
         bottomNavigation = findViewById(R.id.bottomNavigation);
 
-        cardBranches = findViewById(R.id.cardBranches);
-        cardAddons = findViewById(R.id.cardAddons);
-        cardSubscriptions = findViewById(R.id.cardSubscriptions);
-        cardInvoices = findViewById(R.id.cardInvoices);
-        cardReports = findViewById(R.id.cardReports);
-        cardActivityLogs = findViewById(R.id.cardActivityLogs);
-        cardPlanFeatures = findViewById(R.id.cardPlanFeatures);
-        cardServiceRequests = findViewById(R.id.cardServiceRequests);
-        setupNav();
-        setupQuickMenu();
-        loadDashboard();
+        SharedPreferences prefs = getSharedPreferences("teleconnect_prefs", MODE_PRIVATE);
+        String role = prefs.getString("user_role", "");
+        String firstName = prefs.getString("first_name", "");
+        String lastName = prefs.getString("last_name", "");
+
+        if ("Manager".equalsIgnoreCase(role)) {
+            tvAgentName.setText(firstName + " " + lastName);
+        } else if (firstName != null && !firstName.isEmpty()) {
+            tvAgentName.setText(firstName + " " + lastName);
+        } else {
+            tvAgentName.setText("Employee Dashboard");
+        }
+
+        setupDashboardCards();
+        setupBottomNavigation();
     }
 
-    private void loadDashboard() {
+    private void setupDashboardCards() {
+
+        SharedPreferences prefs = getSharedPreferences("teleconnect_prefs", MODE_PRIVATE);
+        String role = prefs.getString("user_role", "");
+
+        rvDashboardCards.setLayoutManager(new GridLayoutManager(this, 2));
+
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
 
-        apiService.getEmployeeDashboard().enqueue(new Callback<EmployeeDashboardResponse>() {
+        apiService.getManagerSummary().enqueue(new Callback<ManagerSummaryResponse>() {
             @Override
-            public void onResponse(Call<EmployeeDashboardResponse> call,
-                                   Response<EmployeeDashboardResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    EmployeeDashboardResponse data = response.body();
+            public void onResponse(Call<ManagerSummaryResponse> call, Response<ManagerSummaryResponse> response) {
 
-                    if (data.getFirstName() != null && !data.getFirstName().isEmpty()) {
-                        tvAgentName.setText(data.getFirstName() + "'s Dashboard");
-                    } else {
-                        tvAgentName.setText("Agent Dashboard");
+                List<DashboardMenuItem> items = new ArrayList<>();
+
+                if (response.isSuccessful() && response.body() != null) {
+
+                    ManagerSummaryResponse data = response.body();
+
+
+                    if ("Manager".equalsIgnoreCase(role)) {
+                        items.add(new DashboardMenuItem(
+                                "👥",
+                                "Branches\nLocation",
+                                data.getTotalLocations() + " active",
+                                R.drawable.bg_card_top_accent_purple,
+                                R.drawable.bg_icon_lavender,
+                                LocationListActivity.class
+                        ));
+
+                        items.add(new DashboardMenuItem(
+                                "👨‍💼",
+                                "Employee",
+                                data.getTotalEmployees() + " employees",
+                                R.drawable.bg_card_top_accent_blue,
+                                R.drawable.bg_icon_blue,
+                                EmployeeListActivity.class
+                        ));
                     }
 
-                    tvBranchesCount.setText(data.getActiveBranches() + " active");
-                    tvAddonsCount.setText(data.getAvailableAddons() + " available");
-                    tvSubscriptionsCount.setText(data.getActiveSubscriptions() + " plans");
-                    tvInvoicesCount.setText(data.getPendingInvoices() + " pending");
-                    tvReportsSubtitle.setText("Monthly");
-                    tvLogsSubtitle.setText(data.getRecentLogs() + " logs");
-                    tvPlanFeatureCount.setText(data.getPlanFeatures() + " plan features");
+                    items.add(new DashboardMenuItem(
+                            "🖥️",
+                            "Subscriptions",
+                            data.getActiveSubscriptions() + " active",
+                            R.drawable.bg_card_top_accent_pink,
+                            R.drawable.bg_icon_pink,
+                            SubscriptionListActivity.class
+                    ));
+
+                    items.add(new DashboardMenuItem(
+                            "💳",
+                            "Invoices",
+                            data.getOpenInvoices() + " past due",
+                            R.drawable.bg_card_top_accent_red,
+                            R.drawable.bg_icon_red,
+                            InvoiceListActivity.class
+                    ));
+
+                    items.add(new DashboardMenuItem(
+                            "📄",
+                            "Add-Ons",
+                            data.getTotalAddons() + " available",
+                            R.drawable.bg_card_top_accent_blue,
+                            R.drawable.bg_icon_blue,
+                            AddOnListActivity.class
+                    ));
+
+                    if ("Manager".equalsIgnoreCase(role)) {
+                        items.add(new DashboardMenuItem(
+                                "📊",
+                                "Agents Reports",
+                                "See Agents' Performance",
+                                R.drawable.bg_card_top_accent_pink,
+                                R.drawable.bg_icon_blue,
+                                EmployeeSalesActivity.class
+                        ));
+                    }
+
+                    items.add(new DashboardMenuItem(
+                            "🧑‍🤝‍🧑",
+                            "Service Requests",
+                            "Live feed",
+                            R.drawable.bg_card_top_accent_magenta,
+                            R.drawable.bg_icon_lavender,
+                            ServiceRequestListActivity.class
+                    ));
+
+                    if ("Manager".equalsIgnoreCase(role)) {
+                        items.add(new DashboardMenuItem(
+                                "🧑‍🤝‍🧑",
+                                "Plan Features",
+                                data.getTotalPlanFeatures() + " active",
+                                R.drawable.bg_card_top_accent_magenta,
+                                R.drawable.bg_icon_lavender,
+                                PlanFeatureListActivity.class
+                        ));
+                    }
+
                 } else {
-                    tvAgentName.setText("Agent Dashboard");
-                    Toast.makeText(EmployeeDashboardActivity.this,
-                            "Failed to load dashboard", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(EmployeeDashboardActivity.this, "Failed to load summary", Toast.LENGTH_SHORT).show();
                 }
+
+                DashboardMenuAdapter adapter = new DashboardMenuAdapter(EmployeeDashboardActivity.this, items);
+                rvDashboardCards.setAdapter(adapter);
             }
 
             @Override
-            public void onFailure(Call<EmployeeDashboardResponse> call, Throwable t) {
-                tvAgentName.setText("Agent Dashboard");
-                Toast.makeText(EmployeeDashboardActivity.this,
-                        "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            public void onFailure(Call<ManagerSummaryResponse> call, Throwable t) {
+                Toast.makeText(EmployeeDashboardActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
     }
 
-    private void setupNav() {
+    private void setupBottomNavigation() {
         bottomNavigation.setSelectedItemId(R.id.nav_home);
 
         bottomNavigation.setOnItemSelectedListener(item -> {
-            int id = item.getItemId();
+            int itemId = item.getItemId();
 
-            if (id == R.id.nav_home) {
-                return true;
-            }
+            if (itemId == R.id.nav_home) return true;
 
-            if (id == R.id.nav_customers) {
+            else if (itemId == R.id.nav_customers) {
                 startActivity(new Intent(this, CustomerListActivity.class));
-                overridePendingTransition(0, 0);
-                finish();
                 return true;
-            }
-
-            if (id == R.id.nav_plans) {
+            } else if (itemId == R.id.nav_plans) {
                 startActivity(new Intent(this, PlanListActivity.class));
-                overridePendingTransition(0, 0);
-                finish();
                 return true;
-            }
-
-            if (id == R.id.nav_profile) {
+            } else if (itemId == R.id.nav_profile) {
                 startActivity(new Intent(this, EmployeeProfileActivity.class));
-                overridePendingTransition(0, 0);
-                finish();
                 return true;
             }
 
             return false;
         });
-    }
-
-    private void setupQuickMenu() {
-        cardBranches.setOnClickListener(v ->
-                startActivity(new Intent(this, LocationListActivity.class)));
-
-        cardAddons.setOnClickListener(v ->
-                startActivity(new Intent(this, AddOnListActivity.class)));
-
-        cardSubscriptions.setOnClickListener(v ->
-                startActivity(new Intent(this, SubscriptionListActivity.class)));
-
-        cardInvoices.setOnClickListener(v ->
-                startActivity(new Intent(this, InvoiceListActivity.class)));
-
-        cardReports.setOnClickListener(v ->
-                startActivity(new Intent(this, ManagerEmployeeSalesActivity.class)));
-
-        cardServiceRequests.setOnClickListener(v ->
-                startActivity(new Intent(this, ServiceRequestListActivity.class)));
-
-        cardActivityLogs.setOnClickListener(v ->
-                startActivity(new Intent(this, LocationListActivity.class)));
-
-
-
-        cardPlanFeatures.setOnClickListener(v ->
-                startActivity(new Intent(this, LocationListActivity.class)));
-
-
-
-//        cardReports.setOnClickListener(v ->
-//                startActivity(new Intent(this, ReportListActivity.class)));
-//
-//        cardActivityLogs.setOnClickListener(v ->
-//                startActivity(new Intent(this, ActivityLogListActivity.class)));
-//
-//        cardReports.setOnClickListener(v ->
-//                startActivity(new Intent(this, ServiceRequestListActivity.class)));
-//
-//        cardPlanFeatures.setOnClickListener(v ->
-//                startActivity(new Intent(this, PlantFeatureListActivity.class)));
     }
 }

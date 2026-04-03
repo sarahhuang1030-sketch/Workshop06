@@ -17,10 +17,10 @@ import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.workshop06.adapter.CustomerAdapter;
+import com.example.workshop06.adapter.PlanFeatureAdapter;
 import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
-import com.example.workshop06.model.CustomerResponse;
+import com.example.workshop06.model.PlanFeatureResponse;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.List;
@@ -29,80 +29,68 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class CustomerListActivity extends AppCompatActivity {
+public class PlanFeatureListActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private TextView tvEmpty;
-    private SearchView searchViewCustomer;
+    private SearchView searchViewPlanFeature;
     private ImageButton btnBack;
     private FloatingActionButton fabAdd;
 
-    private CustomerAdapter adapter;
+    private PlanFeatureAdapter adapter;
 
     private final ActivityResultLauncher<Intent> formLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> loadCustomers());
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                loadPlanFeatures();
+            });
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_customer_list);
+        setContentView(R.layout.activity_plan_feature_list);
 
         initViews();
         setupRecyclerView();
         setupSearch();
         setupButtons();
-        loadCustomers();
+        loadPlanFeatures();
     }
 
     private void initViews() {
-        recyclerView = findViewById(R.id.recyclerViewCustomers);
+        recyclerView = findViewById(R.id.recyclerViewPlanFeatures);
         progressBar = findViewById(R.id.progressBar);
         tvEmpty = findViewById(R.id.tvEmpty);
-        searchViewCustomer = findViewById(R.id.searchViewCustomer);
+        searchViewPlanFeature = findViewById(R.id.searchViewPlanFeature);
         btnBack = findViewById(R.id.btnBack);
         fabAdd = findViewById(R.id.fabAdd);
     }
 
     private void setupRecyclerView() {
-        adapter = new CustomerAdapter(new CustomerAdapter.OnCustomerActionListener() {
+        adapter = new PlanFeatureAdapter(new PlanFeatureAdapter.OnPlanFeatureActionListener() {
             @Override
-            public void onEdit(CustomerResponse item) {
-                Intent intent = new Intent(CustomerListActivity.this, CustomerFormActivity.class);
+            public void onEdit(PlanFeatureResponse item) {
+                Intent intent = new Intent(PlanFeatureListActivity.this, PlanFeatureFormActivity.class);
                 intent.putExtra("mode", "edit");
-                intent.putExtra("customerId", item.getCustomerId());
-                intent.putExtra("customerType", item.getCustomerType());
-                intent.putExtra("firstName", item.getFirstName());
-                intent.putExtra("lastName", item.getLastName());
-                intent.putExtra("businessName", item.getBusinessName());
-                intent.putExtra("email", item.getEmail());
-                intent.putExtra("homePhone", item.getHomePhone());
-                intent.putExtra("status", item.getStatus());
+                intent.putExtra("featureId", item.getFeatureId());
+                intent.putExtra("planId", item.getPlanId());
+                intent.putExtra("featureName", item.getFeatureName());
+                intent.putExtra("featureValue", item.getFeatureValue());
+                intent.putExtra("unit", item.getUnit());
+                intent.putExtra("sortOrder", item.getSortOrder());
                 formLauncher.launch(intent);
             }
 
             @Override
-            public void onDelete(CustomerResponse item) {
-                if (item.getCustomerId() == null) return;
+            public void onDelete(PlanFeatureResponse item) {
+                if (item.getFeatureId() == null) return;
 
-                new AlertDialog.Builder(CustomerListActivity.this)
-                        .setTitle("Delete Customer")
-                        .setMessage("Are you sure you want to delete this customer?")
-                        .setPositiveButton("Delete", (dialog, which) -> deleteCustomer(item.getCustomerId()))
+                new AlertDialog.Builder(PlanFeatureListActivity.this)
+                        .setTitle("Delete Plan Feature")
+                        .setMessage("Are you sure you want to delete this plan feature?")
+                        .setPositiveButton("Delete", (dialog, which) -> deletePlanFeature(item.getFeatureId()))
                         .setNegativeButton("Cancel", null)
                         .show();
-            }
-
-            @Override
-            public void onAddress(CustomerResponse item) {
-                if (item.getCustomerId() == null) return;
-
-                Intent intent = new Intent(CustomerListActivity.this, CustomerAddressFormActivity.class);
-                intent.putExtra("customerId", item.getCustomerId());
-                intent.putExtra("customerName",
-                        ((item.getFirstName() != null ? item.getFirstName() : "") + " "
-                                + (item.getLastName() != null ? item.getLastName() : "")).trim());
-                formLauncher.launch(intent);
             }
         });
 
@@ -112,9 +100,9 @@ public class CustomerListActivity extends AppCompatActivity {
     }
 
     private void setupSearch() {
-        if (searchViewCustomer == null) return;
+        if (searchViewPlanFeature == null) return;
 
-        searchViewCustomer.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        searchViewPlanFeature.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 adapter.filter(query);
@@ -132,56 +120,60 @@ public class CustomerListActivity extends AppCompatActivity {
     }
 
     private void setupButtons() {
-        btnBack.setOnClickListener(v -> finish());
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> finish());
+        }
 
-        fabAdd.setOnClickListener(v -> {
-            Intent intent = new Intent(CustomerListActivity.this, CustomerFormActivity.class);
-            intent.putExtra("mode", "add");
-            formLauncher.launch(intent);
-        });
+        if (fabAdd != null) {
+            fabAdd.setOnClickListener(v -> {
+                Intent intent = new Intent(PlanFeatureListActivity.this, PlanFeatureFormActivity.class);
+                intent.putExtra("mode", "add");
+                formLauncher.launch(intent);
+            });
+        }
     }
 
-    private void loadCustomers() {
+    private void loadPlanFeatures() {
         showLoading(true);
         showEmpty(false);
 
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
-        apiService.getCustomers().enqueue(new Callback<List<CustomerResponse>>() {
+        apiService.getPlanFeatures().enqueue(new Callback<List<PlanFeatureResponse>>() {
             @Override
-            public void onResponse(Call<List<CustomerResponse>> call, Response<List<CustomerResponse>> response) {
+            public void onResponse(Call<List<PlanFeatureResponse>> call, Response<List<PlanFeatureResponse>> response) {
                 showLoading(false);
 
                 if (!response.isSuccessful()) {
-                    showError("Failed to load customers. Code: " + response.code());
+                    showError("Failed to load plan features. Code: " + response.code());
                     return;
                 }
 
-                List<CustomerResponse> data = response.body();
+                List<PlanFeatureResponse> data = response.body();
                 adapter.setData(data);
                 showEmpty(data == null || data.isEmpty());
             }
 
             @Override
-            public void onFailure(Call<List<CustomerResponse>> call, Throwable t) {
+            public void onFailure(Call<List<PlanFeatureResponse>> call, Throwable t) {
                 showLoading(false);
                 adapter.setData(null);
-                showError("Unable to load customers");
+                showError("Unable to load plan features");
             }
         });
     }
 
-    private void deleteCustomer(int customerId) {
+    private void deletePlanFeature(int featureId) {
         showLoading(true);
 
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
-        apiService.deleteCustomer(customerId).enqueue(new Callback<Void>() {
+        apiService.deletePlanFeature(featureId).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 showLoading(false);
 
                 if (response.isSuccessful()) {
-                    Toast.makeText(CustomerListActivity.this, "Deleted successfully", Toast.LENGTH_SHORT).show();
-                    loadCustomers();
+                    Toast.makeText(PlanFeatureListActivity.this, "Deleted successfully", Toast.LENGTH_SHORT).show();
+                    loadPlanFeatures();
                 } else {
                     showError("Delete failed. Code: " + response.code());
                 }
@@ -190,20 +182,31 @@ public class CustomerListActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
                 showLoading(false);
-                showError("Unable to delete customer");
+                showError("Unable to delete plan feature");
             }
         });
     }
 
     private void showLoading(boolean isLoading) {
-        progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
-        recyclerView.setVisibility(isLoading ? View.GONE : View.VISIBLE);
-        if (isLoading) tvEmpty.setVisibility(View.GONE);
+        if (progressBar != null) {
+            progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        }
+
+        if (recyclerView != null) {
+            recyclerView.setVisibility(isLoading ? View.GONE : View.VISIBLE);
+        }
+
+        if (tvEmpty != null && isLoading) {
+            tvEmpty.setVisibility(View.GONE);
+        }
     }
 
     private void showEmpty(boolean isEmpty) {
-        tvEmpty.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
-        if (progressBar.getVisibility() != View.VISIBLE) {
+        if (tvEmpty != null) {
+            tvEmpty.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+        }
+
+        if (recyclerView != null && progressBar != null && progressBar.getVisibility() != View.VISIBLE) {
             recyclerView.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
         }
     }

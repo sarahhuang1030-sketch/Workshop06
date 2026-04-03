@@ -1,5 +1,6 @@
 package com.example.workshop06.api;
 
+import com.example.workshop06.model.ActivityLogResponse;
 import com.example.workshop06.model.AddOnRequest;
 import com.example.workshop06.model.AddOnResponse;
 import com.example.workshop06.model.AddressRequest;
@@ -70,6 +71,10 @@ public interface ApiService {
     // this is to get the employeedashboard
     @GET("/api/employee/dashboard")
     Call<EmployeeDashboardResponse> getEmployeeDashboard();
+
+    //summary for the counts
+    @GET("/api/manager/reports/summary")
+    Call<ManagerSummaryResponse> getManagerSummary();
 
     //endpoints for location
     @GET("/api/manager/location")
@@ -189,5 +194,92 @@ Call<List<EmployeeSalesResponse>> getEmployeeSales();
             @Path("requestId") int requestId,
             @Path("appointmentId") int appointmentId
     );
+
+    //plan features
+    @GET("/api/manager/planfeatures")
+    Call<List<PlanFeatureResponse>> getPlanFeatures();
+
+    @POST("/api/manager/planfeatures")
+    Call<PlanFeatureResponse> createPlanFeature(@Body PlanFeatureCreateUpdateRequest request);
+
+    @PUT("/api/manager/planfeatures/{featureId}")
+    Call<PlanFeatureResponse> updatePlanFeature(
+            @Path("featureId") int featureId,
+            @Body PlanFeatureCreateUpdateRequest request
+    );
+
+    @DELETE("/api/manager/planfeatures/{featureId}")
+    Call<Void> deletePlanFeature(@Path("featureId") int featureId);
+
+    //showing the logs
+    @GET("/api/manager/audit")
+    Call<List<ActivityLogResponse>> getActivityLogs();
+
+    //employee
+    @GET("/api/manager/employees")
+    Call<List<EmployeeResponse>> getEmployees();
+
+    @GET("/api/manager/employees/{id}")
+    Call<EmployeeResponse> getEmployeeById(@Path("id") int id);
+
+    @POST("/api/manager/employees")
+    Call<CreateEmployeeResponse> createEmployee(@Body SaveEmployeeRequest request);
+
+    @PUT("/api/manager/employees/{id}")
+    Call<EmployeeResponse> updateEmployee(
+            @Path("id") int id,
+            @Body SaveEmployeeRequest request
+    );
+
+    @DELETE("/api/manager/employees/{id}")
+    Call<Void> deleteEmployee(@Path("id") int id);
+
+    //customers
+    @GET("/api/manager/customers")
+    Call<List<CustomerResponse>> getCustomers();
+
+    @GET("/api/manager/customers/{id}")
+    Call<CustomerResponse> getCustomerById(@Path("id") int id);
+
+    @POST("/api/manager/customers")
+    Call<CustomerResponse> createCustomer(@Body SaveCustomerRequest request);
+
+    @PUT("/api/manager/customers/{id}")
+    Call<CustomerResponse> updateCustomer(
+            @Path("id") int id,
+            @Body SaveCustomerRequest request
+    );
+
+    @DELETE("/api/manager/customers/{id}")
+    Call<Void> deleteCustomer(@Path("id") int id);
+
+    @GET("/api/manager/customers/{customerId}/address")
+    Call<CustomerAddressResponse> getCustomerAddress(@Path("customerId") int customerId);
+
+    @PUT("/api/manager/customers/{customerId}/address")
+    Call<CustomerAddressResponse> saveCustomerAddress(
+            @Path("customerId") int customerId,
+            @Body SaveCustomerAddressRequest request
+    );
+
+
+    //plans
+    @GET("/api/manager/plans")
+    Call<List<PlanResponse>> getPlansManager();
+
+    @GET("/api/manager/plans/{id}")
+    Call<PlanResponse> getPlanByIdManager(@Path("id") int id);
+
+    @POST("/api/manager/plans")
+    Call<PlanResponse> createPlanManager(@Body SavePlanRequest request);
+
+    @PUT("/api/manager/plans/{id}")
+    Call<PlanResponse> updatePlanManager(
+            @Path("id") int id,
+            @Body SavePlanRequest request
+    );
+
+    @DELETE("/api/manager/plans/{id}")
+    Call<Void> deletePlanManager(@Path("id") int id);
 
 }

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="14dp"
+    app:cardCornerRadius="18dp"
+    app:cardElevation="4dp"
+    app:cardUseCompatPadding="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tvLogId"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Log #1"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#111827" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Module"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:layout_marginTop="10dp" />
+
+        <TextView
+            android:id="@+id/tvModule"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Action"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:layout_marginTop="10dp" />
+
+        <TextView
+            android:id="@+id/tvAction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Target"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:layout_marginTop="10dp" />
+
+        <TextView
+            android:id="@+id/tvTarget"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Done By"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:layout_marginTop="10dp" />
+
+        <TextView
+            android:id="@+id/tvDoneBy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Timestamp"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:layout_marginTop="10dp" />
+
+        <TextView
+            android:id="@+id/tvTimestamp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

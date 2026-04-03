@@ -2,56 +2,44 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F3EEFF">
+    android:background="#F8F1FA">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="16dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:background="@drawable/bg_gradient_plan"
-        android:orientation="vertical"
-        android:paddingStart="18dp"
-        android:paddingEnd="18dp"
-        android:paddingTop="20dp">
-
-    <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Location Form"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="#fff"
-            android:layout_marginStart="12dp" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@android:color/transparent"
+                android:src="@android:drawable/ic_media_previous"
+                android:contentDescription="Back" />
 
-    </LinearLayout>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Location Type"
-            android:textStyle="bold"
-            android:textColor="#111827"
-            android:layout_marginTop="12dp"
-            android:layout_marginStart="4dp" />
+            <TextView
+                android:id="@+id/tvTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Customer Address"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="#111827"
+                android:layout_marginStart="12dp" />
+        </LinearLayout>
 
         <Spinner
-            android:id="@+id/spinnerLocationType"
+            android:id="@+id/spinnerAddressType"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@android:drawable/edit_text" />
-
-        <EditText
-            android:id="@+id/etLocationName"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Location Name"
-            android:layout_marginTop="12dp"/>
+            android:layout_marginTop="18dp" />
 
         <EditText
             android:id="@+id/etStreet1"
@@ -95,25 +83,20 @@
             android:hint="Country"
             android:layout_marginTop="12dp" />
 
-        <EditText
-            android:id="@+id/etPhone"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Phone"
-            android:layout_marginTop="12dp" />
-
-        <CheckBox
-            android:id="@+id/cbActive"
+        <ProgressBar
+            android:id="@+id/progressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Active"
-            android:layout_marginTop="12dp" />
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:visibility="gone" />
 
         <Button
-            android:id="@+id/btnSaveLocation"
+            android:id="@+id/btnSave"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Save"
-            android:layout_marginTop="20dp" />
+            android:text="Save Address"
+            android:layout_marginTop="16dp" />
+
     </LinearLayout>
 </ScrollView>

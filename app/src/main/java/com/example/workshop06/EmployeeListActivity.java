@@ -35,7 +35,7 @@ public class EmployeeListActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private TextView tvEmpty;
     private SearchView searchViewEmployee;
-    private ImageButton btnBack;
+
     private FloatingActionButton fabAdd;
 
     private EmployeeAdapter adapter;
@@ -62,7 +62,7 @@ public class EmployeeListActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         tvEmpty = findViewById(R.id.tvEmpty);
         searchViewEmployee = findViewById(R.id.searchViewEmployee);
-        btnBack = findViewById(R.id.btnBack);
+
         fabAdd = findViewById(R.id.fabAdd);
     }
 
@@ -126,9 +126,7 @@ public class EmployeeListActivity extends AppCompatActivity {
     }
 
     private void setupButtons() {
-        if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
-        }
+
 
         if (fabAdd != null) {
             fabAdd.setOnClickListener(v -> {

@@ -4,7 +4,8 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ImageButton;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,8 +23,13 @@ import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.CustomerResponse;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-
+import com.google.android.material.textfield.TextInputEditText;
+import android.text.Editable;
+import android.text.TextWatcher;
 import java.util.List;
+
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
+
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -35,10 +41,25 @@ public class CustomerListActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private TextView tvEmpty;
     private SearchView searchViewCustomer;
-    private ImageButton btnBack;
-    private FloatingActionButton fabAdd;
 
+    // ✅ first/last name are TextInputEditText
+    private TextInputEditText etFilterFirstName;
+    private TextInputEditText etFilterLastName;
+
+    // ✅ status/type are AutoCompleteTextView
+//    private AutoCompleteTextView spinnerStatusFilter;
+//    private AutoCompleteTextView spinnerTypeFilter;
+
+    private MaterialAutoCompleteTextView spinnerStatusFilter;
+    private MaterialAutoCompleteTextView spinnerTypeFilter;
+
+    private FloatingActionButton fabAdd;
     private CustomerAdapter adapter;
+
+    private String currentSearchText = "";
+
+    private String currentStatusFilter = "All Status";
+    private String currentTypeFilter = "All Types";
 
     private final ActivityResultLauncher<Intent> formLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> loadCustomers());
@@ -50,7 +71,9 @@ public class CustomerListActivity extends AppCompatActivity {
 
         initViews();
         setupRecyclerView();
+        setupFilterDropdowns();
         setupSearch();
+        setupFilterInputs();
         setupButtons();
         loadCustomers();
     }
@@ -60,7 +83,10 @@ public class CustomerListActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         tvEmpty = findViewById(R.id.tvEmpty);
         searchViewCustomer = findViewById(R.id.searchViewCustomer);
-        btnBack = findViewById(R.id.btnBack);
+
+        spinnerStatusFilter = findViewById(R.id.spinnerStatusFilter);
+        spinnerTypeFilter = findViewById(R.id.spinnerTypeFilter);
+
         fabAdd = findViewById(R.id.fabAdd);
     }
 
@@ -98,10 +124,17 @@ public class CustomerListActivity extends AppCompatActivity {
                 if (item.getCustomerId() == null) return;
 
                 Intent intent = new Intent(CustomerListActivity.this, CustomerAddressFormActivity.class);
+
+                String customerName;
+                if ("Business".equalsIgnoreCase(item.getCustomerType())) {
+                    customerName = item.getBusinessName() != null ? item.getBusinessName() : "";
+                } else {
+                    customerName = ((item.getFirstName() != null ? item.getFirstName() : "") + " "
+                            + (item.getLastName() != null ? item.getLastName() : "")).trim();
+                }
+
                 intent.putExtra("customerId", item.getCustomerId());
-                intent.putExtra("customerName",
-                        ((item.getFirstName() != null ? item.getFirstName() : "") + " "
-                                + (item.getLastName() != null ? item.getLastName() : "")).trim());
+                intent.putExtra("customerName", customerName);
                 formLauncher.launch(intent);
             }
         });
@@ -111,29 +144,97 @@ public class CustomerListActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
     }
 
-    private void setupSearch() {
-        if (searchViewCustomer == null) return;
+    private void setupFilterDropdowns() {
+        String[] statusItems = {"All Status", "Active", "Inactive"};
+        ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_list_item_1,
+                statusItems
+        );
+        spinnerStatusFilter.setAdapter(statusAdapter);
+        spinnerStatusFilter.setText("All Status", false);
 
+        String[] typeItems = {"All Types", "Individual", "Business"};
+        ArrayAdapter<String> typeAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_list_item_1,
+                typeItems
+        );
+        spinnerTypeFilter.setAdapter(typeAdapter);
+        spinnerTypeFilter.setText("All Types", false);
+
+        spinnerStatusFilter.setOnClickListener(v -> spinnerStatusFilter.showDropDown());
+        spinnerTypeFilter.setOnClickListener(v -> spinnerTypeFilter.showDropDown());
+    }
+    private void setupSearch() {
         searchViewCustomer.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                adapter.filter(query);
-                updateEmptyState();
+                currentSearchText = query != null ? query : "";
+                applyCurrentFilters();
                 return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                adapter.filter(newText);
-                updateEmptyState();
+                currentSearchText = newText != null ? newText : "";
+                applyCurrentFilters();
                 return true;
             }
         });
     }
 
-    private void setupButtons() {
-        btnBack.setOnClickListener(v -> finish());
+    private void setupFilterInputs() {
 
+
+        if (spinnerStatusFilter != null) {
+            spinnerStatusFilter.setOnItemClickListener((parent, view, position, id) -> {
+                currentStatusFilter = parent.getItemAtPosition(position).toString();
+                applyCurrentFilters();
+            });
+
+            spinnerStatusFilter.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    currentStatusFilter = s != null && !s.toString().trim().isEmpty()
+                            ? s.toString().trim()
+                            : "All Status";
+                    applyCurrentFilters();
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) { }
+            });
+        }
+
+        if (spinnerTypeFilter != null) {
+            spinnerTypeFilter.setOnItemClickListener((parent, view, position, id) -> {
+                currentTypeFilter = parent.getItemAtPosition(position).toString();
+                applyCurrentFilters();
+            });
+
+            spinnerTypeFilter.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    currentTypeFilter = s != null && !s.toString().trim().isEmpty()
+                            ? s.toString().trim()
+                            : "All Types";
+                    applyCurrentFilters();
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) { }
+            });
+        }
+    }
+
+    private void setupButtons() {
         fabAdd.setOnClickListener(v -> {
             Intent intent = new Intent(CustomerListActivity.this, CustomerFormActivity.class);
             intent.putExtra("mode", "add");
@@ -141,6 +242,27 @@ public class CustomerListActivity extends AppCompatActivity {
         });
     }
 
+    private void applyCurrentFilters() {
+
+
+        currentStatusFilter = spinnerStatusFilter != null && spinnerStatusFilter.getText() != null
+                && !spinnerStatusFilter.getText().toString().trim().isEmpty()
+                ? spinnerStatusFilter.getText().toString().trim()
+                : "All Status";
+
+        currentTypeFilter = spinnerTypeFilter != null && spinnerTypeFilter.getText() != null
+                && !spinnerTypeFilter.getText().toString().trim().isEmpty()
+                ? spinnerTypeFilter.getText().toString().trim()
+                : "All Types";
+
+        adapter.applyFilters(
+                currentSearchText,
+                currentStatusFilter,
+                currentTypeFilter
+        );
+
+        updateEmptyState();
+    }
     private void loadCustomers() {
         showLoading(true);
         showEmpty(false);
@@ -158,7 +280,8 @@ public class CustomerListActivity extends AppCompatActivity {
 
                 List<CustomerResponse> data = response.body();
                 adapter.setData(data);
-                showEmpty(data == null || data.isEmpty());
+                applyCurrentFilters();
+                showEmpty(adapter.getItemCount() == 0);
             }
 
             @Override

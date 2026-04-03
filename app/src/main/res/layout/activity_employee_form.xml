@@ -16,22 +16,26 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <ImageButton
-                android:id="@+id/btnBack"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@android:color/transparent"
-                android:src="@android:drawable/ic_media_previous"
-                android:contentDescription="Back" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="70dp"
+                android:background="@drawable/bg_gradient_plan"
+                android:orientation="vertical"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
+                android:paddingTop="20dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Employee Form"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:textColor="#111827"
-                android:layout_marginStart="12dp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Employee Form"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="#fff"
+                    android:layout_marginStart="12dp" />
+
+
+            </LinearLayout>
         </LinearLayout>
 
         <EditText

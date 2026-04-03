@@ -36,7 +36,7 @@ public class ServiceAppointmentListActivity extends AppCompatActivity {
     private TextView tvEmpty;
     private TextView tvSubtitle;
     private SearchView searchView;
-    private ImageButton btnBack;
+
     private FloatingActionButton fabAdd;
 
     private ServiceAppointmentAdapter adapter;
@@ -79,7 +79,7 @@ public class ServiceAppointmentListActivity extends AppCompatActivity {
         tvEmpty = findViewById(R.id.tvEmpty);
         tvSubtitle = findViewById(R.id.tvSubtitle);
         searchView = findViewById(R.id.searchViewAppointment);
-        btnBack = findViewById(R.id.btnBack);
+
         fabAdd = findViewById(R.id.fabAdd);
     }
 
@@ -137,7 +137,7 @@ public class ServiceAppointmentListActivity extends AppCompatActivity {
     }
 
     private void setupButtons() {
-        btnBack.setOnClickListener(v -> finish());
+
 
         fabAdd.setOnClickListener(v -> {
             Intent intent = new Intent(ServiceAppointmentListActivity.this, ServiceAppointmentFormActivity.class);

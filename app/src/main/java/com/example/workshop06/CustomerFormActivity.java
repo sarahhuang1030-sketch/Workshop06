@@ -2,10 +2,11 @@ package com.example.workshop06;
 
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -15,8 +16,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
+import com.example.workshop06.model.CreateCustomerRequest;
+import com.example.workshop06.model.CreateCustomerResponse;
 import com.example.workshop06.model.CustomerResponse;
-import com.example.workshop06.model.SaveCustomerRequest;
+import com.example.workshop06.util.FormFormatUtils;
+import com.example.workshop06.util.ValidationUtils;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -32,7 +36,7 @@ public class CustomerFormActivity extends AppCompatActivity {
     private EditText etHomePhone;
     private Spinner spinnerStatus;
     private Button btnSave;
-    private ImageButton btnBack;
+
     private ProgressBar progressBar;
 
     private String mode = "add";
@@ -45,7 +49,10 @@ public class CustomerFormActivity extends AppCompatActivity {
 
         initViews();
         setupSpinners();
+        attachFormatters();
         loadIntentData();
+        setupTypeBehavior();
+        updateCustomerTypeUI();
         setupButtons();
     }
 
@@ -58,7 +65,6 @@ public class CustomerFormActivity extends AppCompatActivity {
         etHomePhone = findViewById(R.id.etHomePhone);
         spinnerStatus = findViewById(R.id.spinnerStatus);
         btnSave = findViewById(R.id.btnSave);
-        btnBack = findViewById(R.id.btnBack);
         progressBar = findViewById(R.id.progressBar);
     }
 
@@ -80,6 +86,10 @@ public class CustomerFormActivity extends AppCompatActivity {
         spinnerStatus.setAdapter(statusAdapter);
     }
 
+    private void attachFormatters() {
+        FormFormatUtils.attachCanadianPhoneFormatter(etHomePhone);
+    }
+
     private void loadIntentData() {
         mode = getIntent().getStringExtra("mode");
         if (mode == null) mode = "add";
@@ -99,6 +109,7 @@ public class CustomerFormActivity extends AppCompatActivity {
 
     private void setSpinnerValue(Spinner spinner, String value) {
         if (value == null) return;
+
         for (int i = 0; i < spinner.getCount(); i++) {
             String item = String.valueOf(spinner.getItemAtPosition(i));
             if (item.equalsIgnoreCase(value)) {
@@ -108,13 +119,90 @@ public class CustomerFormActivity extends AppCompatActivity {
         }
     }
 
+    private void setupTypeBehavior() {
+        spinnerCustomerType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                updateCustomerTypeUI();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+    }
+
+    private void updateCustomerTypeUI() {
+        String customerType = spinnerCustomerType.getSelectedItem() != null
+                ? spinnerCustomerType.getSelectedItem().toString()
+                : "Individual";
+
+        boolean isBusiness = "Business".equalsIgnoreCase(customerType);
+
+        if (isBusiness) {
+            etBusinessName.setVisibility(View.VISIBLE);
+            etBusinessName.setEnabled(true);
+            etBusinessName.setError(null);
+
+            etFirstName.setEnabled(true);
+            etLastName.setEnabled(true);
+        } else {
+            etBusinessName.setText("");
+            etBusinessName.setError(null);
+            etBusinessName.setEnabled(false);
+            etBusinessName.setVisibility(View.GONE);
+
+            etFirstName.setEnabled(true);
+            etLastName.setEnabled(true);
+            etFirstName.setError(null);
+            etLastName.setError(null);
+        }
+    }
+
     private void setupButtons() {
-        btnBack.setOnClickListener(v -> finish());
         btnSave.setOnClickListener(v -> saveCustomer());
     }
 
+    private boolean validateForm() {
+        String customerType = spinnerCustomerType.getSelectedItem() != null
+                ? spinnerCustomerType.getSelectedItem().toString()
+                : "Individual";
+
+        boolean isBusiness = "Business".equalsIgnoreCase(customerType);
+
+        if (!ValidationUtils.email(etEmail)) {
+            return false;
+        }
+
+        if (!ValidationUtils.phone(etHomePhone)) {
+            return false;
+        }
+
+        if (isBusiness) {
+            if (!ValidationUtils.required(etBusinessName, "Business name is required for business customer")) {
+                return false;
+            }
+        } else {
+            if (!ValidationUtils.required(etFirstName, "First name is required for individual customer")) {
+                return false;
+            }
+
+            if (!ValidationUtils.required(etLastName, "Last name is required for individual customer")) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private void saveCustomer() {
+        if (!validateForm()) {
+            return;
+        }
+
         String customerType = spinnerCustomerType.getSelectedItem().toString();
+        boolean isBusiness = "Business".equalsIgnoreCase(customerType);
+
         String firstName = etFirstName.getText().toString().trim();
         String lastName = etLastName.getText().toString().trim();
         String businessName = etBusinessName.getText().toString().trim();
@@ -122,32 +210,21 @@ public class CustomerFormActivity extends AppCompatActivity {
         String homePhone = etHomePhone.getText().toString().trim();
         String status = spinnerStatus.getSelectedItem().toString();
 
-        if (TextUtils.isEmpty(email)) {
-            etEmail.setError("Email is required");
-            etEmail.requestFocus();
-            return;
-        }
-
-        if (TextUtils.isEmpty(homePhone)) {
-            etHomePhone.setError("Phone is required");
-            etHomePhone.requestFocus();
-            return;
-        }
-
-        if ("Business".equalsIgnoreCase(customerType) && TextUtils.isEmpty(businessName)) {
-            etBusinessName.setError("Business name is required for business customer");
-            etBusinessName.requestFocus();
-            return;
-        }
-
-        SaveCustomerRequest request = new SaveCustomerRequest(
-                customerType,
+        CreateCustomerRequest request = new CreateCustomerRequest(
                 TextUtils.isEmpty(firstName) ? null : firstName,
                 TextUtils.isEmpty(lastName) ? null : lastName,
-                TextUtils.isEmpty(businessName) ? null : businessName,
+                isBusiness && !TextUtils.isEmpty(businessName) ? businessName : null,
                 email,
                 homePhone,
-                status
+                customerType,
+                status,
+
+                null,       // street1
+                null,       // street2
+                null,       // city
+                null,       // province
+                null,       // postalCode
+                "Canada"    // country
         );
 
         showLoading(true);
@@ -161,7 +238,9 @@ public class CustomerFormActivity extends AppCompatActivity {
                     showLoading(false);
 
                     if (response.isSuccessful()) {
-                        Toast.makeText(CustomerFormActivity.this, "Updated successfully", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(CustomerFormActivity.this,
+                                "Updated successfully",
+                                Toast.LENGTH_SHORT).show();
                         setResult(RESULT_OK);
                         finish();
                     } else {
@@ -180,15 +259,45 @@ public class CustomerFormActivity extends AppCompatActivity {
                 }
             });
         } else {
-            apiService.createCustomer(request).enqueue(new Callback<CustomerResponse>() {
+            apiService.createCustomer(request).enqueue(new Callback<CreateCustomerResponse>() {
                 @Override
-                public void onResponse(Call<CustomerResponse> call, Response<CustomerResponse> response) {
+                public void onResponse(Call<CreateCustomerResponse> call, Response<CreateCustomerResponse> response) {
                     showLoading(false);
 
-                    if (response.isSuccessful()) {
-                        Toast.makeText(CustomerFormActivity.this, "Created successfully", Toast.LENGTH_SHORT).show();
-                        setResult(RESULT_OK);
-                        finish();
+                    if (response.isSuccessful() && response.body() != null) {
+                        CreateCustomerResponse created = response.body();
+
+                        new androidx.appcompat.app.AlertDialog.Builder(CustomerFormActivity.this)
+                                .setTitle("Customer Created")
+                                .setMessage("Username: " + created.getUsername()
+                                        + "\nTemporary Password: " + created.getTempPassword()
+                                        + "\n\nTap COPY to save credentials.")
+
+                                .setCancelable(false)
+
+                                // ✅ ONLY BUTTON
+                                .setPositiveButton("Copy", (dialog, which) -> {
+                                    String textToCopy = "Username: " + created.getUsername()
+                                            + "\nTemporary Password: " + created.getTempPassword();
+
+                                    android.content.ClipboardManager clipboard =
+                                            (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+
+                                    android.content.ClipData clip =
+                                            android.content.ClipData.newPlainText("Customer Credentials", textToCopy);
+
+                                    clipboard.setPrimaryClip(clip);
+
+                                    Toast.makeText(CustomerFormActivity.this,
+                                            "Copied to clipboard",
+                                            Toast.LENGTH_SHORT).show();
+
+                                    // ✅ go back after copying
+                                    setResult(RESULT_OK);
+                                    finish();
+                                })
+
+                                .show();
                     } else {
                         Toast.makeText(CustomerFormActivity.this,
                                 "Create failed. Code: " + response.code(),
@@ -197,7 +306,7 @@ public class CustomerFormActivity extends AppCompatActivity {
                 }
 
                 @Override
-                public void onFailure(Call<CustomerResponse> call, Throwable t) {
+                public void onFailure(Call<CreateCustomerResponse> call, Throwable t) {
                     showLoading(false);
                     Toast.makeText(CustomerFormActivity.this,
                             "Unable to create customer",
@@ -208,7 +317,7 @@ public class CustomerFormActivity extends AppCompatActivity {
     }
 
     private void showLoading(boolean isLoading) {
-        progressBar.setVisibility(isLoading ? android.view.View.VISIBLE : android.view.View.GONE);
+        progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         btnSave.setEnabled(!isLoading);
     }
 }

@@ -35,7 +35,7 @@ public class PlanFeatureListActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private TextView tvEmpty;
     private SearchView searchViewPlanFeature;
-    private ImageButton btnBack;
+
     private FloatingActionButton fabAdd;
 
     private PlanFeatureAdapter adapter;
@@ -62,7 +62,7 @@ public class PlanFeatureListActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         tvEmpty = findViewById(R.id.tvEmpty);
         searchViewPlanFeature = findViewById(R.id.searchViewPlanFeature);
-        btnBack = findViewById(R.id.btnBack);
+
         fabAdd = findViewById(R.id.fabAdd);
     }
 
@@ -120,9 +120,7 @@ public class PlanFeatureListActivity extends AppCompatActivity {
     }
 
     private void setupButtons() {
-        if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
-        }
+
 
         if (fabAdd != null) {
             fabAdd.setOnClickListener(v -> {

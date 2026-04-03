@@ -35,7 +35,7 @@ public class PlanListActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private TextView tvEmpty;
     private SearchView searchViewPlan;
-    private ImageButton btnBack;
+
     private FloatingActionButton fabAdd;
 
     private PlanManagerAdapter adapter;
@@ -60,7 +60,7 @@ public class PlanListActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         tvEmpty = findViewById(R.id.tvEmpty);
         searchViewPlan = findViewById(R.id.searchViewPlan);
-        btnBack = findViewById(R.id.btnBack);
+
         fabAdd = findViewById(R.id.fabAdd);
     }
 
@@ -124,7 +124,7 @@ public class PlanListActivity extends AppCompatActivity {
     }
 
     private void setupButtons() {
-        btnBack.setOnClickListener(v -> finish());
+
 
         fabAdd.setOnClickListener(v -> {
             Intent intent = new Intent(PlanListActivity.this, PlanFormActivity.class);

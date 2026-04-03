@@ -35,6 +35,7 @@ public class CustomerAdapter extends RecyclerView.Adapter<CustomerAdapter.ViewHo
     public void setData(List<CustomerResponse> data) {
         fullList.clear();
         filteredList.clear();
+        filteredList.clear();
 
         if (data != null) {
             fullList.addAll(data);
@@ -44,34 +45,44 @@ public class CustomerAdapter extends RecyclerView.Adapter<CustomerAdapter.ViewHo
         notifyDataSetChanged();
     }
 
-    public void filter(String keyword) {
+    public void applyFilters(String searchText,
+                             String statusFilter,
+                             String typeFilter) {
+
         filteredList.clear();
 
-        if (keyword == null || keyword.trim().isEmpty()) {
-            filteredList.addAll(fullList);
-        } else {
-            String q = keyword.toLowerCase(Locale.US).trim();
+        String search = searchText == null ? "" : searchText.toLowerCase(Locale.US).trim();
+        String status = statusFilter == null ? "All Status" : statusFilter.trim();
+        String type = typeFilter == null ? "All Types" : typeFilter.trim();
 
-            for (CustomerResponse item : fullList) {
-                String id = item.getCustomerId() != null ? String.valueOf(item.getCustomerId()) : "";
-                String type = item.getCustomerType() != null ? item.getCustomerType().toLowerCase(Locale.US) : "";
-                String first = item.getFirstName() != null ? item.getFirstName().toLowerCase(Locale.US) : "";
-                String last = item.getLastName() != null ? item.getLastName().toLowerCase(Locale.US) : "";
-                String business = item.getBusinessName() != null ? item.getBusinessName().toLowerCase(Locale.US) : "";
-                String email = item.getEmail() != null ? item.getEmail().toLowerCase(Locale.US) : "";
-                String phone = item.getHomePhone() != null ? item.getHomePhone().toLowerCase(Locale.US) : "";
-                String status = item.getStatus() != null ? item.getStatus().toLowerCase(Locale.US) : "";
+        for (CustomerResponse item : fullList) {
+            String first = item.getFirstName() == null ? "" : item.getFirstName().toLowerCase(Locale.US);
+            String last = item.getLastName() == null ? "" : item.getLastName().toLowerCase(Locale.US);
+            String business = item.getBusinessName() == null ? "" : item.getBusinessName().toLowerCase(Locale.US);
+            String email = item.getEmail() == null ? "" : item.getEmail().toLowerCase(Locale.US);
+            String phone = item.getHomePhone() == null ? "" : item.getHomePhone().toLowerCase(Locale.US);
+            String customerStatus = item.getStatus() == null ? "" : item.getStatus();
+            String customerType = item.getCustomerType() == null ? "" : item.getCustomerType();
 
-                if (id.contains(q)
-                        || type.contains(q)
-                        || first.contains(q)
-                        || last.contains(q)
-                        || business.contains(q)
-                        || email.contains(q)
-                        || phone.contains(q)
-                        || status.contains(q)) {
-                    filteredList.add(item);
-                }
+            boolean matchesSearch =
+                    search.isEmpty()
+                            || first.contains(search)
+                            || last.contains(search)
+                            || business.contains(search)
+                            || email.contains(search)
+                            || phone.contains(search);
+
+
+            boolean matchesStatus =
+                    status.equalsIgnoreCase("All Status")
+                            || customerStatus.equalsIgnoreCase(status);
+
+            boolean matchesType =
+                    type.equalsIgnoreCase("All Types")
+                            || customerType.equalsIgnoreCase(type);
+
+            if (matchesSearch && matchesStatus && matchesType) {
+                filteredList.add(item);
             }
         }
 
@@ -90,14 +101,22 @@ public class CustomerAdapter extends RecyclerView.Adapter<CustomerAdapter.ViewHo
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         CustomerResponse item = filteredList.get(position);
 
-        holder.tvCustomerId.setText(item.getCustomerId() != null
-                ? "Customer #" + item.getCustomerId()
-                : "Customer #-");
+        String displayName;
+        if ("Business".equalsIgnoreCase(item.getCustomerType())) {
+            displayName = item.getBusinessName();
+        } else {
+            String first = item.getFirstName() != null ? item.getFirstName() : "";
+            String last = item.getLastName() != null ? item.getLastName() : "";
+            displayName = (first + " " + last).trim();
+        }
 
-        String fullName = ((item.getFirstName() != null ? item.getFirstName() : "") + " "
-                + (item.getLastName() != null ? item.getLastName() : "")).trim();
+        if (displayName == null || displayName.isEmpty()) {
+            displayName = "Unnamed Customer";
+        }
 
-        holder.tvCustomerName.setText(fullName.isEmpty() ? "Unnamed Customer" : fullName);
+        holder.tvCustomerId.setText(displayName);
+        holder.tvCustomerName.setVisibility(View.GONE);
+
         holder.tvCustomerType.setText(item.getCustomerType() != null ? item.getCustomerType() : "-");
         holder.tvBusinessName.setText(item.getBusinessName() != null ? item.getBusinessName() : "-");
         holder.tvEmail.setText(item.getEmail() != null ? item.getEmail() : "-");

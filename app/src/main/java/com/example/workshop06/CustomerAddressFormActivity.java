@@ -1,11 +1,9 @@
 package com.example.workshop06;
 
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -18,6 +16,8 @@ import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.CustomerAddressResponse;
 import com.example.workshop06.model.SaveCustomerAddressRequest;
+import com.example.workshop06.util.FormFormatUtils;
+import com.example.workshop06.util.ValidationUtils;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -29,7 +29,6 @@ public class CustomerAddressFormActivity extends AppCompatActivity {
     private Spinner spinnerAddressType;
     private EditText etStreet1, etStreet2, etCity, etProvince, etPostalCode, etCountry;
     private Button btnSave;
-    private ImageButton btnBack;
     private ProgressBar progressBar;
 
     private int customerId = -1;
@@ -44,6 +43,9 @@ public class CustomerAddressFormActivity extends AppCompatActivity {
         initViews();
         setupSpinner();
         setupButtons();
+
+
+        FormFormatUtils.attachCanadianPostalCodeFormatter(etPostalCode);
 
         String customerName = getIntent().getStringExtra("customerName");
         if (tvTitle != null && customerName != null && !customerName.trim().isEmpty()) {
@@ -69,7 +71,6 @@ public class CustomerAddressFormActivity extends AppCompatActivity {
         etPostalCode = findViewById(R.id.etPostalCode);
         etCountry = findViewById(R.id.etCountry);
         btnSave = findViewById(R.id.btnSave);
-        btnBack = findViewById(R.id.btnBack);
         progressBar = findViewById(R.id.progressBar);
     }
 
@@ -84,7 +85,6 @@ public class CustomerAddressFormActivity extends AppCompatActivity {
     }
 
     private void setupButtons() {
-        btnBack.setOnClickListener(v -> finish());
         btnSave.setOnClickListener(v -> saveAddress());
     }
 
@@ -129,45 +129,47 @@ public class CustomerAddressFormActivity extends AppCompatActivity {
         }
     }
 
+    private boolean validateForm() {
+        if (!ValidationUtils.required(etStreet1, "Street 1 is required")) {
+            return false;
+        }
+
+        if (!ValidationUtils.required(etCity, "City is required")) {
+            return false;
+        }
+
+        if (!ValidationUtils.required(etProvince, "Province is required")) {
+            return false;
+        }
+
+        if (!ValidationUtils.canadianPostalCode(etPostalCode)) {
+            return false;
+        }
+
+        if (!ValidationUtils.required(etCountry, "Country is required")) {
+            return false;
+        }
+
+        return true;
+    }
+
     private void saveAddress() {
+        if (!validateForm()) {
+            return;
+        }
+
         String addressType = spinnerAddressType.getSelectedItem().toString();
         String street1 = etStreet1.getText().toString().trim();
         String street2 = etStreet2.getText().toString().trim();
         String city = etCity.getText().toString().trim();
         String province = etProvince.getText().toString().trim();
-        String postalCode = etPostalCode.getText().toString().trim();
+        String postalCode = etPostalCode.getText().toString().trim().toUpperCase();
         String country = etCountry.getText().toString().trim();
-
-        if (TextUtils.isEmpty(street1)) {
-            etStreet1.setError("Street is required");
-            etStreet1.requestFocus();
-            return;
-        }
-        if (TextUtils.isEmpty(city)) {
-            etCity.setError("City is required");
-            etCity.requestFocus();
-            return;
-        }
-        if (TextUtils.isEmpty(province)) {
-            etProvince.setError("Province is required");
-            etProvince.requestFocus();
-            return;
-        }
-        if (TextUtils.isEmpty(postalCode)) {
-            etPostalCode.setError("Postal code is required");
-            etPostalCode.requestFocus();
-            return;
-        }
-        if (TextUtils.isEmpty(country)) {
-            etCountry.setError("Country is required");
-            etCountry.requestFocus();
-            return;
-        }
 
         SaveCustomerAddressRequest request = new SaveCustomerAddressRequest(
                 addressType,
                 street1,
-                TextUtils.isEmpty(street2) ? null : street2,
+                street2.isEmpty() ? null : street2,
                 city,
                 province,
                 postalCode,

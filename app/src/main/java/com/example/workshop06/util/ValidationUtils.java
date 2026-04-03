@@ -34,14 +34,16 @@ public class ValidationUtils {
         if (field == null) return false;
 
         String value = field.getText() != null ? field.getText().toString().trim() : "";
+
         if (TextUtils.isEmpty(value)) {
             field.setError("Email is required");
             field.requestFocus();
             return false;
         }
 
-        if (!Patterns.EMAIL_ADDRESS.matcher(value).matches()) {
-            field.setError("Enter a valid email");
+        if (!Patterns.EMAIL_ADDRESS.matcher(value).matches()
+                || !value.matches(".*\\.[A-Za-z]{2,}$")) {
+            field.setError("Enter a valid email (e.g. name@example.com)");
             field.requestFocus();
             return false;
         }

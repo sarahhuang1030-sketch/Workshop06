@@ -241,16 +241,16 @@ Call<List<EmployeeSalesResponse>> getEmployeeSales();
     @GET("/api/manager/customers/{id}")
     Call<CustomerResponse> getCustomerById(@Path("id") int id);
 
-    @POST("/api/manager/customers")
-    Call<CustomerResponse> createCustomer(@Body SaveCustomerRequest request);
+    @POST("/api/customers")
+    Call<CreateCustomerResponse> createCustomer(@Body CreateCustomerRequest request);
 
-    @PUT("/api/manager/customers/{id}")
+    @PUT("/api/customers/{id}")
     Call<CustomerResponse> updateCustomer(
             @Path("id") int id,
-            @Body SaveCustomerRequest request
+            @Body CreateCustomerRequest request
     );
 
-    @DELETE("/api/manager/customers/{id}")
+    @DELETE("/api/customers/{id}")
     Call<Void> deleteCustomer(@Path("id") int id);
 
     @GET("/api/manager/customers/{customerId}/address")

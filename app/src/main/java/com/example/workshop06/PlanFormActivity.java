@@ -28,7 +28,7 @@ public class PlanFormActivity extends AppCompatActivity {
             etDescription, etTagline, etBadge, etIconKey, etThemeKey, etDataLabel;
     private Spinner spinnerIsActive;
     private Button btnSave;
-    private ImageButton btnBack;
+
     private ProgressBar progressBar;
 
     private String mode = "add";
@@ -58,7 +58,7 @@ public class PlanFormActivity extends AppCompatActivity {
         etDataLabel = findViewById(R.id.etDataLabel);
         spinnerIsActive = findViewById(R.id.spinnerIsActive);
         btnSave = findViewById(R.id.btnSave);
-        btnBack = findViewById(R.id.btnBack);
+
         progressBar = findViewById(R.id.progressBar);
     }
 
@@ -114,7 +114,7 @@ public class PlanFormActivity extends AppCompatActivity {
     }
 
     private void setupButtons() {
-        btnBack.setOnClickListener(v -> finish());
+
         btnSave.setOnClickListener(v -> savePlan());
     }
 

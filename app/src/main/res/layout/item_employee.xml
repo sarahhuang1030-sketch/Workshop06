@@ -142,24 +142,24 @@
             android:layout_height="wrap_content"
             android:text="-" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Active"
-            android:textStyle="bold"
-            android:textColor="#6B7280"
-            android:layout_marginTop="10dp" />
+<!--        <TextView-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Active"-->
+<!--            android:textStyle="bold"-->
+<!--            android:textColor="#6B7280"-->
+<!--            android:layout_marginTop="10dp" />-->
+
+<!--        <TextView-->
+<!--            android:id="@+id/tvActive"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="-" />-->
 
         <TextView
-            android:id="@+id/tvActive"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="-" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Primary Location ID"
+            android:text="Primary Location"
             android:textStyle="bold"
             android:textColor="#6B7280"
             android:layout_marginTop="10dp" />
@@ -173,7 +173,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Manager ID"
+            android:text="Manager"
             android:textStyle="bold"
             android:textColor="#6B7280"
             android:layout_marginTop="10dp" />

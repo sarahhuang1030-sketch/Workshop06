@@ -18,10 +18,12 @@ import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+
 import com.example.workshop06.adapter.CustomerAdapter;
 import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.CustomerResponse;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import android.text.Editable;
@@ -41,6 +43,8 @@ public class CustomerListActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private TextView tvEmpty;
     private SearchView searchViewCustomer;
+
+    private BottomNavigationView bottomNavigation;
 
     // ✅ first/last name are TextInputEditText
     private TextInputEditText etFilterFirstName;
@@ -68,6 +72,7 @@ public class CustomerListActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_customer_list);
+        bottomNavigation = findViewById(R.id.bottomNavigation);
 
         initViews();
         setupRecyclerView();
@@ -76,6 +81,7 @@ public class CustomerListActivity extends AppCompatActivity {
         setupFilterInputs();
         setupButtons();
         loadCustomers();
+        BottomNavHelper.setup(this, R.id.nav_customers);
     }
 
     private void initViews() {
@@ -339,4 +345,6 @@ public class CustomerListActivity extends AppCompatActivity {
         updateEmptyState();
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
+
+
 }

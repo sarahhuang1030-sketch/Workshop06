@@ -53,7 +53,7 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
         }
 
         setupDashboardCards();
-        setupBottomNavigation();
+        BottomNavHelper.setup(this, R.id.nav_home);
     }
 
     private void setupDashboardCards() {
@@ -169,26 +169,5 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
         });
     }
 
-    private void setupBottomNavigation() {
-        bottomNavigation.setSelectedItemId(R.id.nav_home);
 
-        bottomNavigation.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-
-            if (itemId == R.id.nav_home) return true;
-
-            else if (itemId == R.id.nav_customers) {
-                startActivity(new Intent(this, CustomerListActivity.class));
-                return true;
-            } else if (itemId == R.id.nav_plans) {
-                startActivity(new Intent(this, PlanListActivity.class));
-                return true;
-            } else if (itemId == R.id.nav_profile) {
-                startActivity(new Intent(this, EmployeeProfileActivity.class));
-                return true;
-            }
-
-            return false;
-        });
-    }
 }

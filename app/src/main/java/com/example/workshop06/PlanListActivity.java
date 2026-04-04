@@ -3,8 +3,11 @@ package com.example.workshop06;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
-import android.widget.ImageButton;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,8 +24,11 @@ import com.example.workshop06.adapter.PlanManagerAdapter;
 import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.PlanResponse;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 
+import java.util.Arrays;
 import java.util.List;
 
 import retrofit2.Call;
@@ -35,10 +41,13 @@ public class PlanListActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private TextView tvEmpty;
     private SearchView searchViewPlan;
-
     private FloatingActionButton fabAdd;
 
+    private EditText etMinAmount, etMaxAmount;
+    private MaterialAutoCompleteTextView spinnerStatus, spinnerTerm;
+    private BottomNavigationView bottomNavigation;
     private PlanManagerAdapter adapter;
+    private boolean filtersReady = false;
 
     private final ActivityResultLauncher<Intent> formLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> loadPlans());
@@ -51,8 +60,11 @@ public class PlanListActivity extends AppCompatActivity {
         initViews();
         setupRecyclerView();
         setupSearch();
+        setupFilterControls();
         setupButtons();
         loadPlans();
+
+        BottomNavHelper.setup(this, R.id.nav_plans);
     }
 
     private void initViews() {
@@ -60,8 +72,14 @@ public class PlanListActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         tvEmpty = findViewById(R.id.tvEmpty);
         searchViewPlan = findViewById(R.id.searchViewPlan);
-
         fabAdd = findViewById(R.id.fabAdd);
+        bottomNavigation = findViewById(R.id.bottomNavigation);
+
+        etMinAmount = findViewById(R.id.etMinAmount);
+        etMaxAmount = findViewById(R.id.etMaxAmount);
+
+        spinnerStatus = findViewById(R.id.spinnerStatusFilter);
+        spinnerTerm = findViewById(R.id.spinnerTerm);
     }
 
     private void setupRecyclerView() {
@@ -109,23 +127,63 @@ public class PlanListActivity extends AppCompatActivity {
         searchViewPlan.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                adapter.filter(query);
-                updateEmptyState();
+                applyFilters();
                 return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                adapter.filter(newText);
-                updateEmptyState();
+                applyFilters();
                 return true;
             }
         });
     }
 
+    private void setupFilterControls() {
+        ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_dropdown_item_1line,
+                Arrays.asList("All", "Active", "Inactive")
+        );
+        spinnerStatus.setAdapter(statusAdapter);
+        spinnerStatus.setText("All", false);
+
+        ArrayAdapter<String> termAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_dropdown_item_1line,
+                Arrays.asList("All", "1", "6", "12", "24", "36")
+        );
+        spinnerTerm.setAdapter(termAdapter);
+        spinnerTerm.setText("All", false);
+
+        TextWatcher amountWatcher = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (filtersReady) applyFilters();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) { }
+        };
+
+        etMinAmount.addTextChangedListener(amountWatcher);
+        etMaxAmount.addTextChangedListener(amountWatcher);
+
+        spinnerStatus.setOnItemClickListener((parent, view, position, id) -> {
+            if (filtersReady) applyFilters();
+        });
+
+        spinnerTerm.setOnItemClickListener((parent, view, position, id) -> {
+            if (filtersReady) applyFilters();
+        });
+
+        filtersReady = true;
+    }
+
     private void setupButtons() {
-
-
         fabAdd.setOnClickListener(v -> {
             Intent intent = new Intent(PlanListActivity.this, PlanFormActivity.class);
             intent.putExtra("mode", "add");
@@ -150,7 +208,7 @@ public class PlanListActivity extends AppCompatActivity {
 
                 List<PlanResponse> data = response.body();
                 adapter.setData(data);
-                showEmpty(data == null || data.isEmpty());
+                applyFilters();
             }
 
             @Override
@@ -207,5 +265,49 @@ public class PlanListActivity extends AppCompatActivity {
     private void showError(String message) {
         updateEmptyState();
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    }
+
+    private void applyFilters() {
+        String query = searchViewPlan.getQuery() != null
+                ? searchViewPlan.getQuery().toString().trim()
+                : "";
+
+        Double minAmount = null;
+        Double maxAmount = null;
+        String status = "All";
+        Integer contractTerm = null;
+
+        try {
+            String minText = etMinAmount.getText().toString().trim();
+            if (!minText.isEmpty()) {
+                minAmount = Double.parseDouble(minText);
+            }
+        } catch (Exception ignored) { }
+
+        try {
+            String maxText = etMaxAmount.getText().toString().trim();
+            if (!maxText.isEmpty()) {
+                maxAmount = Double.parseDouble(maxText);
+            }
+        } catch (Exception ignored) { }
+
+        String selectedStatus = spinnerStatus.getText() != null
+                ? spinnerStatus.getText().toString().trim()
+                : "";
+        if (!selectedStatus.isEmpty()) {
+            status = selectedStatus;
+        }
+
+        String selectedTerm = spinnerTerm.getText() != null
+                ? spinnerTerm.getText().toString().trim()
+                : "";
+        if (!selectedTerm.isEmpty() && !selectedTerm.equalsIgnoreCase("All")) {
+            try {
+                contractTerm = Integer.parseInt(selectedTerm);
+            } catch (Exception ignored) { }
+        }
+
+        adapter.applyFilters(query, minAmount, maxAmount, status, contractTerm);
+        updateEmptyState();
     }
 }

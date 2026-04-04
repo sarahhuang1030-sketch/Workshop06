@@ -1,5 +1,6 @@
 package com.example.workshop06.adapter;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +13,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.workshop06.R;
 import com.example.workshop06.model.SubscriptionResponse;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class SubscriptionAdapter extends RecyclerView.Adapter<SubscriptionAdapter.SubscriptionViewHolder> {
 
@@ -21,12 +24,62 @@ public class SubscriptionAdapter extends RecyclerView.Adapter<SubscriptionAdapte
         void onDelete(SubscriptionResponse item);
     }
 
-    private final List<SubscriptionResponse> items;
+    private final List<SubscriptionResponse> originalItems = new ArrayList<>();
+    private final List<SubscriptionResponse> filteredItems = new ArrayList<>();
     private final SubscriptionActionListener listener;
 
     public SubscriptionAdapter(List<SubscriptionResponse> items, SubscriptionActionListener listener) {
-        this.items = items;
+        if (items != null) {
+            originalItems.addAll(items);
+            filteredItems.addAll(items);
+        }
         this.listener = listener;
+    }
+
+    public void updateData(List<SubscriptionResponse> newItems) {
+        originalItems.clear();
+        filteredItems.clear();
+
+        if (newItems != null) {
+            originalItems.addAll(newItems);
+            filteredItems.addAll(newItems);
+        }
+
+        Log.d("SubscriptionAdapter", "updateData size: " + filteredItems.size());
+        notifyDataSetChanged();
+    }
+
+    public void filter(String query, String selectedStatus) {
+        filteredItems.clear();
+
+        String safeQuery = query == null ? "" : query.trim().toLowerCase(Locale.US);
+        String safeStatus = selectedStatus == null ? "All" : selectedStatus.trim();
+
+        for (SubscriptionResponse item : originalItems) {
+            String customerName = safe(item.getCustomerName());
+            String planName = safe(item.getPlanName());
+            String status = safe(item.getStatus());
+
+            boolean matchesQuery =
+                    safeQuery.isEmpty()
+                            || customerName.toLowerCase(Locale.US).contains(safeQuery)
+                            || planName.toLowerCase(Locale.US).contains(safeQuery);
+
+            boolean matchesStatus =
+                    safeStatus.equalsIgnoreCase("All")
+                            || status.equalsIgnoreCase(safeStatus);
+
+            if (matchesQuery && matchesStatus) {
+                filteredItems.add(item);
+            }
+        }
+
+        Log.d("SubscriptionAdapter", "filter result size: " + filteredItems.size());
+        notifyDataSetChanged();
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value.trim();
     }
 
     @NonNull
@@ -39,16 +92,34 @@ public class SubscriptionAdapter extends RecyclerView.Adapter<SubscriptionAdapte
 
     @Override
     public void onBindViewHolder(@NonNull SubscriptionViewHolder holder, int position) {
-        SubscriptionResponse item = items.get(position);
+        SubscriptionResponse item = filteredItems.get(position);
 
         holder.tvTitle.setText("Subscription #" + item.getSubscriptionId());
-        holder.tvSubtitle.setText("Customer " + item.getCustomerId() + " • Plan " + item.getPlanId());
-        holder.tvStatus.setText(item.getStatus() != null ? item.getStatus() : "—");
-        holder.tvDates.setText(
-                (item.getStartDate() != null ? item.getStartDate() : "—") +
-                        " to " +
-                        (item.getEndDate() != null ? item.getEndDate() : "—")
+
+        String customerName = safe(item.getCustomerName());
+        String planName = safe(item.getPlanName());
+
+        if (customerName.isEmpty()) {
+            customerName = "Customer #" + item.getCustomerId();
+        }
+
+        if (planName.isEmpty()) {
+            planName = "Plan #" + item.getPlanId();
+        }
+
+        holder.tvSubtitle.setText(customerName + " • " + planName);
+
+        holder.tvStatus.setText(
+                item.getStatus() != null && !item.getStatus().trim().isEmpty()
+                        ? item.getStatus()
+                        : "—"
         );
+
+        String startDate = item.getStartDate() != null ? item.getStartDate() : "—";
+        String endDate = item.getEndDate() != null ? item.getEndDate() : "—";
+        holder.tvDates.setText(startDate + " to " + endDate);
+
+        Log.d("SubscriptionAdapter", "Binding row: " + item.getSubscriptionId());
 
         holder.btnEdit.setOnClickListener(v -> listener.onEdit(item));
         holder.btnDelete.setOnClickListener(v -> listener.onDelete(item));
@@ -56,7 +127,8 @@ public class SubscriptionAdapter extends RecyclerView.Adapter<SubscriptionAdapte
 
     @Override
     public int getItemCount() {
-        return items != null ? items.size() : 0;
+        Log.d("SubscriptionAdapter", "getItemCount: " + filteredItems.size());
+        return filteredItems.size();
     }
 
     static class SubscriptionViewHolder extends RecyclerView.ViewHolder {

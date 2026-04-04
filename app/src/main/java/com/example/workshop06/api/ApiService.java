@@ -282,4 +282,7 @@ Call<List<EmployeeSalesResponse>> getEmployeeSales();
     @DELETE("/api/manager/plans/{id}")
     Call<Void> deletePlanManager(@Path("id") int id);
 
+    //Service type
+    @GET("/api/manager/servicetypes")
+    Call<List<ServiceTypeResponse>> getServiceTypes();
 }

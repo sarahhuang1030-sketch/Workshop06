@@ -18,6 +18,7 @@ import java.util.Locale;
 public class InvoiceAdapter extends RecyclerView.Adapter<InvoiceAdapter.InvoiceViewHolder> {
 
     public interface InvoiceActionListener {
+        void onView(InvoiceResponse item);
         void onEdit(InvoiceResponse item);
         void onDelete(InvoiceResponse item);
     }
@@ -28,6 +29,14 @@ public class InvoiceAdapter extends RecyclerView.Adapter<InvoiceAdapter.InvoiceV
     public InvoiceAdapter(List<InvoiceResponse> items, InvoiceActionListener listener) {
         this.items = items;
         this.listener = listener;
+    }
+
+    public void setData(List<InvoiceResponse> newItems) {
+        items.clear();
+        if (newItems != null) {
+            items.addAll(newItems);
+        }
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -52,6 +61,7 @@ public class InvoiceAdapter extends RecyclerView.Adapter<InvoiceAdapter.InvoiceV
             holder.tvTotal.setText("$0.00");
         }
 
+        holder.btnView.setOnClickListener(v -> listener.onView(item));
         holder.btnEdit.setOnClickListener(v -> listener.onEdit(item));
         holder.btnDelete.setOnClickListener(v -> listener.onDelete(item));
     }
@@ -63,7 +73,7 @@ public class InvoiceAdapter extends RecyclerView.Adapter<InvoiceAdapter.InvoiceV
 
     static class InvoiceViewHolder extends RecyclerView.ViewHolder {
         TextView tvInvoiceNumber, tvCustomer, tvStatus, tvTotal;
-        ImageButton btnEdit, btnDelete;
+        ImageButton btnView, btnEdit, btnDelete;
 
         public InvoiceViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -71,6 +81,8 @@ public class InvoiceAdapter extends RecyclerView.Adapter<InvoiceAdapter.InvoiceV
             tvCustomer = itemView.findViewById(R.id.tvInvoiceCustomer);
             tvStatus = itemView.findViewById(R.id.tvInvoiceStatus);
             tvTotal = itemView.findViewById(R.id.tvInvoiceTotal);
+
+            btnView = itemView.findViewById(R.id.btnViewInvoice);
             btnEdit = itemView.findViewById(R.id.btnEditInvoice);
             btnDelete = itemView.findViewById(R.id.btnDeleteInvoice);
         }

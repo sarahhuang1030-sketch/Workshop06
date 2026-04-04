@@ -67,6 +67,15 @@
             </LinearLayout>
 
             <ImageButton
+                android:id="@+id/btnViewInvoice"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="View invoice details"
+                android:src="@android:drawable/ic_menu_view"
+                android:tint="#000" />
+
+            <ImageButton
                 android:id="@+id/btnEditInvoice"
                 android:layout_width="40dp"
                 android:layout_height="40dp"

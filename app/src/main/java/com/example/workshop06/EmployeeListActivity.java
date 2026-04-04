@@ -4,7 +4,7 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ImageButton;
+import android.widget.ArrayAdapter;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,9 +21,16 @@ import com.example.workshop06.adapter.EmployeeAdapter;
 import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.EmployeeResponse;
+import com.example.workshop06.model.LocationResponse;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -35,15 +42,19 @@ public class EmployeeListActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private TextView tvEmpty;
     private SearchView searchViewEmployee;
-
     private FloatingActionButton fabAdd;
 
+    private MaterialAutoCompleteTextView spinnerStatusFilter;
+    private MaterialAutoCompleteTextView spinnerRoleFilter;
+
     private EmployeeAdapter adapter;
+    private final List<EmployeeResponse> allEmployees = new ArrayList<>();
+    private final Map<Integer, String> managerNameMap = new HashMap<>();
+    private final Map<Integer, String> locationNameMap = new HashMap<>();
+    private boolean filtersReady = false;
 
     private final ActivityResultLauncher<Intent> formLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-                loadEmployees();
-            });
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> loadEmployees());
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -53,8 +64,11 @@ public class EmployeeListActivity extends AppCompatActivity {
         initViews();
         setupRecyclerView();
         setupSearch();
+        setupFilterControls();
         setupButtons();
         loadEmployees();
+
+        BottomNavHelper.setup(this, 0);
     }
 
     private void initViews() {
@@ -62,8 +76,10 @@ public class EmployeeListActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         tvEmpty = findViewById(R.id.tvEmpty);
         searchViewEmployee = findViewById(R.id.searchViewEmployee);
-
         fabAdd = findViewById(R.id.fabAdd);
+
+        spinnerStatusFilter = findViewById(R.id.spinnerStatusFilter);
+        spinnerRoleFilter = findViewById(R.id.spinnerRoleFilter);
     }
 
     private void setupRecyclerView() {
@@ -111,23 +127,75 @@ public class EmployeeListActivity extends AppCompatActivity {
         searchViewEmployee.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                adapter.filter(query);
-                updateEmptyState();
+                applyFilters();
                 return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                adapter.filter(newText);
-                updateEmptyState();
+                applyFilters();
                 return true;
             }
         });
     }
 
+    private void setupFilterControls() {
+        ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_dropdown_item_1line,
+                new String[]{"All", "Active", "Inactive"}
+        );
+        spinnerStatusFilter.setAdapter(statusAdapter);
+        spinnerStatusFilter.setText("All", false);
+
+        ArrayAdapter<String> roleAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_dropdown_item_1line,
+                new String[]{"All"}
+        );
+        spinnerRoleFilter.setAdapter(roleAdapter);
+        spinnerRoleFilter.setText("All", false);
+
+        spinnerStatusFilter.setOnItemClickListener((parent, view, position, id) -> {
+            if (filtersReady) applyFilters();
+        });
+
+        spinnerRoleFilter.setOnItemClickListener((parent, view, position, id) -> {
+            if (filtersReady) applyFilters();
+        });
+
+        filtersReady = true;
+    }
+
+    private void updateRoleDropdown(List<EmployeeResponse> data) {
+        Set<String> roles = new LinkedHashSet<>();
+        roles.add("All");
+
+        if (data != null) {
+            for (EmployeeResponse item : data) {
+                if (item.getRole() != null && !item.getRole().trim().isEmpty()) {
+                    roles.add(item.getRole().trim());
+                }
+            }
+        }
+
+        ArrayAdapter<String> roleAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_dropdown_item_1line,
+                new ArrayList<>(roles)
+        );
+        spinnerRoleFilter.setAdapter(roleAdapter);
+
+        String current = spinnerRoleFilter.getText() != null
+                ? spinnerRoleFilter.getText().toString().trim()
+                : "";
+
+        if (current.isEmpty()) {
+            spinnerRoleFilter.setText("All", false);
+        }
+    }
+
     private void setupButtons() {
-
-
         if (fabAdd != null) {
             fabAdd.setOnClickListener(v -> {
                 Intent intent = new Intent(EmployeeListActivity.this, EmployeeFormActivity.class);
@@ -153,17 +221,127 @@ public class EmployeeListActivity extends AppCompatActivity {
                 }
 
                 List<EmployeeResponse> data = response.body();
-                adapter.setData(data);
-                showEmpty(data == null || data.isEmpty());
+                allEmployees.clear();
+                managerNameMap.clear();
+
+                if (data != null) {
+                    allEmployees.addAll(data);
+
+                    for (EmployeeResponse item : data) {
+                        if (item.getEmployeeId() != null) {
+                            String firstName = item.getFirstName() != null ? item.getFirstName().trim() : "";
+                            String lastName = item.getLastName() != null ? item.getLastName().trim() : "";
+                            String fullName = (firstName + " " + lastName).trim();
+
+                            if (fullName.isEmpty()) {
+                                fullName = item.getEmail() != null ? item.getEmail() : "Employee #" + item.getEmployeeId();
+                            }
+
+                            managerNameMap.put(item.getEmployeeId(), fullName);
+                        }
+                    }
+                }
+
+                adapter.setManagerNameMap(managerNameMap);
+                updateRoleDropdown(allEmployees);
+                loadLocationsForNames();
             }
 
             @Override
             public void onFailure(Call<List<EmployeeResponse>> call, Throwable t) {
                 showLoading(false);
+                allEmployees.clear();
                 adapter.setData(null);
                 showError("Unable to load employees");
             }
         });
+    }
+
+    private void loadLocationsForNames() {
+        ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
+        apiService.getLocations().enqueue(new Callback<List<LocationResponse>>() {
+            @Override
+            public void onResponse(Call<List<LocationResponse>> call, Response<List<LocationResponse>> response) {
+                locationNameMap.clear();
+
+                if (response.isSuccessful() && response.body() != null) {
+                    for (LocationResponse item : response.body()) {
+                        if (item.getLocationId() != null) {
+                            locationNameMap.put(
+                                    item.getLocationId(),
+                                    item.getLocationName() != null && !item.getLocationName().trim().isEmpty()
+                                            ? item.getLocationName().trim()
+                                            : "Location #" + item.getLocationId()
+                            );
+                        }
+                    }
+                }
+
+                adapter.setLocationNameMap(locationNameMap);
+                applyFilters();
+            }
+
+            @Override
+            public void onFailure(Call<List<LocationResponse>> call, Throwable t) {
+                adapter.setLocationNameMap(locationNameMap);
+                applyFilters();
+            }
+        });
+    }
+
+    private void applyFilters() {
+        String query = searchViewEmployee.getQuery() != null
+                ? searchViewEmployee.getQuery().toString().trim().toLowerCase()
+                : "";
+
+        String selectedStatus = spinnerStatusFilter.getText() != null
+                ? spinnerStatusFilter.getText().toString().trim()
+                : "All";
+
+        String selectedRole = spinnerRoleFilter.getText() != null
+                ? spinnerRoleFilter.getText().toString().trim()
+                : "All";
+
+        List<EmployeeResponse> filtered = new ArrayList<>();
+
+        for (EmployeeResponse item : allEmployees) {
+            String firstName = safe(item.getFirstName());
+            String lastName = safe(item.getLastName());
+            String fullName = (firstName + " " + lastName).trim();
+            String email = safe(item.getEmail());
+            String phone = safe(item.getPhone());
+            String role = safe(item.getRole());
+            String status = safe(item.getStatus());
+
+            boolean matchesSearch =
+                    query.isEmpty()
+                            || fullName.toLowerCase().contains(query)
+                            || firstName.toLowerCase().contains(query)
+                            || lastName.toLowerCase().contains(query)
+                            || email.toLowerCase().contains(query)
+                            || phone.toLowerCase().contains(query);
+
+            boolean matchesStatus =
+                    selectedStatus.isEmpty()
+                            || selectedStatus.equalsIgnoreCase("All")
+                            || status.equalsIgnoreCase(selectedStatus);
+
+            boolean matchesRole =
+                    selectedRole.isEmpty()
+                            || selectedRole.equalsIgnoreCase("All")
+                            || role.equalsIgnoreCase(selectedRole);
+
+            if (matchesSearch && matchesStatus && matchesRole) {
+                filtered.add(item);
+            }
+        }
+
+        adapter.setData(filtered);
+        updateEmptyState();
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value.trim();
     }
 
     private void deleteEmployee(int employeeId) {

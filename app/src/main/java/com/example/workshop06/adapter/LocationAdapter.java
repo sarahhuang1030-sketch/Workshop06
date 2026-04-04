@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.workshop06.R;
 import com.example.workshop06.model.LocationResponse;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class LocationAdapter extends RecyclerView.Adapter<LocationAdapter.LocationViewHolder> {
@@ -25,8 +26,16 @@ public class LocationAdapter extends RecyclerView.Adapter<LocationAdapter.Locati
     private final LocationActionListener listener;
 
     public LocationAdapter(List<LocationResponse> items, LocationActionListener listener) {
-        this.items = items;
+        this.items = items != null ? items : new ArrayList<>();
         this.listener = listener;
+    }
+
+    public void setData(List<LocationResponse> data) {
+        items.clear();
+        if (data != null) {
+            items.addAll(data);
+        }
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -46,6 +55,7 @@ public class LocationAdapter extends RecyclerView.Adapter<LocationAdapter.Locati
 
         String city = item.getCity() == null ? "" : item.getCity();
         String province = item.getProvince() == null ? "" : item.getProvince();
+        String phone = item.getPhone() == null ? "" : item.getPhone();
 
         String cityProvince;
         if (!city.isEmpty() && !province.isEmpty()) {
@@ -56,7 +66,11 @@ public class LocationAdapter extends RecyclerView.Adapter<LocationAdapter.Locati
             cityProvince = province;
         }
 
-        holder.tvCity.setText(cityProvince);
+        if (!phone.isEmpty()) {
+            holder.tvCity.setText(cityProvince.isEmpty() ? phone : cityProvince + " • " + phone);
+        } else {
+            holder.tvCity.setText(cityProvince);
+        }
 
         holder.btnEdit.setOnClickListener(v -> {
             if (listener != null) {
@@ -73,7 +87,7 @@ public class LocationAdapter extends RecyclerView.Adapter<LocationAdapter.Locati
 
     @Override
     public int getItemCount() {
-        return items != null ? items.size() : 0;
+        return items.size();
     }
 
     static class LocationViewHolder extends RecyclerView.ViewHolder {

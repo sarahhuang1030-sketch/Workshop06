@@ -43,36 +43,62 @@ public class PlanManagerAdapter extends RecyclerView.Adapter<PlanManagerAdapter.
         notifyDataSetChanged();
     }
 
-    public void filter(String keyword) {
+    public void applyFilters(String keyword,
+                             Double minAmount,
+                             Double maxAmount,
+                             String status,
+                             Integer contractTermMonths) {
+
         filteredList.clear();
 
-        if (keyword == null || keyword.trim().isEmpty()) {
-            filteredList.addAll(fullList);
-        } else {
-            String q = keyword.toLowerCase(Locale.US).trim();
+        String q = keyword == null ? "" : keyword.trim().toLowerCase(Locale.US);
 
-            for (PlanResponse item : fullList) {
-                String planId = item.getPlanId() != null ? String.valueOf(item.getPlanId()) : "";
-                String serviceTypeId = item.getServiceTypeId() != null ? String.valueOf(item.getServiceTypeId()) : "";
-                String planName = item.getPlanName() != null ? item.getPlanName().toLowerCase(Locale.US) : "";
-                String desc = item.getDescription() != null ? item.getDescription().toLowerCase(Locale.US) : "";
-                String tagline = item.getTagline() != null ? item.getTagline().toLowerCase(Locale.US) : "";
-                String badge = item.getBadge() != null ? item.getBadge().toLowerCase(Locale.US) : "";
-                String dataLabel = item.getDataLabel() != null ? item.getDataLabel().toLowerCase(Locale.US) : "";
+        for (PlanResponse item : fullList) {
+            String planName = item.getPlanName() != null
+                    ? item.getPlanName().toLowerCase(Locale.US) : "";
 
-                if (planId.contains(q)
-                        || serviceTypeId.contains(q)
-                        || planName.contains(q)
-                        || desc.contains(q)
-                        || tagline.contains(q)
-                        || badge.contains(q)
-                        || dataLabel.contains(q)) {
-                    filteredList.add(item);
-                }
+            String description = item.getDescription() != null
+                    ? item.getDescription().toLowerCase(Locale.US) : "";
+
+            Double monthlyPrice = item.getMonthlyPrice();
+            Integer isActive = item.getIsActive();
+            Integer contractTerm = item.getContractTermMonths();
+
+            boolean matchesKeyword =
+                    q.isEmpty()
+                            || planName.contains(q)
+                            || description.contains(q);
+
+            boolean matchesMinAmount =
+                    minAmount == null
+                            || (monthlyPrice != null && monthlyPrice >= minAmount);
+
+            boolean matchesMaxAmount =
+                    maxAmount == null
+                            || (monthlyPrice != null && monthlyPrice <= maxAmount);
+
+            boolean matchesStatus = true;
+            if ("Active".equalsIgnoreCase(status)) {
+                matchesStatus = isActive != null && isActive == 1;
+            } else if ("Inactive".equalsIgnoreCase(status)) {
+                matchesStatus = isActive != null && isActive == 0;
+            }
+
+            boolean matchesContractTerm =
+                    contractTermMonths == null
+                            || (contractTerm != null && contractTerm.equals(contractTermMonths));
+
+            if (matchesKeyword && matchesMinAmount && matchesMaxAmount
+                    && matchesStatus && matchesContractTerm) {
+                filteredList.add(item);
             }
         }
 
         notifyDataSetChanged();
+    }
+
+    public void filter(String keyword) {
+        applyFilters(keyword, null, null, "All", null);
     }
 
     @NonNull
@@ -87,25 +113,41 @@ public class PlanManagerAdapter extends RecyclerView.Adapter<PlanManagerAdapter.
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         PlanResponse item = filteredList.get(position);
 
-        holder.tvPlanId.setText(item.getPlanId() != null
-                ? "Plan #" + item.getPlanId()
-                : "Plan #-");
+        holder.tvPlanTitle.setText(
+                item.getPlanName() != null && !item.getPlanName().trim().isEmpty()
+                        ? item.getPlanName()
+                        : "Unnamed Plan"
+        );
 
-        holder.tvPlanName.setText(item.getPlanName() != null ? item.getPlanName() : "Unnamed Plan");
-        holder.tvServiceTypeId.setText(item.getServiceTypeId() != null ? String.valueOf(item.getServiceTypeId()) : "-");
-        holder.tvMonthlyPrice.setText(item.getMonthlyPrice() != null
-                ? String.format(Locale.US, "$%.2f", item.getMonthlyPrice())
-                : "-");
-        holder.tvContractTermMonths.setText(item.getContractTermMonths() != null
-                ? String.valueOf(item.getContractTermMonths())
-                : "-");
-        holder.tvDescription.setText(item.getDescription() != null ? item.getDescription() : "-");
-        holder.tvIsActive.setText(item.getIsActive() != null && item.getIsActive() == 1 ? "Yes" : "No");
-        holder.tvTagline.setText(item.getTagline() != null ? item.getTagline() : "-");
-        holder.tvBadge.setText(item.getBadge() != null ? item.getBadge() : "-");
-        holder.tvIconKey.setText(item.getIconKey() != null ? item.getIconKey() : "-");
-        holder.tvThemeKey.setText(item.getThemeKey() != null ? item.getThemeKey() : "-");
-        holder.tvDataLabel.setText(item.getDataLabel() != null ? item.getDataLabel() : "-");
+        holder.tvServiceTypeId.setText(
+                item.getServiceTypeId() != null
+                        ? String.valueOf(item.getServiceTypeId())
+                        : "-"
+        );
+
+        holder.tvMonthlyPrice.setText(
+                item.getMonthlyPrice() != null
+                        ? String.format(Locale.US, "$%.2f", item.getMonthlyPrice())
+                        : "-"
+        );
+
+        holder.tvContractTermMonths.setText(
+                item.getContractTermMonths() != null
+                        ? String.valueOf(item.getContractTermMonths())
+                        : "-"
+        );
+
+        holder.tvDescription.setText(
+                item.getDescription() != null && !item.getDescription().trim().isEmpty()
+                        ? item.getDescription()
+                        : "-"
+        );
+
+        holder.tvIsActive.setText(
+                item.getIsActive() != null && item.getIsActive() == 1
+                        ? "Yes"
+                        : "No"
+        );
 
         holder.btnEdit.setOnClickListener(v -> {
             if (listener != null) listener.onEdit(item);
@@ -122,24 +164,20 @@ public class PlanManagerAdapter extends RecyclerView.Adapter<PlanManagerAdapter.
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvPlanId, tvPlanName, tvServiceTypeId, tvMonthlyPrice, tvContractTermMonths,
-                tvDescription, tvIsActive, tvTagline, tvBadge, tvIconKey, tvThemeKey, tvDataLabel;
+        TextView tvPlanTitle, tvServiceTypeId, tvMonthlyPrice, tvContractTermMonths,
+                tvDescription, tvIsActive;
         ImageButton btnEdit, btnDelete;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvPlanId = itemView.findViewById(R.id.tvPlanId);
-            tvPlanName = itemView.findViewById(R.id.tvPlanName);
+
+            tvPlanTitle = itemView.findViewById(R.id.tvPlanTitle);
             tvServiceTypeId = itemView.findViewById(R.id.tvServiceTypeId);
             tvMonthlyPrice = itemView.findViewById(R.id.tvMonthlyPrice);
             tvContractTermMonths = itemView.findViewById(R.id.tvContractTermMonths);
             tvDescription = itemView.findViewById(R.id.tvDescription);
             tvIsActive = itemView.findViewById(R.id.tvIsActive);
-            tvTagline = itemView.findViewById(R.id.tvTagline);
-            tvBadge = itemView.findViewById(R.id.tvBadge);
-            tvIconKey = itemView.findViewById(R.id.tvIconKey);
-            tvThemeKey = itemView.findViewById(R.id.tvThemeKey);
-            tvDataLabel = itemView.findViewById(R.id.tvDataLabel);
+
             btnEdit = itemView.findViewById(R.id.btnEdit);
             btnDelete = itemView.findViewById(R.id.btnDelete);
         }

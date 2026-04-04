@@ -11,6 +11,8 @@ import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.InvoiceResponse;
 
+import java.util.Locale;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -32,9 +34,13 @@ public class InvoiceDetailActivity extends AppCompatActivity {
         tvTotal = findViewById(R.id.tvTotal);
 
         String invoiceNumber = getIntent().getStringExtra("invoiceNumber");
-        if (invoiceNumber != null) {
-            loadInvoice(invoiceNumber);
+        if (invoiceNumber == null || invoiceNumber.trim().isEmpty()) {
+            Toast.makeText(this, "Invoice number not found", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
         }
+
+        loadInvoice(invoiceNumber);
     }
 
     private void loadInvoice(String invoiceNumber) {
@@ -45,14 +51,16 @@ public class InvoiceDetailActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     InvoiceResponse item = response.body();
 
-                    tvInvoiceNumber.setText(item.getInvoiceNumber());
-                    tvCustomerName.setText(item.getCustomerName() != null ? item.getCustomerName() : "—");
-                    tvStatus.setText(item.getStatus() != null ? item.getStatus() : "—");
-                    tvIssueDate.setText(item.getIssueDate() != null ? item.getIssueDate() : "—");
-                    tvDueDate.setText(item.getDueDate() != null ? item.getDueDate() : "—");
-                    tvTotal.setText(item.getTotal() != null ? "$" + String.format("%.2f", item.getTotal()) : "$0.00");
+                    tvInvoiceNumber.setText("Invoice Number: " + safe(item.getInvoiceNumber()));
+                    tvCustomerName.setText("Customer Name: " + safe(item.getCustomerName()));
+                    tvStatus.setText("Status: " + safe(item.getStatus()));
+                    tvIssueDate.setText("Issue Date: " + safe(item.getIssueDate()));
+                    tvDueDate.setText("Due Date: " + safe(item.getDueDate()));
+
+                    double total = item.getTotal() != null ? item.getTotal() : 0.0;
+                    tvTotal.setText(String.format(Locale.US, "Total: $%.2f", total));
                 } else {
-                    Toast.makeText(InvoiceDetailActivity.this, "Failed to load invoice", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(InvoiceDetailActivity.this, "Failed to load invoice details", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -61,5 +69,9 @@ public class InvoiceDetailActivity extends AppCompatActivity {
                 Toast.makeText(InvoiceDetailActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    private String safe(String value) {
+        return value == null ? "—" : value.trim();
     }
 }

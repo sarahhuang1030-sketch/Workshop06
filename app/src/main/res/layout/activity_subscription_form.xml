@@ -22,51 +22,147 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
                 android:text="Subscription Form"
-                android:textSize="24sp"
-                android:textStyle="bold"
                 android:textColor="#fff"
-                android:layout_marginStart="12dp" />
-
-
+                android:textSize="24sp"
+                android:textStyle="bold" />
         </LinearLayout>
 
-        <EditText
-            android:id="@+id/etCustomerId"
-            android:layout_width="match_parent"
+        <!-- Customer Name (Read Only) -->
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:hint="Customer Id"
-            android:inputType="number" />
+            android:text="Customer"
+            android:textColor="#4B5563"
+            android:textStyle="bold" />
 
         <EditText
-            android:id="@+id/etPlanId"
+            android:id="@+id/etCustomerName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:background="@android:drawable/edit_text"
+            android:clickable="false"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:hint="Customer Name"
+            android:inputType="none"
+            android:padding="12dp" />
+
+        <!-- Plan Name (Read Only) -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:hint="Plan Id"
-            android:inputType="number" />
+            android:text="Plan"
+            android:textColor="#4B5563"
+            android:textStyle="bold" />
 
         <EditText
-            android:id="@+id/etStartDate"
+            android:id="@+id/etPlanName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:hint="Start Date (YYYY-MM-DD)" />
+            android:layout_marginTop="6dp"
+            android:background="@android:drawable/edit_text"
+            android:clickable="false"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:hint="Plan Name"
+            android:inputType="none"
+            android:padding="12dp" />
 
-        <EditText
-            android:id="@+id/etEndDate"
-            android:layout_width="match_parent"
+        <!-- Start Date -->
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:hint="End Date (YYYY-MM-DD)" />
+            android:text="Start Date"
+            android:textColor="#4B5563"
+            android:textStyle="bold" />
 
-        <EditText
-            android:id="@+id/etStatus"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/etStartDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="false"
+                android:hint="YYYY-MM-DD"
+                android:inputType="none"
+                android:padding="12dp" />
+
+            <ImageButton
+                android:id="@+id/btnStartDatePicker"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Pick start date"
+                android:padding="8dp"
+                android:src="@android:drawable/ic_menu_my_calendar" />
+        </LinearLayout>
+
+        <!-- End Date -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:hint="Status" />
+            android:text="End Date"
+            android:textColor="#4B5563"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/etEndDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="false"
+                android:hint="YYYY-MM-DD"
+                android:inputType="none"
+                android:padding="12dp" />
+
+            <ImageButton
+                android:id="@+id/btnEndDatePicker"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Pick end date"
+                android:padding="8dp"
+                android:src="@android:drawable/ic_menu_my_calendar" />
+        </LinearLayout>
+
+        <!-- Status Dropdown -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="Status"
+            android:textColor="#4B5563"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/spinnerStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp" />
 
         <EditText
             android:id="@+id/etBillingCycleDay"
@@ -81,10 +177,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:hint="Notes"
-            android:minLines="3"
             android:gravity="top|start"
-            android:inputType="textMultiLine" />
+            android:hint="Notes"
+            android:inputType="textMultiLine"
+            android:minLines="3" />
 
         <Button
             android:id="@+id/btnSaveSubscription"

@@ -146,14 +146,22 @@ public class ValidationUtils {
         if (field == null) return false;
 
         String value = field.getText() != null ? field.getText().toString().trim() : "";
+
         if (TextUtils.isEmpty(value)) {
             field.setError("Phone number is required");
             field.requestFocus();
             return false;
         }
 
-        if (!Patterns.PHONE.matcher(value).matches()) {
-            field.setError("Enter a valid phone number");
+        String digits = value.replaceAll("\\D", "");
+        if (digits.length() != 10) {
+            field.setError("Enter a valid 10-digit phone number");
+            field.requestFocus();
+            return false;
+        }
+
+        if (!value.matches("^\\(\\d{3}\\) \\d{3}-\\d{4}$")) {
+            field.setError("Phone must be in format (123) 456-7890");
             field.requestFocus();
             return false;
         }

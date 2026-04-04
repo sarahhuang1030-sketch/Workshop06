@@ -20,7 +20,7 @@
             android:gravity="center_vertical">
 
             <TextView
-                android:id="@+id/tvPlanId"
+                android:id="@+id/tvPlanTitle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -49,15 +49,15 @@
 
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/tvPlanName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Plan Name"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="#374151"
-            android:layout_marginTop="4dp" />
+<!--        <TextView-->
+<!--            android:id="@+id/tvPlanName"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Plan Name"-->
+<!--            android:textSize="16sp"-->
+<!--            android:textStyle="bold"-->
+<!--            android:textColor="#374151"-->
+<!--            android:layout_marginTop="4dp" />-->
 
         <TextView
             android:layout_width="wrap_content"
@@ -129,75 +129,75 @@
             android:layout_height="wrap_content"
             android:text="-" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Tagline"
-            android:textStyle="bold"
-            android:textColor="#6B7280"
-            android:layout_marginTop="10dp" />
+<!--        <TextView-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Tagline"-->
+<!--            android:textStyle="bold"-->
+<!--            android:textColor="#6B7280"-->
+<!--            android:layout_marginTop="10dp" />-->
 
-        <TextView
-            android:id="@+id/tvTagline"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="-" />
+<!--        <TextView-->
+<!--            android:id="@+id/tvTagline"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="-" />-->
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Badge"
-            android:textStyle="bold"
-            android:textColor="#6B7280"
-            android:layout_marginTop="10dp" />
+<!--        <TextView-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Badge"-->
+<!--            android:textStyle="bold"-->
+<!--            android:textColor="#6B7280"-->
+<!--            android:layout_marginTop="10dp" />-->
 
-        <TextView
-            android:id="@+id/tvBadge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="-" />
+<!--        <TextView-->
+<!--            android:id="@+id/tvBadge"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="-" />-->
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Icon Key"
-            android:textStyle="bold"
-            android:textColor="#6B7280"
-            android:layout_marginTop="10dp" />
+<!--        <TextView-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Icon Key"-->
+<!--            android:textStyle="bold"-->
+<!--            android:textColor="#6B7280"-->
+<!--            android:layout_marginTop="10dp" />-->
 
-        <TextView
-            android:id="@+id/tvIconKey"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="-" />
+<!--        <TextView-->
+<!--            android:id="@+id/tvIconKey"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="-" />-->
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Theme Key"
-            android:textStyle="bold"
-            android:textColor="#6B7280"
-            android:layout_marginTop="10dp" />
+<!--        <TextView-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Theme Key"-->
+<!--            android:textStyle="bold"-->
+<!--            android:textColor="#6B7280"-->
+<!--            android:layout_marginTop="10dp" />-->
 
-        <TextView
-            android:id="@+id/tvThemeKey"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="-" />
+<!--        <TextView-->
+<!--            android:id="@+id/tvThemeKey"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="-" />-->
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Data Label"
-            android:textStyle="bold"
-            android:textColor="#6B7280"
-            android:layout_marginTop="10dp" />
+<!--        <TextView-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Data Label"-->
+<!--            android:textStyle="bold"-->
+<!--            android:textColor="#6B7280"-->
+<!--            android:layout_marginTop="10dp" />-->
 
-        <TextView
-            android:id="@+id/tvDataLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="-" />
+<!--        <TextView-->
+<!--            android:id="@+id/tvDataLabel"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="-" />-->
 
     </LinearLayout>
 

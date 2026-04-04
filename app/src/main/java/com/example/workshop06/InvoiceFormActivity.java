@@ -1,8 +1,11 @@
 package com.example.workshop06;
 
+import android.app.DatePickerDialog;
 import android.os.Bundle;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -12,6 +15,10 @@ import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.InvoiceRequest;
 import com.example.workshop06.model.InvoiceResponse;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
+
+import java.util.Calendar;
+import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -19,26 +26,34 @@ import retrofit2.Response;
 
 public class InvoiceFormActivity extends AppCompatActivity {
 
-    private EditText etCustomerId, etInvoiceNumber, etStatus, etIssueDate, etDueDate,
-            etSubtotal, etTaxTotal, etTotal ;
+    private EditText etCustomerName, etInvoiceNumber, etIssueDate, etDueDate,
+            etSubtotal, etTaxTotal, etTotal;
+    private MaterialAutoCompleteTextView spinnerInvoiceStatus;
+    private ImageButton btnIssueDate, btnDueDate;
     private Button btnSaveInvoice;
 
     private String originalInvoiceNumber = null;
+    private Integer customerId = null;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_invoice_form);
 
-        etCustomerId = findViewById(R.id.etCustomerId);
+        etCustomerName = findViewById(R.id.etCustomerName);
         etInvoiceNumber = findViewById(R.id.etInvoiceNumber);
-        etStatus = findViewById(R.id.etStatus);
+        spinnerInvoiceStatus = findViewById(R.id.spinnerInvoiceStatus);
         etIssueDate = findViewById(R.id.etIssueDate);
         etDueDate = findViewById(R.id.etDueDate);
         etSubtotal = findViewById(R.id.etSubtotal);
         etTaxTotal = findViewById(R.id.etTaxTotal);
         etTotal = findViewById(R.id.etTotal);
+        btnIssueDate = findViewById(R.id.btnIssueDate);
+        btnDueDate = findViewById(R.id.btnDueDate);
         btnSaveInvoice = findViewById(R.id.btnSaveInvoice);
+
+        setupStatusDropdown();
+        setupDatePickers();
 
         if (getIntent() != null && getIntent().hasExtra("invoiceNumber")) {
             originalInvoiceNumber = getIntent().getStringExtra("invoiceNumber");
@@ -50,6 +65,57 @@ public class InvoiceFormActivity extends AppCompatActivity {
         btnSaveInvoice.setOnClickListener(v -> saveInvoice());
     }
 
+    private void setupStatusDropdown() {
+        String[] statuses = {"Active", "Inactive"};
+
+        ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_dropdown_item_1line,
+                statuses
+        );
+
+        spinnerInvoiceStatus.setAdapter(statusAdapter);
+        spinnerInvoiceStatus.setText("Active", false);
+
+        spinnerInvoiceStatus.setOnClickListener(v -> spinnerInvoiceStatus.showDropDown());
+        spinnerInvoiceStatus.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                spinnerInvoiceStatus.showDropDown();
+            }
+        });
+    }
+
+    private void setupDatePickers() {
+        btnIssueDate.setOnClickListener(v -> showDatePicker(etIssueDate));
+        btnDueDate.setOnClickListener(v -> showDatePicker(etDueDate));
+
+        etIssueDate.setOnClickListener(v -> showDatePicker(etIssueDate));
+        etDueDate.setOnClickListener(v -> showDatePicker(etDueDate));
+    }
+
+    private void showDatePicker(EditText target) {
+        Calendar calendar = Calendar.getInstance();
+
+        DatePickerDialog dialog = new DatePickerDialog(
+                this,
+                (view, year, month, dayOfMonth) -> {
+                    String formatted = String.format(
+                            Locale.US,
+                            "%04d-%02d-%02d",
+                            year,
+                            month + 1,
+                            dayOfMonth
+                    );
+                    target.setText(formatted);
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+        );
+
+        dialog.show();
+    }
+
     private void loadInvoice(String invoiceNumber) {
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
         apiService.getInvoiceByNumber(invoiceNumber).enqueue(new Callback<InvoiceResponse>() {
@@ -58,8 +124,16 @@ public class InvoiceFormActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     InvoiceResponse item = response.body();
 
+                    customerId = item.getCustomerId();
+
+                    etCustomerName.setText(item.getCustomerName() != null ? item.getCustomerName() : "");
                     etInvoiceNumber.setText(item.getInvoiceNumber() != null ? item.getInvoiceNumber() : "");
-                    etStatus.setText(item.getStatus() != null ? item.getStatus() : "");
+                    spinnerInvoiceStatus.setText(
+                            item.getStatus() != null && !item.getStatus().trim().isEmpty()
+                                    ? item.getStatus()
+                                    : "Active",
+                            false
+                    );
                     etIssueDate.setText(item.getIssueDate() != null ? item.getIssueDate() : "");
                     etDueDate.setText(item.getDueDate() != null ? item.getDueDate() : "");
                     etSubtotal.setText(item.getSubtotal() != null ? String.valueOf(item.getSubtotal()) : "");
@@ -78,27 +152,29 @@ public class InvoiceFormActivity extends AppCompatActivity {
     }
 
     private void saveInvoice() {
-        String customerIdText = etCustomerId.getText().toString().trim();
         String invoiceNumber = etInvoiceNumber.getText().toString().trim();
-        String status = etStatus.getText().toString().trim();
+        String status = spinnerInvoiceStatus.getText().toString().trim();
         String issueDate = etIssueDate.getText().toString().trim();
         String dueDate = etDueDate.getText().toString().trim();
         String subtotalText = etSubtotal.getText().toString().trim();
         String taxTotalText = etTaxTotal.getText().toString().trim();
         String totalText = etTotal.getText().toString().trim();
 
-        if (customerIdText.isEmpty() || invoiceNumber.isEmpty()) {
-            Toast.makeText(this, "Customer Id and Invoice Number are required", Toast.LENGTH_SHORT).show();
+        if (customerId == null) {
+            Toast.makeText(this, "Customer information is missing", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        Integer customerId;
+        if (invoiceNumber.isEmpty()) {
+            Toast.makeText(this, "Invoice Number is required", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         Double subtotal;
         Double taxTotal;
         Double total;
 
         try {
-            customerId = Integer.parseInt(customerIdText);
             subtotal = subtotalText.isEmpty() ? 0.0 : Double.parseDouble(subtotalText);
             taxTotal = taxTotalText.isEmpty() ? 0.0 : Double.parseDouble(taxTotalText);
             total = totalText.isEmpty() ? 0.0 : Double.parseDouble(totalText);
@@ -110,7 +186,7 @@ public class InvoiceFormActivity extends AppCompatActivity {
         InvoiceRequest request = new InvoiceRequest(
                 customerId,
                 invoiceNumber,
-                status.isEmpty() ? null : status,
+                status.isEmpty() ? "Active" : status,
                 issueDate.isEmpty() ? null : issueDate,
                 dueDate.isEmpty() ? null : dueDate,
                 subtotal,
@@ -120,40 +196,22 @@ public class InvoiceFormActivity extends AppCompatActivity {
 
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
 
-        if (originalInvoiceNumber == null) {
-            apiService.createInvoice(request).enqueue(new Callback<InvoiceResponse>() {
-                @Override
-                public void onResponse(Call<InvoiceResponse> call, Response<InvoiceResponse> response) {
-                    if (response.isSuccessful()) {
-                        Toast.makeText(InvoiceFormActivity.this, "Invoice created", Toast.LENGTH_SHORT).show();
-                        finish();
-                    } else {
-                        Toast.makeText(InvoiceFormActivity.this, "Create failed", Toast.LENGTH_SHORT).show();
-                    }
+        apiService.updateInvoice(invoiceNumber, request).enqueue(new Callback<InvoiceResponse>() {
+            @Override
+            public void onResponse(Call<InvoiceResponse> call, Response<InvoiceResponse> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(InvoiceFormActivity.this, "Invoice updated", Toast.LENGTH_SHORT).show();
+                    setResult(RESULT_OK);
+                    finish();
+                } else {
+                    Toast.makeText(InvoiceFormActivity.this, "Update failed", Toast.LENGTH_SHORT).show();
                 }
+            }
 
-                @Override
-                public void onFailure(Call<InvoiceResponse> call, Throwable t) {
-                    Toast.makeText(InvoiceFormActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
-                }
-            });
-        } else {
-            apiService.updateInvoice(originalInvoiceNumber, request).enqueue(new Callback<InvoiceResponse>() {
-                @Override
-                public void onResponse(Call<InvoiceResponse> call, Response<InvoiceResponse> response) {
-                    if (response.isSuccessful()) {
-                        Toast.makeText(InvoiceFormActivity.this, "Invoice updated", Toast.LENGTH_SHORT).show();
-                        finish();
-                    } else {
-                        Toast.makeText(InvoiceFormActivity.this, "Update failed", Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<InvoiceResponse> call, Throwable t) {
-                    Toast.makeText(InvoiceFormActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
-                }
-            });
-        }
+            @Override
+            public void onFailure(Call<InvoiceResponse> call, Throwable t) {
+                Toast.makeText(InvoiceFormActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }

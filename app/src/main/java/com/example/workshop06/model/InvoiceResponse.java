@@ -3,6 +3,7 @@ package com.example.workshop06.model;
 import java.util.List;
 
 public class InvoiceResponse {
+    public Integer customerId;
     public String invoiceNumber;
     public String status;
     public String issueDate;
@@ -14,6 +15,7 @@ public class InvoiceResponse {
     public List<InvoiceItemResponse> items;
     private String customerName;
 
+    public Integer getCustomerId() { return customerId; }
     public String getInvoiceNumber() { return invoiceNumber; }
     public String getStatus() { return status; }
     public String getIssueDate() { return issueDate; }

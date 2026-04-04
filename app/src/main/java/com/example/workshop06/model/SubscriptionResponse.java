@@ -11,6 +11,17 @@ public class SubscriptionResponse {
     private String status;
     private Integer billingCycleDay;
     private String notes;
+    private String customerName;
+    private String planName;
+
+    public String getPlanName() {
+        return planName;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
     private List<SubscriptionAddOnResponse> addons;
 
     public Integer getSubscriptionId() { return subscriptionId; }

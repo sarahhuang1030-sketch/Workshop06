@@ -22,7 +22,7 @@ public class SaveEmployeeRequest {
                                Double salary,
                                String hireDate,
                                String status,
-                               Integer active,
+//                               Integer active,
                                Integer managerId) {
         this.primaryLocationId = primaryLocationId;
         this.firstName = firstName;
@@ -33,7 +33,7 @@ public class SaveEmployeeRequest {
         this.salary = salary;
         this.hireDate = hireDate;
         this.status = status;
-        this.active = active;
+//        this.active = active;
         this.managerId = managerId;
     }
 

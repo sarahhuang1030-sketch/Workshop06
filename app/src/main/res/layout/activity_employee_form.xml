@@ -31,21 +31,65 @@
                     android:text="Employee Form"
                     android:textSize="24sp"
                     android:textStyle="bold"
-                    android:textColor="#fff"
+                    android:textColor="#FFFFFF"
                     android:layout_marginStart="12dp" />
-
-
             </LinearLayout>
         </LinearLayout>
 
-        <EditText
-            android:id="@+id/etPrimaryLocationId"
+        <!-- Employee ID (read only in edit mode) -->
+        <LinearLayout
+            android:id="@+id/layoutTopRow"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Primary Location ID"
-            android:inputType="number"
-            android:layout_marginTop="18dp" />
+            android:orientation="horizontal"
+            android:layout_marginTop="18dp">
 
+            <!-- Employee ID -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginEnd="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Employee ID"
+                    android:textStyle="bold"
+                    android:textColor="#6B7280" />
+
+                <EditText
+                    android:id="@+id/etEmployeeId"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:enabled="false"
+                    android:focusable="false"
+                    android:clickable="false" />
+            </LinearLayout>
+
+            <!-- Primary Location -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Primary Location"
+                    android:textStyle="bold"
+                    android:textColor="#6B7280" />
+
+                <Spinner
+                    android:id="@+id/spinnerLocation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+        </LinearLayout>
         <EditText
             android:id="@+id/etFirstName"
             android:layout_width="match_parent"
@@ -82,20 +126,56 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp" />
 
-        <EditText
-            android:id="@+id/etSalary"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Salary"
-            android:inputType="numberDecimal"
-            android:layout_marginTop="12dp" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="12dp">
 
-        <EditText
-            android:id="@+id/etHireDate"
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="$"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="#111827"
+                android:layout_marginEnd="8dp" />
+
+            <EditText
+                android:id="@+id/etSalary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Salary"
+                android:inputType="numberDecimal" />
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Hire Date (e.g. 2026-04-02)"
-            android:layout_marginTop="12dp" />
+            android:layout_marginTop="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/etHireDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="false"
+                android:hint="Hire Date" />
+
+            <ImageButton
+                android:id="@+id/btnHireDate"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Select hire date"
+                android:src="@android:drawable/ic_menu_my_calendar" />
+        </LinearLayout>
 
         <Spinner
             android:id="@+id/spinnerStatus"
@@ -103,18 +183,13 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp" />
 
-        <Spinner
-            android:id="@+id/spinnerActive"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp" />
 
-        <EditText
-            android:id="@+id/etManagerId"
+
+        <!-- Manager dropdown instead of plain Manager ID -->
+        <Spinner
+            android:id="@+id/spinnerManager"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Manager ID"
-            android:inputType="number"
             android:layout_marginTop="12dp" />
 
         <ProgressBar

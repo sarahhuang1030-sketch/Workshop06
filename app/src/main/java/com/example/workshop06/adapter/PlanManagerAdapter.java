@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.workshop06.R;
 import com.example.workshop06.model.PlanResponse;
+import com.example.workshop06.model.ServiceTypeResponse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,11 +22,19 @@ public class PlanManagerAdapter extends RecyclerView.Adapter<PlanManagerAdapter.
     public interface OnPlanActionListener {
         void onEdit(PlanResponse item);
         void onDelete(PlanResponse item);
+        void onManageAddOns(PlanResponse item);
     }
 
     private final List<PlanResponse> fullList = new ArrayList<>();
     private final List<PlanResponse> filteredList = new ArrayList<>();
     private final OnPlanActionListener listener;
+
+    private List<ServiceTypeResponse> serviceTypes;
+
+    public void setServiceTypes(List<ServiceTypeResponse> serviceTypes) {
+        this.serviceTypes = serviceTypes;
+        notifyDataSetChanged();
+    }
 
     public PlanManagerAdapter(OnPlanActionListener listener) {
         this.listener = listener;
@@ -97,10 +106,6 @@ public class PlanManagerAdapter extends RecyclerView.Adapter<PlanManagerAdapter.
         notifyDataSetChanged();
     }
 
-    public void filter(String keyword) {
-        applyFilters(keyword, null, null, "All", null);
-    }
-
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -119,11 +124,7 @@ public class PlanManagerAdapter extends RecyclerView.Adapter<PlanManagerAdapter.
                         : "Unnamed Plan"
         );
 
-        holder.tvServiceTypeId.setText(
-                item.getServiceTypeId() != null
-                        ? String.valueOf(item.getServiceTypeId())
-                        : "-"
-        );
+        holder.tvServiceTypeId.setText(getServiceTypeName(item.getServiceTypeId()));
 
         holder.tvMonthlyPrice.setText(
                 item.getMonthlyPrice() != null
@@ -143,11 +144,21 @@ public class PlanManagerAdapter extends RecyclerView.Adapter<PlanManagerAdapter.
                         : "-"
         );
 
+        holder.tvAddons.setText(
+                item.getAddOnNames() != null && !item.getAddOnNames().trim().isEmpty()
+                        ? item.getAddOnNames()
+                        : "No add-ons"
+        );
+
         holder.tvIsActive.setText(
                 item.getIsActive() != null && item.getIsActive() == 1
                         ? "Yes"
                         : "No"
         );
+
+        holder.btnManageAddOns.setOnClickListener(v -> {
+            if (listener != null) listener.onManageAddOns(item);
+        });
 
         holder.btnEdit.setOnClickListener(v -> {
             if (listener != null) listener.onEdit(item);
@@ -165,8 +176,8 @@ public class PlanManagerAdapter extends RecyclerView.Adapter<PlanManagerAdapter.
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvPlanTitle, tvServiceTypeId, tvMonthlyPrice, tvContractTermMonths,
-                tvDescription, tvIsActive;
-        ImageButton btnEdit, btnDelete;
+                tvDescription, tvAddons, tvIsActive;
+        ImageButton btnManageAddOns, btnEdit, btnDelete;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -176,10 +187,23 @@ public class PlanManagerAdapter extends RecyclerView.Adapter<PlanManagerAdapter.
             tvMonthlyPrice = itemView.findViewById(R.id.tvMonthlyPrice);
             tvContractTermMonths = itemView.findViewById(R.id.tvContractTermMonths);
             tvDescription = itemView.findViewById(R.id.tvDescription);
+            tvAddons = itemView.findViewById(R.id.tvAddons);
             tvIsActive = itemView.findViewById(R.id.tvIsActive);
 
+            btnManageAddOns = itemView.findViewById(R.id.btnManageAddOns);
             btnEdit = itemView.findViewById(R.id.btnEdit);
             btnDelete = itemView.findViewById(R.id.btnDelete);
         }
+    }
+
+    private String getServiceTypeName(Integer id) {
+        if (serviceTypes == null || id == null) return String.valueOf(id);
+
+        for (ServiceTypeResponse s : serviceTypes) {
+            if (id.equals(s.getServiceTypeId())) {
+                return s.getName();
+            }
+        }
+        return String.valueOf(id);
     }
 }

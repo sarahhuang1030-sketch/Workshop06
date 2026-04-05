@@ -14,6 +14,8 @@ public class PlanResponse {
     private String themeKey;
     private String dataLabel;
 
+    private String addOnNames;
+
     public Integer getPlanId() { return planId; }
     public Integer getServiceTypeId() { return serviceTypeId; }
     public String getPlanName() { return planName; }
@@ -26,4 +28,12 @@ public class PlanResponse {
     public String getIconKey() { return iconKey; }
     public String getThemeKey() { return themeKey; }
     public String getDataLabel() { return dataLabel; }
+
+    public String getAddOnNames() {
+        return addOnNames;
+    }
+
+    public void setAddOnNames(String addOnNames) {
+        this.addOnNames = addOnNames;
+    }
 }

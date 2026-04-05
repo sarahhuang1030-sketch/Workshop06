@@ -1,138 +1,150 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8F1FA">
+    android:background="#F3EEFF">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="20dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:background="@drawable/bg_employee_dashboard_header"
+            android:orientation="vertical"
+            android:paddingStart="18dp"
+            android:paddingEnd="18dp"
+            android:paddingTop="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Plan Form"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="#fff"
+                android:paddingTop="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Create or update a plan"
+                android:textColor="#fff"
+                android:textSize="14sp" />
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:layout_marginTop="18dp"
+            android:orientation="horizontal">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="70dp"
-                android:background="@drawable/bg_gradient_plan"
-                android:orientation="vertical"
-                android:paddingStart="18dp"
-                android:paddingEnd="18dp"
-                android:paddingTop="20dp">
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:hint="Service Type"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                    android:id="@+id/spinnerServiceType"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Plan Form"
-                    android:textSize="24sp"
-                    android:textStyle="bold"
-                    android:textColor="#fff"
-                    android:layout_marginStart="12dp" />
+                    android:inputType="none" />
+            </com.google.android.material.textfield.TextInputLayout>
 
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Status"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu">
 
-            </LinearLayout>
+                <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                    android:id="@+id/spinnerIsActive"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="none" />
+            </com.google.android.material.textfield.TextInputLayout>
+
         </LinearLayout>
 
-        <EditText
-            android:id="@+id/etServiceTypeId"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Service Type ID"
-            android:inputType="number"
-            android:layout_marginTop="18dp" />
+            android:layout_marginTop="14dp"
+            android:orientation="horizontal">
 
-        <EditText
-            android:id="@+id/etPlanName"
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:hint="Plan Name"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etPlanName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Monthly Price"
+                app:prefixText="$"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etMonthlyPrice"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberDecimal" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+        </LinearLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Plan Name"
-            android:layout_marginTop="12dp" />
-
-        <EditText
-            android:id="@+id/etMonthlyPrice"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Monthly Price"
-            android:inputType="numberDecimal"
-            android:layout_marginTop="12dp" />
-
-        <EditText
-            android:id="@+id/etContractTermMonths"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Contract Term Months"
-            android:inputType="number"
-            android:layout_marginTop="12dp" />
-
-        <EditText
-            android:id="@+id/etDescription"
-            android:layout_width="match_parent"
-            android:layout_height="100dp"
+            android:layout_marginTop="14dp"
             android:hint="Description"
-            android:gravity="top"
-            android:inputType="textMultiLine"
-            android:layout_marginTop="12dp" />
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
 
-        <Spinner
-            android:id="@+id/spinnerIsActive"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp" />
-
-        <EditText
-            android:id="@+id/etTagline"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Tagline"
-            android:layout_marginTop="12dp" />
-
-        <EditText
-            android:id="@+id/etBadge"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Badge"
-            android:layout_marginTop="12dp" />
-
-        <EditText
-            android:id="@+id/etIconKey"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Icon Key"
-            android:layout_marginTop="12dp" />
-
-        <EditText
-            android:id="@+id/etThemeKey"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Theme Key"
-            android:layout_marginTop="12dp" />
-
-        <EditText
-            android:id="@+id/etDataLabel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Data Label"
-            android:layout_marginTop="12dp" />
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="top|start"
+                android:inputType="textMultiLine"
+                android:minLines="3" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <ProgressBar
             android:id="@+id/progressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="18dp"
             android:visibility="gone" />
 
         <Button
             android:id="@+id/btnSave"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="#6F56B3"
             android:text="Save"
-            android:layout_marginTop="16dp" />
+            android:textAllCaps="false"
+            android:textColor="@android:color/white" />
 
     </LinearLayout>
 </ScrollView>

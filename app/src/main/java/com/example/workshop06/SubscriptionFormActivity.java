@@ -5,8 +5,6 @@ import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -15,6 +13,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.SubscriptionRequest;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
+import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.Calendar;
 import java.util.Locale;
@@ -26,9 +26,9 @@ import retrofit2.Response;
 public class SubscriptionFormActivity extends AppCompatActivity {
 
     private EditText etCustomerName, etPlanName, etStartDate, etEndDate, etBillingCycleDay, etNotes;
-    private Spinner spinnerStatus;
+    private MaterialAutoCompleteTextView spinnerStatus;
+    private TextInputLayout tilStartDate, tilEndDate;
     private Button btnSaveSubscription;
-    private ImageButton btnStartDatePicker, btnEndDatePicker;
 
     private Integer subscriptionId = null;
     private Integer customerId = null;
@@ -47,22 +47,12 @@ public class SubscriptionFormActivity extends AppCompatActivity {
         etNotes = findViewById(R.id.etNotes);
 
         spinnerStatus = findViewById(R.id.spinnerStatus);
-        btnStartDatePicker = findViewById(R.id.btnStartDatePicker);
-        btnEndDatePicker = findViewById(R.id.btnEndDatePicker);
+        tilStartDate = findViewById(R.id.tilStartDate);
+        tilEndDate = findViewById(R.id.tilEndDate);
         btnSaveSubscription = findViewById(R.id.btnSaveSubscription);
 
-        ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_spinner_item,
-                new String[]{"Active", "Inactive"}
-        );
-        statusAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerStatus.setAdapter(statusAdapter);
-
-        btnStartDatePicker.setOnClickListener(v -> showDatePicker(etStartDate));
-        btnEndDatePicker.setOnClickListener(v -> showDatePicker(etEndDate));
-        etStartDate.setOnClickListener(v -> showDatePicker(etStartDate));
-        etEndDate.setOnClickListener(v -> showDatePicker(etEndDate));
+        setupStatusDropdown();
+        setupDatePickers();
 
         if (getIntent() != null) {
             if (getIntent().hasExtra("subscriptionId")) {
@@ -94,6 +84,30 @@ public class SubscriptionFormActivity extends AppCompatActivity {
         }
 
         btnSaveSubscription.setOnClickListener(v -> saveSubscription());
+    }
+
+    private void setupStatusDropdown() {
+        ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_dropdown_item_1line,
+                new String[]{"Active", "Inactive"}
+        );
+
+        spinnerStatus.setAdapter(statusAdapter);
+        spinnerStatus.setOnClickListener(v -> spinnerStatus.showDropDown());
+        spinnerStatus.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                spinnerStatus.showDropDown();
+            }
+        });
+    }
+
+    private void setupDatePickers() {
+        etStartDate.setOnClickListener(v -> showDatePicker(etStartDate));
+        etEndDate.setOnClickListener(v -> showDatePicker(etEndDate));
+
+        tilStartDate.setEndIconOnClickListener(v -> showDatePicker(etStartDate));
+        tilEndDate.setEndIconOnClickListener(v -> showDatePicker(etEndDate));
     }
 
     private void showDatePicker(EditText targetEditText) {
@@ -139,10 +153,8 @@ public class SubscriptionFormActivity extends AppCompatActivity {
                     etNotes.setText(item.getNotes() != null ? item.getNotes() : "");
 
                     String status = item.getStatus() != null ? item.getStatus().trim() : "";
-                    if (status.equalsIgnoreCase("Active")) {
-                        spinnerStatus.setSelection(0);
-                    } else if (status.equalsIgnoreCase("Inactive")) {
-                        spinnerStatus.setSelection(1);
+                    if (!status.isEmpty()) {
+                        spinnerStatus.setText(status, false);
                     }
 
                     if (etCustomerName.getText().toString().trim().isEmpty()) {
@@ -168,13 +180,21 @@ public class SubscriptionFormActivity extends AppCompatActivity {
     }
 
     private void saveSubscription() {
-        String startDate = etStartDate.getText().toString().trim();
-        String endDate = etEndDate.getText().toString().trim();
-        String status = spinnerStatus.getSelectedItem() != null
-                ? spinnerStatus.getSelectedItem().toString()
+        String startDate = etStartDate.getText() != null
+                ? etStartDate.getText().toString().trim()
                 : "";
-        String billingCycleDayText = etBillingCycleDay.getText().toString().trim();
-        String notes = etNotes.getText().toString().trim();
+        String endDate = etEndDate.getText() != null
+                ? etEndDate.getText().toString().trim()
+                : "";
+        String status = spinnerStatus.getText() != null
+                ? spinnerStatus.getText().toString().trim()
+                : "";
+        String billingCycleDayText = etBillingCycleDay.getText() != null
+                ? etBillingCycleDay.getText().toString().trim()
+                : "";
+        String notes = etNotes.getText() != null
+                ? etNotes.getText().toString().trim()
+                : "";
 
         if (customerId == null) {
             Toast.makeText(this, "Customer is required", Toast.LENGTH_SHORT).show();
@@ -183,6 +203,12 @@ public class SubscriptionFormActivity extends AppCompatActivity {
 
         if (planId == null) {
             Toast.makeText(this, "Plan is required", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (status.isEmpty()) {
+            spinnerStatus.setError("Status is required");
+            spinnerStatus.requestFocus();
             return;
         }
 
@@ -203,7 +229,7 @@ public class SubscriptionFormActivity extends AppCompatActivity {
                 planId,
                 startDate.isEmpty() ? null : startDate,
                 endDate.isEmpty() ? null : endDate,
-                status.isEmpty() ? null : status,
+                status,
                 billingCycleDay,
                 notes.isEmpty() ? null : notes
         );

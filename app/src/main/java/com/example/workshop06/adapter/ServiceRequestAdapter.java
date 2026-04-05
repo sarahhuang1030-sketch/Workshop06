@@ -44,30 +44,42 @@ public class ServiceRequestAdapter extends RecyclerView.Adapter<ServiceRequestAd
         notifyDataSetChanged();
     }
 
-    public void filter(String keyword) {
+    public void applyFilters(String keyword, String technicianFilter, String priorityFilter) {
         filteredList.clear();
 
-        if (keyword == null || keyword.trim().isEmpty()) {
-            filteredList.addAll(fullList);
-        } else {
-            String q = keyword.toLowerCase(Locale.US).trim();
+        String q = keyword == null ? "" : keyword.toLowerCase(Locale.US).trim();
+        String technician = technicianFilter == null ? "All" : technicianFilter.trim();
+        String priority = priorityFilter == null ? "All" : priorityFilter.trim();
 
-            for (ServiceRequestResponse item : fullList) {
-                String customerName = item.getCustomerName() != null ? item.getCustomerName().toLowerCase(Locale.US) : "";
-                String technicianName = item.getTechnicianName() != null ? item.getTechnicianName().toLowerCase(Locale.US) : "";
-                String requestType = item.getRequestType() != null ? item.getRequestType().toLowerCase(Locale.US) : "";
-                String status = item.getStatus() != null ? item.getStatus().toLowerCase(Locale.US) : "";
-                String priority = item.getPriority() != null ? item.getPriority().toLowerCase(Locale.US) : "";
-                String requestId = item.getRequestId() != null ? String.valueOf(item.getRequestId()) : "";
+        for (ServiceRequestResponse item : fullList) {
+            String customerName = item.getCustomerName() != null
+                    ? item.getCustomerName().toLowerCase(Locale.US).trim()
+                    : "";
 
-                if (customerName.contains(q)
-                        || technicianName.contains(q)
-                        || requestType.contains(q)
-                        || status.contains(q)
-                        || priority.contains(q)
-                        || requestId.contains(q)) {
-                    filteredList.add(item);
-                }
+            String address = item.getAddressText() != null
+                    ? item.getAddressText().toLowerCase(Locale.US).trim()
+                    : "";
+
+            String technicianName = item.getTechnicianName() != null
+                    ? item.getTechnicianName().trim()
+                    : "";
+
+            String itemPriority = item.getPriority() != null
+                    ? item.getPriority().trim()
+                    : "";
+
+            boolean matchesSearch = q.isEmpty()
+                    || customerName.contains(q)
+                    || address.contains(q);
+
+            boolean matchesTechnician = technician.equalsIgnoreCase("All")
+                    || technicianName.equalsIgnoreCase(technician);
+
+            boolean matchesPriority = priority.equalsIgnoreCase("All")
+                    || itemPriority.equalsIgnoreCase(priority);
+
+            if (matchesSearch && matchesTechnician && matchesPriority) {
+                filteredList.add(item);
             }
         }
 

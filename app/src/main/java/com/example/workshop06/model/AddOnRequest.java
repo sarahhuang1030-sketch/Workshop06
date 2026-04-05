@@ -13,15 +13,13 @@ public class AddOnRequest {
                         String addOnName,
                         Double monthlyPrice,
                         String description,
-                        Boolean isActive,
-                        String iconKey,
-                        String themeKey) {
+                        Boolean isActive
+                        ) {
         this.serviceTypeId = serviceTypeId;
         this.addOnName = addOnName;
         this.monthlyPrice = monthlyPrice;
         this.description = description;
         this.isActive = isActive;
-        this.iconKey = iconKey;
-        this.themeKey = themeKey;
+
     }
 }

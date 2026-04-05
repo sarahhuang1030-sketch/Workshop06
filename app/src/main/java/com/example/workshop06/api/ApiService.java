@@ -285,4 +285,20 @@ Call<List<EmployeeSalesResponse>> getEmployeeSales();
     //Service type
     @GET("/api/manager/servicetypes")
     Call<List<ServiceTypeResponse>> getServiceTypes();
+
+    //crud on addon
+    @GET("/api/manager/plans/{planId}/addons")
+    Call<List<AddOnResponse>> getAddOnsByPlanId(@Path("planId") int planId);
+
+    @POST("/api/manager/plans/{planId}/addons/{addOnId}")
+    Call<Void> attachAddOnToPlan(
+            @Path("planId") int planId,
+            @Path("addOnId") int addOnId
+    );
+
+    @DELETE("/api/manager/plans/{planId}/addons/{addOnId}")
+    Call<Void> removeAddOnFromPlan(
+            @Path("planId") int planId,
+            @Path("addOnId") int addOnId
+    );
 }

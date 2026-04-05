@@ -4,12 +4,11 @@ import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
+import android.view.ViewParent;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ProgressBar;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -24,6 +23,8 @@ import com.example.workshop06.model.LocationResponse;
 import com.example.workshop06.model.SaveEmployeeRequest;
 import com.example.workshop06.util.FormFormatUtils;
 import com.example.workshop06.util.ValidationUtils;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
+import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -41,13 +42,14 @@ public class EmployeeFormActivity extends AppCompatActivity {
     private EditText etLastName;
     private EditText etEmail;
     private EditText etPhone;
-    private Spinner spinnerRole;
     private EditText etSalary;
     private EditText etHireDate;
-    private ImageButton btnHireDate;
-    private Spinner spinnerStatus;
-    private Spinner spinnerManager;
-    private Spinner spinnerLocation;
+
+    private MaterialAutoCompleteTextView spinnerRole;
+    private MaterialAutoCompleteTextView spinnerStatus;
+    private MaterialAutoCompleteTextView spinnerManager;
+    private MaterialAutoCompleteTextView spinnerLocation;
+
     private Button btnSave;
     private ProgressBar progressBar;
 
@@ -56,10 +58,8 @@ public class EmployeeFormActivity extends AppCompatActivity {
 
     private int selectedLocationId = -1;
     private final List<LocationResponse> locationList = new ArrayList<>();
-    private ArrayAdapter<String> locationAdapter;
 
     private final List<EmployeeResponse> managerList = new ArrayList<>();
-    private ArrayAdapter<String> managerAdapter;
     private int selectedManagerId = -1;
 
     @Override
@@ -68,7 +68,7 @@ public class EmployeeFormActivity extends AppCompatActivity {
         setContentView(R.layout.activity_employee_form);
 
         initViews();
-        setupSpinners();
+        setupDropdowns();
         setupFormatters();
         setupDatePicker();
         loadIntentData();
@@ -83,41 +83,62 @@ public class EmployeeFormActivity extends AppCompatActivity {
         etLastName = findViewById(R.id.etLastName);
         etEmail = findViewById(R.id.etEmail);
         etPhone = findViewById(R.id.etPhone);
-        spinnerRole = findViewById(R.id.spinnerRole);
         etSalary = findViewById(R.id.etSalary);
         etHireDate = findViewById(R.id.etHireDate);
-        btnHireDate = findViewById(R.id.btnHireDate);
+
+        spinnerRole = findViewById(R.id.spinnerRole);
         spinnerStatus = findViewById(R.id.spinnerStatus);
         spinnerManager = findViewById(R.id.spinnerManager);
         spinnerLocation = findViewById(R.id.spinnerLocation);
+
         btnSave = findViewById(R.id.btnSave);
         progressBar = findViewById(R.id.progressBar);
     }
 
-    private void setupSpinners() {
+    private void setupDropdowns() {
         ArrayAdapter<String> roleAdapter = new ArrayAdapter<>(
                 this,
-                android.R.layout.simple_spinner_item,
+                android.R.layout.simple_dropdown_item_1line,
                 new String[]{"MANAGER", "SALES_AGENT", "SERVICE_TECHNICIAN"}
         );
-        roleAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerRole.setAdapter(roleAdapter);
+        spinnerRole.setOnClickListener(v -> spinnerRole.showDropDown());
+        spinnerRole.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) spinnerRole.showDropDown();
+        });
 
         ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(
                 this,
-                android.R.layout.simple_spinner_item,
+                android.R.layout.simple_dropdown_item_1line,
                 new String[]{"Active", "Inactive", "On Leave", "Suspended"}
         );
-        statusAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerStatus.setAdapter(statusAdapter);
+        spinnerStatus.setOnClickListener(v -> spinnerStatus.showDropDown());
+        spinnerStatus.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) spinnerStatus.showDropDown();
+        });
 
-        managerAdapter = new ArrayAdapter<>(
+        ArrayAdapter<String> managerAdapter = new ArrayAdapter<>(
                 this,
-                android.R.layout.simple_spinner_item,
+                android.R.layout.simple_dropdown_item_1line,
                 new ArrayList<>()
         );
-        managerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerManager.setAdapter(managerAdapter);
+        spinnerManager.setOnClickListener(v -> spinnerManager.showDropDown());
+        spinnerManager.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) spinnerManager.showDropDown();
+        });
+
+        ArrayAdapter<String> locationAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_dropdown_item_1line,
+                new ArrayList<>()
+        );
+        spinnerLocation.setAdapter(locationAdapter);
+        spinnerLocation.setOnClickListener(v -> spinnerLocation.showDropDown());
+        spinnerLocation.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) spinnerLocation.showDropDown();
+        });
     }
 
     private void setupFormatters() {
@@ -127,17 +148,32 @@ public class EmployeeFormActivity extends AppCompatActivity {
     private void setupDatePicker() {
         View.OnClickListener listener = v -> showDatePicker();
         etHireDate.setOnClickListener(listener);
-        btnHireDate.setOnClickListener(listener);
+
+        TextInputLayout tilHireDate = findParentTextInputLayout(etHireDate);
+        if (tilHireDate != null) {
+            tilHireDate.setEndIconOnClickListener(v -> showDatePicker());
+        }
+    }
+
+    private TextInputLayout findParentTextInputLayout(View view) {
+        ViewParent parent = view.getParent();
+        while (parent != null) {
+            if (parent instanceof TextInputLayout) {
+                return (TextInputLayout) parent;
+            }
+            parent = parent.getParent();
+        }
+        return null;
     }
 
     private void showDatePicker() {
-        final Calendar calendar = Calendar.getInstance();
+        Calendar calendar = Calendar.getInstance();
 
         DatePickerDialog dialog = new DatePickerDialog(
                 this,
                 (view, year, month, dayOfMonth) -> {
                     String formatted = String.format(
-                            Locale.CANADA,
+                            Locale.US,
                             "%04d-%02d-%02d",
                             year,
                             month + 1,
@@ -174,7 +210,7 @@ public class EmployeeFormActivity extends AppCompatActivity {
             String hireDate = getIntent().getStringExtra("hireDate");
             String status = getIntent().getStringExtra("status");
 
-            etEmployeeId.setText(String.valueOf(employeeId));
+            etEmployeeId.setText(employeeId > 0 ? String.valueOf(employeeId) : "");
 
             if (primaryLocationId != Integer.MIN_VALUE) {
                 selectedLocationId = primaryLocationId;
@@ -194,8 +230,8 @@ public class EmployeeFormActivity extends AppCompatActivity {
             if (phone != null) etPhone.setText(phone);
             if (hireDate != null) etHireDate.setText(hireDate);
 
-            setSpinnerValue(spinnerRole, role);
-            setSpinnerValue(spinnerStatus, status);
+            setDropdownValue(spinnerRole, role);
+            setDropdownValue(spinnerStatus, status);
         }
     }
 
@@ -205,23 +241,32 @@ public class EmployeeFormActivity extends AppCompatActivity {
         apiService.getLocations().enqueue(new Callback<List<LocationResponse>>() {
             @Override
             public void onResponse(Call<List<LocationResponse>> call, Response<List<LocationResponse>> response) {
-                if (!response.isSuccessful() || response.body() == null) return;
+                if (!response.isSuccessful() || response.body() == null) {
+                    Toast.makeText(EmployeeFormActivity.this, "Failed to load locations", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
                 locationList.clear();
                 locationList.addAll(response.body());
 
                 List<String> names = new ArrayList<>();
                 for (LocationResponse loc : locationList) {
-                    names.add(loc.getLocationName());
+                    names.add(loc.getLocationName() != null ? loc.getLocationName() : "Location");
                 }
 
-                locationAdapter = new ArrayAdapter<>(
+                ArrayAdapter<String> locationAdapter = new ArrayAdapter<>(
                         EmployeeFormActivity.this,
-                        android.R.layout.simple_spinner_item,
+                        android.R.layout.simple_dropdown_item_1line,
                         names
                 );
-                locationAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 spinnerLocation.setAdapter(locationAdapter);
+
+                spinnerLocation.setOnItemClickListener((parent, view, position, id) -> {
+                    if (position >= 0 && position < locationList.size()) {
+                        Integer idValue = locationList.get(position).getLocationId();
+                        selectedLocationId = idValue != null ? idValue : -1;
+                    }
+                });
 
                 setSelectedLocation();
             }
@@ -236,9 +281,12 @@ public class EmployeeFormActivity extends AppCompatActivity {
     private void setSelectedLocation() {
         if (selectedLocationId <= 0) return;
 
-        for (int i = 0; i < locationList.size(); i++) {
-            if (locationList.get(i).getLocationId() == selectedLocationId) {
-                spinnerLocation.setSelection(i);
+        for (LocationResponse loc : locationList) {
+            if (loc.getLocationId() != null && loc.getLocationId() == selectedLocationId) {
+                spinnerLocation.setText(
+                        loc.getLocationName() != null ? loc.getLocationName() : "",
+                        false
+                );
                 break;
             }
         }
@@ -251,6 +299,7 @@ public class EmployeeFormActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<List<EmployeeResponse>> call, Response<List<EmployeeResponse>> response) {
                 if (!response.isSuccessful() || response.body() == null) {
+                    Toast.makeText(EmployeeFormActivity.this, "Unable to load managers", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -259,21 +308,43 @@ public class EmployeeFormActivity extends AppCompatActivity {
                 labels.add("No Manager");
 
                 for (EmployeeResponse employee : response.body()) {
-                    if (employee != null && employee.getRole() != null
+                    if (employee != null
+                            && employee.getRole() != null
                             && "MANAGER".equalsIgnoreCase(employee.getRole())) {
+
                         managerList.add(employee);
 
                         String fullName = (safe(employee.getFirstName()) + " " + safe(employee.getLastName())).trim();
-                        labels.add(fullName + " (MANAGER)");
+                        if (fullName.isEmpty()) {
+                            fullName = "Manager #" + employee.getEmployeeId();
+                        }
+                        labels.add(fullName);
                     }
                 }
 
-                managerAdapter.clear();
-                managerAdapter.addAll(labels);
-                managerAdapter.notifyDataSetChanged();
+                ArrayAdapter<String> managerAdapter = new ArrayAdapter<>(
+                        EmployeeFormActivity.this,
+                        android.R.layout.simple_dropdown_item_1line,
+                        labels
+                );
+                spinnerManager.setAdapter(managerAdapter);
+
+                spinnerManager.setOnItemClickListener((parent, view, position, id) -> {
+                    if (position == 0) {
+                        selectedManagerId = -1;
+                    } else {
+                        int index = position - 1;
+                        if (index >= 0 && index < managerList.size()) {
+                            Integer idValue = managerList.get(index).getEmployeeId();
+                            selectedManagerId = idValue != null ? idValue : -1;
+                        }
+                    }
+                });
 
                 if (selectedManagerId > 0) {
                     setManagerSelection(selectedManagerId);
+                } else {
+                    spinnerManager.setText("No Manager", false);
                 }
             }
 
@@ -285,24 +356,21 @@ public class EmployeeFormActivity extends AppCompatActivity {
     }
 
     private void setManagerSelection(int managerId) {
-        for (int i = 0; i < managerList.size(); i++) {
-            if (managerList.get(i).getEmployeeId() == managerId) {
-                spinnerManager.setSelection(i + 1);
+        for (EmployeeResponse manager : managerList) {
+            if (manager.getEmployeeId() != null && manager.getEmployeeId() == managerId) {
+                String fullName = (safe(manager.getFirstName()) + " " + safe(manager.getLastName())).trim();
+                if (fullName.isEmpty()) {
+                    fullName = "Manager #" + managerId;
+                }
+                spinnerManager.setText(fullName, false);
                 break;
             }
         }
     }
 
-    private void setSpinnerValue(Spinner spinner, String value) {
-        if (value == null) return;
-
-        for (int i = 0; i < spinner.getCount(); i++) {
-            String item = String.valueOf(spinner.getItemAtPosition(i));
-            if (item.equalsIgnoreCase(value)) {
-                spinner.setSelection(i);
-                break;
-            }
-        }
+    private void setDropdownValue(MaterialAutoCompleteTextView dropdown, String value) {
+        if (value == null || value.trim().isEmpty()) return;
+        dropdown.setText(value, false);
     }
 
     private void setupButtons() {
@@ -320,25 +388,26 @@ public class EmployeeFormActivity extends AppCompatActivity {
         String lastName = etLastName.getText().toString().trim();
         String email = etEmail.getText().toString().trim();
         String phone = etPhone.getText().toString().trim();
-        String role = spinnerRole.getSelectedItem().toString();
+        String role = spinnerRole.getText() != null ? spinnerRole.getText().toString().trim() : "";
         String salaryText = etSalary.getText().toString().trim();
         String hireDate = etHireDate.getText().toString().trim();
-        String status = spinnerStatus.getSelectedItem().toString();
+        String status = spinnerStatus.getText() != null ? spinnerStatus.getText().toString().trim() : "";
 
-        Integer primaryLocationId = null;
-        int locationPosition = spinnerLocation.getSelectedItemPosition();
-        if (locationPosition >= 0 && locationPosition < locationList.size()) {
-            primaryLocationId = locationList.get(locationPosition).getLocationId();
+        if (TextUtils.isEmpty(role)) {
+            spinnerRole.setError("Role is required");
+            spinnerRole.requestFocus();
+            return;
         }
 
-        Double salary = TextUtils.isEmpty(salaryText)
-                ? null : Double.parseDouble(salaryText);
-
-        Integer managerId = null;
-        int managerPosition = spinnerManager.getSelectedItemPosition();
-        if (managerPosition > 0 && managerPosition - 1 < managerList.size()) {
-            managerId = managerList.get(managerPosition - 1).getEmployeeId();
+        if (TextUtils.isEmpty(status)) {
+            spinnerStatus.setError("Status is required");
+            spinnerStatus.requestFocus();
+            return;
         }
+
+        Integer primaryLocationId = selectedLocationId > 0 ? selectedLocationId : null;
+        Double salary = TextUtils.isEmpty(salaryText) ? null : Double.parseDouble(salaryText);
+        Integer managerId = selectedManagerId > 0 ? selectedManagerId : null;
 
         SaveEmployeeRequest request = new SaveEmployeeRequest(
                 primaryLocationId,

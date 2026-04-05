@@ -3,7 +3,6 @@ package com.example.workshop06;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -29,9 +28,10 @@ public class AddOnFormActivity extends AppCompatActivity {
     private EditText etAddOnName;
     private EditText etMonthlyPrice;
     private EditText etDescription;
-    private CheckBox cbActive;
     private Button btnSaveAddOn;
+
     private MaterialAutoCompleteTextView spinnerServiceType;
+    private MaterialAutoCompleteTextView spinnerActive;
 
     private Integer addOnId = null;
     private AddOnResponse loadedAddOn = null;
@@ -40,16 +40,19 @@ public class AddOnFormActivity extends AppCompatActivity {
     private ArrayAdapter<String> serviceTypeAdapter;
     private int selectedServiceTypePosition = -1;
 
+    private ArrayAdapter<String> activeAdapter;
+    private int selectedActivePosition = 0; // 0 = Yes, 1 = No
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_addon_form);
 
         spinnerServiceType = findViewById(R.id.spinnerServiceType);
+        spinnerActive = findViewById(R.id.spinnerActive);
         etAddOnName = findViewById(R.id.etAddOnName);
         etMonthlyPrice = findViewById(R.id.etMonthlyPrice);
         etDescription = findViewById(R.id.etDescription);
-        cbActive = findViewById(R.id.cbActive);
         btnSaveAddOn = findViewById(R.id.btnSaveAddOn);
 
         serviceTypeAdapter = new ArrayAdapter<>(
@@ -62,6 +65,19 @@ public class AddOnFormActivity extends AppCompatActivity {
         spinnerServiceType.setOnItemClickListener((parent, view, position, id) -> {
             selectedServiceTypePosition = position;
             spinnerServiceType.setError(null);
+        });
+
+        activeAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_dropdown_item_1line,
+                new String[]{"Yes", "No"}
+        );
+        spinnerActive.setAdapter(activeAdapter);
+        spinnerActive.setText("Yes", false);
+
+        spinnerActive.setOnItemClickListener((parent, view, position, id) -> {
+            selectedActivePosition = position;
+            spinnerActive.setError(null);
         });
 
         if (getIntent() != null && getIntent().hasExtra("addOnId")) {
@@ -88,7 +104,10 @@ public class AddOnFormActivity extends AppCompatActivity {
                     etMonthlyPrice.setText(loadedAddOn.getMonthlyPrice() != null
                             ? String.valueOf(loadedAddOn.getMonthlyPrice()) : "");
                     etDescription.setText(loadedAddOn.getDescription() != null ? loadedAddOn.getDescription() : "");
-                    cbActive.setChecked(Boolean.TRUE.equals(loadedAddOn.getIsActive()));
+
+                    boolean isActive = Boolean.TRUE.equals(loadedAddOn.getIsActive());
+                    selectedActivePosition = isActive ? 0 : 1;
+                    spinnerActive.setText(isActive ? "Yes" : "No", false);
 
                     setServiceTypeSelectionForLoadedAddOn();
                 } else {
@@ -160,6 +179,16 @@ public class AddOnFormActivity extends AppCompatActivity {
             return;
         }
 
+        String activeText = spinnerActive.getText() != null
+                ? spinnerActive.getText().toString().trim()
+                : "";
+
+        if (activeText.isEmpty()) {
+            spinnerActive.setError("Please select active status");
+            spinnerActive.requestFocus();
+            return;
+        }
+
         if (name.isEmpty()) {
             etAddOnName.setError("Add-On name is required");
             etAddOnName.requestFocus();
@@ -182,15 +211,14 @@ public class AddOnFormActivity extends AppCompatActivity {
         }
 
         Integer serviceTypeId = serviceTypes.get(selectedServiceTypePosition).getServiceTypeId();
+        boolean isActive = activeText.equalsIgnoreCase("Yes");
 
         AddOnRequest request = new AddOnRequest(
                 serviceTypeId,
                 name,
                 monthlyPrice,
                 description,
-                cbActive.isChecked(),
-                null,
-                null
+                isActive
         );
 
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);

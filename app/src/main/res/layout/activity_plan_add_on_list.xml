@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     android:background="#F3EEFF">
 
-    <!-- HEADER (same style as employee list) -->
     <LinearLayout
         android:id="@+id/topContainer"
         android:layout_width="0dp"
@@ -19,6 +18,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:padding="20dp">
 
             <LinearLayout
@@ -30,26 +31,27 @@
                 android:paddingTop="20dp">
 
                 <TextView
+                    android:id="@+id/tvTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Employee Sales"
+                    android:text="Plan Add-ons"
                     android:textColor="#fff"
                     android:textSize="28sp"
                     android:textStyle="bold"
-                    android:paddingTop="24dp"/>
+                    android:paddingTop="24dp" />
 
                 <TextView
+                    android:id="@+id/tvSubtitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="View sales performance by employee"
+                    android:text="Manage add-ons for this plan"
                     android:textColor="#fff"
                     android:textSize="14sp"
-                    android:layout_marginTop="4dp"/>
+                    android:layout_marginTop="4dp" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 
-    <!-- SEARCH + SORT -->
     <LinearLayout
         android:id="@+id/filterContainer"
         android:layout_width="0dp"
@@ -63,43 +65,53 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <androidx.appcompat.widget.SearchView
-            android:id="@+id/searchViewEmployee"
+            android:id="@+id/searchViewAddOn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_search_border"
             android:paddingStart="8dp"
             android:paddingEnd="8dp"
-            android:queryHint="Search by name"
+            android:queryHint="Search by add-on name or description"
             android:iconifiedByDefault="false" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="end"
             android:layout_marginTop="10dp">
 
-            <ImageButton
-                android:id="@+id/btnSortCount"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:layout_marginEnd="8dp"
-                android:background="@drawable/bg_round_button"
-                android:src="@android:drawable/ic_menu_sort_by_size"
-                android:contentDescription="Sort by sales count" />
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:hint="Status"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu">
 
-            <ImageButton
-                android:id="@+id/btnSortSales"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:background="@drawable/bg_round_button"
-                android:src="@android:drawable/ic_menu_sort_alphabetically"
-                android:contentDescription="Sort by total sales" />
+                <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                    android:id="@+id/spinnerStatusFilter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="none" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:hint="Service Type"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu">
+
+                <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                    android:id="@+id/spinnerServiceTypeFilter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="none" />
+            </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
-
     </LinearLayout>
 
-    <!-- PROGRESS -->
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
@@ -107,25 +119,23 @@
         app:layout_constraintTop_toBottomOf="@id/filterContainer"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="8dp"/>
+        android:layout_marginTop="8dp" />
 
-    <!-- EMPTY -->
     <TextView
         android:id="@+id/tvEmpty"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="No employee sales found"
+        android:text="No add-ons found"
         android:textColor="#6B7280"
         android:textSize="16sp"
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/progressBar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="8dp"/>
+        android:layout_marginTop="8dp" />
 
-    <!-- LIST -->
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerViewSales"
+        android:id="@+id/recyclerViewPlanAddOns"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:padding="16dp"
@@ -133,9 +143,21 @@
         app:layout_constraintTop_toBottomOf="@id/tvEmpty"
         app:layout_constraintBottom_toTopOf="@id/bottomNavigation"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- BOTTOM NAV -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAdd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@android:drawable/ic_input_add"
+        android:contentDescription="Add Add-on"
+        app:backgroundTint="#7C3AED"
+        app:tint="@android:color/white"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavigation"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigation"
         android:layout_width="0dp"
@@ -143,10 +165,10 @@
         android:background="@android:color/white"
         app:itemIconTint="@color/bottom_nav_color"
         app:itemTextColor="@color/bottom_nav_color"
-        app:menu="@menu/bottom_emp_nav_menu"
+        app:menu="@menu/bottom_nav_menu"
         app:labelVisibilityMode="labeled"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

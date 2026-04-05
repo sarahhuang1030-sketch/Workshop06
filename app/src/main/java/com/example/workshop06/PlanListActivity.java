@@ -24,6 +24,7 @@ import com.example.workshop06.adapter.PlanManagerAdapter;
 import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.PlanResponse;
+import com.example.workshop06.model.ServiceTypeResponse;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
@@ -37,6 +38,7 @@ import retrofit2.Response;
 
 public class PlanListActivity extends AppCompatActivity {
 
+    private List<ServiceTypeResponse> serviceTypes;
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private TextView tvEmpty;
@@ -63,7 +65,7 @@ public class PlanListActivity extends AppCompatActivity {
         setupFilterControls();
         setupButtons();
         loadPlans();
-
+        loadServiceTypes();
         BottomNavHelper.setup(this, R.id.nav_plans);
     }
 
@@ -114,7 +116,19 @@ public class PlanListActivity extends AppCompatActivity {
                         .setNegativeButton("Cancel", null)
                         .show();
             }
+
+            @Override
+            public void onManageAddOns(PlanResponse item) {
+                if (item.getPlanId() == null) return;
+
+                Intent intent = new Intent(PlanListActivity.this, PlanAddOnListActivity.class);
+                intent.putExtra("planId", item.getPlanId());
+                intent.putExtra("planName", item.getPlanName());
+                startActivity(intent);
+            }
         });
+
+
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setHasFixedSize(true);
@@ -309,5 +323,30 @@ public class PlanListActivity extends AppCompatActivity {
 
         adapter.applyFilters(query, minAmount, maxAmount, status, contractTerm);
         updateEmptyState();
+    }
+
+    private void loadServiceTypes() {
+        ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
+
+        apiService.getServiceTypes().enqueue(new Callback<List<ServiceTypeResponse>>() {
+            @Override
+            public void onResponse(Call<List<ServiceTypeResponse>> call, Response<List<ServiceTypeResponse>> response) {
+                if (response.isSuccessful()) {
+                    serviceTypes = response.body();
+                    adapter.setServiceTypes(serviceTypes); // 👈 important
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<ServiceTypeResponse>> call, Throwable t) {
+                Toast.makeText(PlanListActivity.this, "Failed to load service types", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadPlans();
     }
 }

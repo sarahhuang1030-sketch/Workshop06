@@ -3,12 +3,10 @@ package com.example.workshop06;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -21,6 +19,7 @@ import com.example.workshop06.model.CreateCustomerResponse;
 import com.example.workshop06.model.CustomerResponse;
 import com.example.workshop06.util.FormFormatUtils;
 import com.example.workshop06.util.ValidationUtils;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -28,15 +27,14 @@ import retrofit2.Response;
 
 public class CustomerFormActivity extends AppCompatActivity {
 
-    private Spinner spinnerCustomerType;
+    private MaterialAutoCompleteTextView spinnerCustomerType;
     private EditText etFirstName;
     private EditText etLastName;
     private EditText etBusinessName;
     private EditText etEmail;
     private EditText etHomePhone;
-    private Spinner spinnerStatus;
+    private MaterialAutoCompleteTextView spinnerStatus;
     private Button btnSave;
-
     private ProgressBar progressBar;
 
     private String mode = "add";
@@ -69,21 +67,23 @@ public class CustomerFormActivity extends AppCompatActivity {
     }
 
     private void setupSpinners() {
+        String[] customerTypes = {"Individual", "Business"};
         ArrayAdapter<String> typeAdapter = new ArrayAdapter<>(
                 this,
-                android.R.layout.simple_spinner_item,
-                new String[]{"Individual", "Business"}
+                android.R.layout.simple_list_item_1,
+                customerTypes
         );
-        typeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerCustomerType.setAdapter(typeAdapter);
+        spinnerCustomerType.setText(customerTypes[0], false);
 
+        String[] statuses = {"Active", "Inactive"};
         ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(
                 this,
-                android.R.layout.simple_spinner_item,
-                new String[]{"Active", "Inactive"}
+                android.R.layout.simple_list_item_1,
+                statuses
         );
-        statusAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerStatus.setAdapter(statusAdapter);
+        spinnerStatus.setText(statuses[0], false);
     }
 
     private void attachFormatters() {
@@ -97,44 +97,28 @@ public class CustomerFormActivity extends AppCompatActivity {
         if ("edit".equalsIgnoreCase(mode)) {
             customerId = getIntent().getIntExtra("customerId", -1);
 
-            setSpinnerValue(spinnerCustomerType, getIntent().getStringExtra("customerType"));
+            setDropdownValue(spinnerCustomerType, getIntent().getStringExtra("customerType"));
             etFirstName.setText(getIntent().getStringExtra("firstName"));
             etLastName.setText(getIntent().getStringExtra("lastName"));
             etBusinessName.setText(getIntent().getStringExtra("businessName"));
             etEmail.setText(getIntent().getStringExtra("email"));
             etHomePhone.setText(getIntent().getStringExtra("homePhone"));
-            setSpinnerValue(spinnerStatus, getIntent().getStringExtra("status"));
+            setDropdownValue(spinnerStatus, getIntent().getStringExtra("status"));
         }
     }
 
-    private void setSpinnerValue(Spinner spinner, String value) {
-        if (value == null) return;
-
-        for (int i = 0; i < spinner.getCount(); i++) {
-            String item = String.valueOf(spinner.getItemAtPosition(i));
-            if (item.equalsIgnoreCase(value)) {
-                spinner.setSelection(i);
-                break;
-            }
-        }
+    private void setDropdownValue(MaterialAutoCompleteTextView dropdown, String value) {
+        if (value == null || value.trim().isEmpty()) return;
+        dropdown.setText(value, false);
     }
 
     private void setupTypeBehavior() {
-        spinnerCustomerType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                updateCustomerTypeUI();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
+        spinnerCustomerType.setOnItemClickListener((parent, view, position, id) -> updateCustomerTypeUI());
     }
 
     private void updateCustomerTypeUI() {
-        String customerType = spinnerCustomerType.getSelectedItem() != null
-                ? spinnerCustomerType.getSelectedItem().toString()
+        String customerType = spinnerCustomerType.getText() != null
+                ? spinnerCustomerType.getText().toString().trim()
                 : "Individual";
 
         boolean isBusiness = "Business".equalsIgnoreCase(customerType);
@@ -164,11 +148,19 @@ public class CustomerFormActivity extends AppCompatActivity {
     }
 
     private boolean validateForm() {
-        String customerType = spinnerCustomerType.getSelectedItem() != null
-                ? spinnerCustomerType.getSelectedItem().toString()
+        String customerType = spinnerCustomerType.getText() != null
+                ? spinnerCustomerType.getText().toString().trim()
                 : "Individual";
 
         boolean isBusiness = "Business".equalsIgnoreCase(customerType);
+
+        if (spinnerCustomerType.getText() == null ||
+                spinnerCustomerType.getText().toString().trim().isEmpty()) {
+            spinnerCustomerType.setError("Customer type is required");
+            return false;
+        } else {
+            spinnerCustomerType.setError(null);
+        }
 
         if (!ValidationUtils.email(etEmail)) {
             return false;
@@ -176,6 +168,14 @@ public class CustomerFormActivity extends AppCompatActivity {
 
         if (!ValidationUtils.phone(etHomePhone)) {
             return false;
+        }
+
+        if (spinnerStatus.getText() == null ||
+                spinnerStatus.getText().toString().trim().isEmpty()) {
+            spinnerStatus.setError("Status is required");
+            return false;
+        } else {
+            spinnerStatus.setError(null);
         }
 
         if (isBusiness) {
@@ -200,7 +200,7 @@ public class CustomerFormActivity extends AppCompatActivity {
             return;
         }
 
-        String customerType = spinnerCustomerType.getSelectedItem().toString();
+        String customerType = spinnerCustomerType.getText().toString().trim();
         boolean isBusiness = "Business".equalsIgnoreCase(customerType);
 
         String firstName = etFirstName.getText().toString().trim();
@@ -208,7 +208,7 @@ public class CustomerFormActivity extends AppCompatActivity {
         String businessName = etBusinessName.getText().toString().trim();
         String email = etEmail.getText().toString().trim();
         String homePhone = etHomePhone.getText().toString().trim();
-        String status = spinnerStatus.getSelectedItem().toString();
+        String status = spinnerStatus.getText().toString().trim();
 
         CreateCustomerRequest request = new CreateCustomerRequest(
                 TextUtils.isEmpty(firstName) ? null : firstName,
@@ -218,7 +218,6 @@ public class CustomerFormActivity extends AppCompatActivity {
                 homePhone,
                 customerType,
                 status,
-
                 null,       // street1
                 null,       // street2
                 null,       // city
@@ -272,10 +271,7 @@ public class CustomerFormActivity extends AppCompatActivity {
                                 .setMessage("Username: " + created.getUsername()
                                         + "\nTemporary Password: " + created.getTempPassword()
                                         + "\n\nTap COPY to save credentials.")
-
                                 .setCancelable(false)
-
-                                // ✅ ONLY BUTTON
                                 .setPositiveButton("Copy", (dialog, which) -> {
                                     String textToCopy = "Username: " + created.getUsername()
                                             + "\nTemporary Password: " + created.getTempPassword();
@@ -292,11 +288,9 @@ public class CustomerFormActivity extends AppCompatActivity {
                                             "Copied to clipboard",
                                             Toast.LENGTH_SHORT).show();
 
-                                    // ✅ go back after copying
                                     setResult(RESULT_OK);
                                     finish();
                                 })
-
                                 .show();
                     } else {
                         Toast.makeText(CustomerFormActivity.this,

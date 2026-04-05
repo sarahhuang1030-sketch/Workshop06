@@ -2,12 +2,11 @@ package com.example.workshop06;
 
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ProgressBar;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -17,6 +16,12 @@ import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.PlanResponse;
 import com.example.workshop06.model.SavePlanRequest;
+import com.example.workshop06.model.ServiceTypeResponse;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -24,15 +29,21 @@ import retrofit2.Response;
 
 public class PlanFormActivity extends AppCompatActivity {
 
-    private EditText etServiceTypeId, etPlanName, etMonthlyPrice, etContractTermMonths,
-            etDescription, etTagline, etBadge, etIconKey, etThemeKey, etDataLabel;
-    private Spinner spinnerIsActive;
-    private Button btnSave;
+    private EditText etPlanName;
+    private EditText etMonthlyPrice;
+    private EditText etDescription;
 
+    private MaterialAutoCompleteTextView spinnerServiceType;
+    private MaterialAutoCompleteTextView spinnerIsActive;
+
+    private Button btnSave;
     private ProgressBar progressBar;
 
     private String mode = "add";
     private int planId = -1;
+
+    private final List<ServiceTypeResponse> serviceTypeList = new ArrayList<>();
+    private Integer selectedServiceTypeId = null;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -40,36 +51,83 @@ public class PlanFormActivity extends AppCompatActivity {
         setContentView(R.layout.activity_plan_form);
 
         initViews();
-        setupSpinner();
+        setupStatusDropdown();
         loadIntentData();
+        loadServiceTypes();
         setupButtons();
     }
 
     private void initViews() {
-        etServiceTypeId = findViewById(R.id.etServiceTypeId);
+        spinnerServiceType = findViewById(R.id.spinnerServiceType);
+        spinnerIsActive = findViewById(R.id.spinnerIsActive);
+
         etPlanName = findViewById(R.id.etPlanName);
         etMonthlyPrice = findViewById(R.id.etMonthlyPrice);
-        etContractTermMonths = findViewById(R.id.etContractTermMonths);
         etDescription = findViewById(R.id.etDescription);
-        etTagline = findViewById(R.id.etTagline);
-        etBadge = findViewById(R.id.etBadge);
-        etIconKey = findViewById(R.id.etIconKey);
-        etThemeKey = findViewById(R.id.etThemeKey);
-        etDataLabel = findViewById(R.id.etDataLabel);
-        spinnerIsActive = findViewById(R.id.spinnerIsActive);
-        btnSave = findViewById(R.id.btnSave);
 
+        btnSave = findViewById(R.id.btnSave);
         progressBar = findViewById(R.id.progressBar);
     }
 
-    private void setupSpinner() {
+    private void setupStatusDropdown() {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 this,
-                android.R.layout.simple_spinner_item,
-                new String[]{"1", "0"}
+                android.R.layout.simple_dropdown_item_1line,
+                new String[]{"Active", "Inactive"}
         );
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerIsActive.setAdapter(adapter);
+        spinnerIsActive.setOnClickListener(v -> spinnerIsActive.showDropDown());
+        spinnerIsActive.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) spinnerIsActive.showDropDown();
+        });
+        spinnerIsActive.setText("Active", false);
+    }
+
+    private void loadServiceTypes() {
+        ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
+
+        apiService.getServiceTypes().enqueue(new Callback<List<ServiceTypeResponse>>() {
+            @Override
+            public void onResponse(Call<List<ServiceTypeResponse>> call, Response<List<ServiceTypeResponse>> response) {
+                if (!response.isSuccessful() || response.body() == null) {
+                    Toast.makeText(PlanFormActivity.this, "Failed to load service types", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                serviceTypeList.clear();
+                serviceTypeList.addAll(response.body());
+
+                List<String> names = new ArrayList<>();
+                for (ServiceTypeResponse item : serviceTypeList) {
+                    names.add(item.getName() != null ? item.getName() : "Service Type");
+                }
+
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                        PlanFormActivity.this,
+                        android.R.layout.simple_dropdown_item_1line,
+                        names
+                );
+                spinnerServiceType.setAdapter(adapter);
+
+                spinnerServiceType.setOnClickListener(v -> spinnerServiceType.showDropDown());
+                spinnerServiceType.setOnFocusChangeListener((v, hasFocus) -> {
+                    if (hasFocus) spinnerServiceType.showDropDown();
+                });
+
+                spinnerServiceType.setOnItemClickListener((parent, view, position, id) -> {
+                    if (position >= 0 && position < serviceTypeList.size()) {
+                        selectedServiceTypeId = serviceTypeList.get(position).getServiceTypeId();
+                    }
+                });
+
+                applySelectedServiceType();
+            }
+
+            @Override
+            public void onFailure(Call<List<ServiceTypeResponse>> call, Throwable t) {
+                Toast.makeText(PlanFormActivity.this, "Failed to load service types", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void loadIntentData() {
@@ -81,59 +139,57 @@ public class PlanFormActivity extends AppCompatActivity {
 
             int serviceTypeId = getIntent().getIntExtra("serviceTypeId", Integer.MIN_VALUE);
             double monthlyPrice = getIntent().getDoubleExtra("monthlyPrice", Double.NaN);
-            int contractTermMonths = getIntent().getIntExtra("contractTermMonths", Integer.MIN_VALUE);
             int isActive = getIntent().getIntExtra("isActive", Integer.MIN_VALUE);
 
-            if (serviceTypeId != Integer.MIN_VALUE) etServiceTypeId.setText(String.valueOf(serviceTypeId));
-            if (!Double.isNaN(monthlyPrice)) etMonthlyPrice.setText(String.valueOf(monthlyPrice));
-            if (contractTermMonths != Integer.MIN_VALUE) etContractTermMonths.setText(String.valueOf(contractTermMonths));
+            if (serviceTypeId != Integer.MIN_VALUE) {
+                selectedServiceTypeId = serviceTypeId;
+            }
 
-            etPlanName.setText(getIntent().getStringExtra("planName"));
-            etDescription.setText(getIntent().getStringExtra("description"));
-            etTagline.setText(getIntent().getStringExtra("tagline"));
-            etBadge.setText(getIntent().getStringExtra("badge"));
-            etIconKey.setText(getIntent().getStringExtra("iconKey"));
-            etThemeKey.setText(getIntent().getStringExtra("themeKey"));
-            etDataLabel.setText(getIntent().getStringExtra("dataLabel"));
+            if (!Double.isNaN(monthlyPrice)) {
+                etMonthlyPrice.setText(String.format(Locale.US, "%.2f", monthlyPrice));
+            }
+
+            String planName = getIntent().getStringExtra("planName");
+            String description = getIntent().getStringExtra("description");
+
+            etPlanName.setText(planName != null ? planName : "");
+            etDescription.setText(description != null ? description : "");
 
             if (isActive != Integer.MIN_VALUE) {
-                setSpinnerValue(String.valueOf(isActive));
+                spinnerIsActive.setText(isActive == 1 ? "Active" : "Inactive", false);
             }
         }
     }
 
-    private void setSpinnerValue(String value) {
-        if (value == null) return;
-        for (int i = 0; i < spinnerIsActive.getCount(); i++) {
-            String item = String.valueOf(spinnerIsActive.getItemAtPosition(i));
-            if (item.equalsIgnoreCase(value)) {
-                spinnerIsActive.setSelection(i);
+    private void applySelectedServiceType() {
+        if (selectedServiceTypeId == null) return;
+
+        for (ServiceTypeResponse item : serviceTypeList) {
+            if (item.getServiceTypeId() != null && item.getServiceTypeId().equals(selectedServiceTypeId)) {
+                spinnerServiceType.setText(item.getName(), false);
                 break;
             }
         }
     }
 
     private void setupButtons() {
-
         btnSave.setOnClickListener(v -> savePlan());
     }
 
     private void savePlan() {
-        String serviceTypeIdText = etServiceTypeId.getText().toString().trim();
+        String serviceTypeName = spinnerServiceType.getText() != null
+                ? spinnerServiceType.getText().toString().trim()
+                : "";
         String planName = etPlanName.getText().toString().trim();
         String monthlyPriceText = etMonthlyPrice.getText().toString().trim();
-        String contractTermMonthsText = etContractTermMonths.getText().toString().trim();
         String description = etDescription.getText().toString().trim();
-        String isActiveText = spinnerIsActive.getSelectedItem().toString();
-        String tagline = etTagline.getText().toString().trim();
-        String badge = etBadge.getText().toString().trim();
-        String iconKey = etIconKey.getText().toString().trim();
-        String themeKey = etThemeKey.getText().toString().trim();
-        String dataLabel = etDataLabel.getText().toString().trim();
+        String isActiveText = spinnerIsActive.getText() != null
+                ? spinnerIsActive.getText().toString().trim()
+                : "";
 
-        if (TextUtils.isEmpty(serviceTypeIdText)) {
-            etServiceTypeId.setError("Service Type ID is required");
-            etServiceTypeId.requestFocus();
+        if (TextUtils.isEmpty(serviceTypeName) || selectedServiceTypeId == null) {
+            spinnerServiceType.setError("Service Type is required");
+            spinnerServiceType.requestFocus();
             return;
         }
 
@@ -143,23 +199,31 @@ public class PlanFormActivity extends AppCompatActivity {
             return;
         }
 
-        Integer serviceTypeId = Integer.parseInt(serviceTypeIdText);
-        Double monthlyPrice = TextUtils.isEmpty(monthlyPriceText) ? null : Double.parseDouble(monthlyPriceText);
-        Integer contractTermMonths = TextUtils.isEmpty(contractTermMonthsText) ? null : Integer.parseInt(contractTermMonthsText);
-        Integer isActive = TextUtils.isEmpty(isActiveText) ? null : Integer.parseInt(isActiveText);
+        Double monthlyPrice = null;
+        try {
+            if (!TextUtils.isEmpty(monthlyPriceText)) {
+                monthlyPrice = Double.parseDouble(monthlyPriceText);
+            }
+        } catch (NumberFormatException e) {
+            etMonthlyPrice.setError("Monthly price must be a valid number");
+            etMonthlyPrice.requestFocus();
+            return;
+        }
+
+        Integer isActive = "Active".equalsIgnoreCase(isActiveText) ? 1 : 0;
 
         SavePlanRequest request = new SavePlanRequest(
-                serviceTypeId,
+                selectedServiceTypeId,
                 planName,
                 monthlyPrice,
-                contractTermMonths,
+                null,
                 TextUtils.isEmpty(description) ? null : description,
                 isActive,
-                TextUtils.isEmpty(tagline) ? null : tagline,
-                TextUtils.isEmpty(badge) ? null : badge,
-                TextUtils.isEmpty(iconKey) ? null : iconKey,
-                TextUtils.isEmpty(themeKey) ? null : themeKey,
-                TextUtils.isEmpty(dataLabel) ? null : dataLabel
+                null,
+                null,
+                null,
+                null,
+                null
         );
 
         showLoading(true);
@@ -220,7 +284,7 @@ public class PlanFormActivity extends AppCompatActivity {
     }
 
     private void showLoading(boolean isLoading) {
-        progressBar.setVisibility(isLoading ? android.view.View.VISIBLE : android.view.View.GONE);
+        progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         btnSave.setEnabled(!isLoading);
     }
 }

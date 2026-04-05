@@ -40,7 +40,7 @@ public class EmployeeSalesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_manager_employee_sales);
         // If you rename the XML file later, change this to:
         // setContentView(R.layout.activity_employee_sales);
-
+        BottomNavHelper.setup(this, 0);
         initViews();
         setupRecyclerView();
         setupSearch();
@@ -50,6 +50,7 @@ public class EmployeeSalesActivity extends AppCompatActivity {
         }
 
         loadEmployeeSales();
+
     }
 
     private void initViews() {

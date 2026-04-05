@@ -24,6 +24,10 @@ import retrofit2.Response;
 
 public class ServiceRequestFormActivity extends AppCompatActivity {
 
+    private EditText etCustomerName;
+    private EditText etCreatedByName;
+    private EditText etAssignedTechnicianName;
+
     private EditText etCustomerId;
     private EditText etCreatedByUserId;
     private EditText etAssignedTechnicianUserId;
@@ -51,9 +55,14 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
     }
 
     private void initViews() {
+        etCustomerName = findViewById(R.id.etCustomerName);
+        etCreatedByName = findViewById(R.id.etCreatedByName);
+        etAssignedTechnicianName = findViewById(R.id.etAssignedTechnicianName);
+
         etCustomerId = findViewById(R.id.etCustomerId);
         etCreatedByUserId = findViewById(R.id.etCreatedByUserId);
         etAssignedTechnicianUserId = findViewById(R.id.etAssignedTechnicianUserId);
+
         etParentRequestId = findViewById(R.id.etParentRequestId);
         etDescription = findViewById(R.id.etDescription);
         etRequestType = findViewById(R.id.etRequestType);
@@ -88,22 +97,36 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
         mode = getIntent().getStringExtra("mode");
         if (mode == null) mode = "add";
 
+        Integer customerId = getNullableIntExtra("customerId");
+        Integer createdByUserId = getNullableIntExtra("createdByUserId");
+        Integer assignedTechnicianUserId = getNullableIntExtra("assignedTechnicianUserId");
+
+        String customerName = getIntent().getStringExtra("customerName");
+        String createdByName = getIntent().getStringExtra("createdByName");
+        String technicianName = getIntent().getStringExtra("technicianName");
+
+        if (customerId != null) etCustomerId.setText(String.valueOf(customerId));
+        if (createdByUserId != null) etCreatedByUserId.setText(String.valueOf(createdByUserId));
+        if (assignedTechnicianUserId != null) {
+            etAssignedTechnicianUserId.setText(String.valueOf(assignedTechnicianUserId));
+        }
+
+        etCustomerName.setText(!TextUtils.isEmpty(customerName) ? customerName : "—");
+        etCreatedByName.setText(!TextUtils.isEmpty(createdByName) ? createdByName : "—");
+        etAssignedTechnicianName.setText(!TextUtils.isEmpty(technicianName) ? technicianName : "—");
+
         if ("edit".equalsIgnoreCase(mode)) {
             requestId = getIntent().getIntExtra("requestId", -1);
 
-            Integer customerId = getNullableIntExtra("customerId");
-            Integer createdByUserId = getNullableIntExtra("createdByUserId");
-            Integer assignedTechnicianUserId = getNullableIntExtra("assignedTechnicianUserId");
             String requestType = getIntent().getStringExtra("requestType");
             String priority = getIntent().getStringExtra("priority");
             String status = getIntent().getStringExtra("status");
             String description = getIntent().getStringExtra("description");
+            Integer parentRequestId = getNullableIntExtra("parentRequestId");
 
-            if (customerId != null) etCustomerId.setText(String.valueOf(customerId));
-            if (createdByUserId != null) etCreatedByUserId.setText(String.valueOf(createdByUserId));
-            if (assignedTechnicianUserId != null) etAssignedTechnicianUserId.setText(String.valueOf(assignedTechnicianUserId));
             if (requestType != null) etRequestType.setText(requestType);
             if (description != null) etDescription.setText(description);
+            if (parentRequestId != null) etParentRequestId.setText(String.valueOf(parentRequestId));
 
             setSpinnerValue(spinnerPriority, priority);
             setSpinnerValue(spinnerStatus, status);
@@ -149,14 +172,12 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
         String status = spinnerStatus.getSelectedItem().toString();
 
         if (TextUtils.isEmpty(customerIdText)) {
-            etCustomerId.setError("Customer ID is required");
-            etCustomerId.requestFocus();
+            Toast.makeText(this, "Customer is required", Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (TextUtils.isEmpty(createdByUserIdText)) {
-            etCreatedByUserId.setError("Created By User ID is required");
-            etCreatedByUserId.requestFocus();
+            Toast.makeText(this, "Created by user is required", Toast.LENGTH_SHORT).show();
             return;
         }
 

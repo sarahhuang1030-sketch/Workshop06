@@ -21,7 +21,15 @@ import com.example.workshop06.adapter.ServiceAppointmentAdapter;
 import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.ServiceAppointmentResponse;
+import com.example.workshop06.model.EmployeeResponse;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
+import android.widget.ArrayAdapter;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
 
 import java.util.List;
 
@@ -42,6 +50,15 @@ public class ServiceAppointmentListActivity extends AppCompatActivity {
     private ServiceAppointmentAdapter adapter;
     private int requestId = -1;
 
+    private MaterialAutoCompleteTextView spinnerStatusFilter;
+    private MaterialAutoCompleteTextView spinnerLocationTypeFilter;
+    private MaterialAutoCompleteTextView spinnerTechnicianFilter;
+
+    private String currentSearch = "";
+    private String selectedStatus = "All";
+    private String selectedLocationType = "All";
+    private String selectedTechnician = "All";
+
     private final ActivityResultLauncher<Intent> formLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> loadAppointments());
 
@@ -56,7 +73,9 @@ public class ServiceAppointmentListActivity extends AppCompatActivity {
         setupRecyclerView();
         setupSearch();
         setupButtons();
-
+        BottomNavHelper.setup(this, 0);
+        setupStaticFilters();
+        setupTechnicianFilter();
         String customerName = getIntent().getStringExtra("customerName");
         String requestType = getIntent().getStringExtra("requestType");
         if (tvSubtitle != null) {
@@ -79,8 +98,10 @@ public class ServiceAppointmentListActivity extends AppCompatActivity {
         tvEmpty = findViewById(R.id.tvEmpty);
         tvSubtitle = findViewById(R.id.tvSubtitle);
         searchView = findViewById(R.id.searchViewAppointment);
-
         fabAdd = findViewById(R.id.fabAdd);
+        spinnerStatusFilter = findViewById(R.id.spinnerStatusFilter);
+        spinnerLocationTypeFilter = findViewById(R.id.spinnerLocationTypeFilter);
+        spinnerTechnicianFilter = findViewById(R.id.spinnerTechnicianFilter);
     }
 
     private void setupRecyclerView() {
@@ -99,6 +120,8 @@ public class ServiceAppointmentListActivity extends AppCompatActivity {
                 intent.putExtra("scheduledEnd", item.getScheduledEnd());
                 intent.putExtra("status", item.getStatus());
                 intent.putExtra("notes", item.getNotes());
+                intent.putExtra("technicianName", item.getTechnicianName());
+                intent.putExtra("addressText", item.getAddressText());
                 formLauncher.launch(intent);
             }
 
@@ -121,16 +144,21 @@ public class ServiceAppointmentListActivity extends AppCompatActivity {
     }
 
     private void setupSearch() {
+        if (searchView == null) return;
+
+        searchView.clearFocus();
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override public boolean onQueryTextSubmit(String query) {
-                adapter.filter(query);
-                updateEmptyState();
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                currentSearch = query == null ? "" : query;
+                applyFilters();
                 return true;
             }
 
-            @Override public boolean onQueryTextChange(String newText) {
-                adapter.filter(newText);
-                updateEmptyState();
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                currentSearch = newText == null ? "" : newText;
+                applyFilters();
                 return true;
             }
         });
@@ -163,7 +191,7 @@ public class ServiceAppointmentListActivity extends AppCompatActivity {
 
                 List<ServiceAppointmentResponse> data = response.body();
                 adapter.setData(data);
-                showEmpty(data == null || data.isEmpty());
+                applyFilters();
             }
 
             @Override
@@ -221,4 +249,100 @@ public class ServiceAppointmentListActivity extends AppCompatActivity {
         updateEmptyState();
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
+
+    private void setupStaticFilters() {
+        ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_dropdown_item_1line,
+                new String[]{"All", "Scheduled", "Completed", "Cancelled", "Pending"}
+        );
+        spinnerStatusFilter.setAdapter(statusAdapter);
+        spinnerStatusFilter.setText("All", false);
+        spinnerStatusFilter.setOnItemClickListener((parent, view, position, id) -> {
+            selectedStatus = parent.getItemAtPosition(position).toString();
+            applyFilters();
+        });
+
+        ArrayAdapter<String> locationTypeAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_dropdown_item_1line,
+                new String[]{"All", "ONSITE", "INSTORE", "REMOTE"}
+        );
+        spinnerLocationTypeFilter.setAdapter(locationTypeAdapter);
+        spinnerLocationTypeFilter.setText("All", false);
+        spinnerLocationTypeFilter.setOnItemClickListener((parent, view, position, id) -> {
+            selectedLocationType = parent.getItemAtPosition(position).toString();
+            applyFilters();
+        });
+    }
+
+    private void setupTechnicianFilter() {
+        if (spinnerTechnicianFilter == null) return;
+
+        ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
+        apiService.getEmployees().enqueue(new Callback<List<EmployeeResponse>>() {
+            @Override
+            public void onResponse(Call<List<EmployeeResponse>> call, Response<List<EmployeeResponse>> response) {
+                List<String> technicianList = new ArrayList<>();
+                technicianList.add("All");
+
+                if (response.isSuccessful() && response.body() != null) {
+                    for (EmployeeResponse emp : response.body()) {
+                        String role = emp.getRole() != null ? emp.getRole().trim() : "";
+
+                        String firstName = emp.getFirstName() != null ? emp.getFirstName().trim() : "";
+                        String lastName = emp.getLastName() != null ? emp.getLastName().trim() : "";
+                        String fullName = (firstName + " " + lastName).trim();
+
+                        if (role.equalsIgnoreCase("SERVICE_TECHNICIAN")
+                                || role.equalsIgnoreCase("Service Technician")
+                                || role.equalsIgnoreCase("Technician")) {
+
+                            if (!fullName.isEmpty() && !technicianList.contains(fullName)) {
+                                technicianList.add(fullName);
+                            }
+                        }
+                    }
+                }
+
+                ArrayAdapter<String> technicianAdapter = new ArrayAdapter<>(
+                        ServiceAppointmentListActivity.this,
+                        android.R.layout.simple_dropdown_item_1line,
+                        technicianList
+                );
+
+                spinnerTechnicianFilter.setAdapter(technicianAdapter);
+                spinnerTechnicianFilter.setText(
+                        selectedTechnician != null && !selectedTechnician.trim().isEmpty()
+                                ? selectedTechnician
+                                : "All",
+                        false
+                );
+
+                spinnerTechnicianFilter.setOnItemClickListener((parent, view, position, id) -> {
+                    selectedTechnician = parent.getItemAtPosition(position).toString();
+                    applyFilters();
+                });
+            }
+
+            @Override
+            public void onFailure(Call<List<EmployeeResponse>> call, Throwable t) {
+                ArrayAdapter<String> technicianAdapter = new ArrayAdapter<>(
+                        ServiceAppointmentListActivity.this,
+                        android.R.layout.simple_dropdown_item_1line,
+                        new String[]{"All"}
+                );
+                spinnerTechnicianFilter.setAdapter(technicianAdapter);
+                spinnerTechnicianFilter.setText("All", false);
+            }
+        });
+    }
+
+    private void applyFilters() {
+        if (adapter == null) return;
+        adapter.applyFilters(currentSearch, selectedStatus, selectedLocationType, selectedTechnician);
+        showEmpty(adapter.getItemCount() == 0);
+    }
+
+
 }

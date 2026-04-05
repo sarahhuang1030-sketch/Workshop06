@@ -54,12 +54,15 @@
         <activity android:name=".ActivityLogListActivity" />
         <activity android:name=".EmployeeFormActivity" />
         <activity android:name=".EmployeeListActivity" />
+        <activity android:name=".EmployeeSalesActivity" />
         <activity android:name=".CustomerAddressFormActivity" />
         <activity android:name=".CustomerFormActivity" />
         <activity android:name=".CustomerListActivity" />
         <activity android:name=".PlanFormActivity" />
         <activity android:name=".PlanListActivity" />
         <activity android:name=".ChangePasswordFirstLoginActivity"/>
+        <activity android:name=".PlanAddOnListActivity" />
+        <activity android:name=".PlanAddOnFormActivity" />
     </application>
 
 </manifest>

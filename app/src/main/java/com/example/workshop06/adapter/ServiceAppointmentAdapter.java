@@ -41,22 +41,48 @@ public class ServiceAppointmentAdapter extends RecyclerView.Adapter<ServiceAppoi
         notifyDataSetChanged();
     }
 
-    public void filter(String keyword) {
+    public void applyFilters(String keyword, String statusFilter, String locationTypeFilter, String technicianFilter) {
         filteredList.clear();
 
-        if (keyword == null || keyword.trim().isEmpty()) {
-            filteredList.addAll(fullList);
-        } else {
-            String q = keyword.toLowerCase(Locale.US).trim();
-            for (ServiceAppointmentResponse item : fullList) {
-                String tech = item.getTechnicianName() != null ? item.getTechnicianName().toLowerCase(Locale.US) : "";
-                String status = item.getStatus() != null ? item.getStatus().toLowerCase(Locale.US) : "";
-                String locationType = item.getLocationType() != null ? item.getLocationType().toLowerCase(Locale.US) : "";
-                String address = item.getAddressText() != null ? item.getAddressText().toLowerCase(Locale.US) : "";
+        String q = keyword == null ? "" : keyword.toLowerCase(Locale.US).trim();
+        String status = statusFilter == null ? "All" : statusFilter.trim();
+        String locationType = locationTypeFilter == null ? "All" : locationTypeFilter.trim();
+        String technician = technicianFilter == null ? "All" : technicianFilter.trim();
 
-                if (tech.contains(q) || status.contains(q) || locationType.contains(q) || address.contains(q)) {
-                    filteredList.add(item);
-                }
+        for (ServiceAppointmentResponse item : fullList) {
+            String techName = item.getTechnicianName() != null
+                    ? item.getTechnicianName().trim()
+                    : "";
+
+            String techNameLower = techName.toLowerCase(Locale.US);
+
+            String itemStatus = item.getStatus() != null
+                    ? item.getStatus().trim()
+                    : "";
+
+            String itemLocationType = item.getLocationType() != null
+                    ? item.getLocationType().trim()
+                    : "";
+
+            String address = item.getAddressText() != null
+                    ? item.getAddressText().toLowerCase(Locale.US).trim()
+                    : "";
+
+            boolean matchesSearch = q.isEmpty()
+                    || techNameLower.contains(q)
+                    || address.contains(q);
+
+            boolean matchesStatus = status.equalsIgnoreCase("All")
+                    || itemStatus.equalsIgnoreCase(status);
+
+            boolean matchesLocationType = locationType.equalsIgnoreCase("All")
+                    || itemLocationType.equalsIgnoreCase(locationType);
+
+            boolean matchesTechnician = technician.equalsIgnoreCase("All")
+                    || techName.equalsIgnoreCase(technician);
+
+            if (matchesSearch && matchesStatus && matchesLocationType && matchesTechnician) {
+                filteredList.add(item);
             }
         }
 

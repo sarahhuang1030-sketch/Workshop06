@@ -3,14 +3,15 @@ package com.example.workshop06;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
@@ -21,6 +22,7 @@ import com.example.workshop06.adapter.PlanFeatureAdapter;
 import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.PlanFeatureResponse;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.List;
@@ -35,15 +37,13 @@ public class PlanFeatureListActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private TextView tvEmpty;
     private SearchView searchViewPlanFeature;
-
     private FloatingActionButton fabAdd;
+    private BottomNavigationView bottomNavigation;
 
     private PlanFeatureAdapter adapter;
 
     private final ActivityResultLauncher<Intent> formLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-                loadPlanFeatures();
-            });
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> loadPlanFeatures());
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -54,6 +54,7 @@ public class PlanFeatureListActivity extends AppCompatActivity {
         setupRecyclerView();
         setupSearch();
         setupButtons();
+        setupBottomNavigation();
         loadPlanFeatures();
     }
 
@@ -62,8 +63,8 @@ public class PlanFeatureListActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         tvEmpty = findViewById(R.id.tvEmpty);
         searchViewPlanFeature = findViewById(R.id.searchViewPlanFeature);
-
         fabAdd = findViewById(R.id.fabAdd);
+        bottomNavigation = findViewById(R.id.bottomNavigation);
     }
 
     private void setupRecyclerView() {
@@ -120,8 +121,6 @@ public class PlanFeatureListActivity extends AppCompatActivity {
     }
 
     private void setupButtons() {
-
-
         if (fabAdd != null) {
             fabAdd.setOnClickListener(v -> {
                 Intent intent = new Intent(PlanFeatureListActivity.this, PlanFeatureFormActivity.class);
@@ -129,6 +128,39 @@ public class PlanFeatureListActivity extends AppCompatActivity {
                 formLauncher.launch(intent);
             });
         }
+    }
+
+    private void setupBottomNavigation() {
+        if (bottomNavigation == null) return;
+
+        bottomNavigation.setSelectedItemId(R.id.nav_plans);
+
+        bottomNavigation.setOnItemSelectedListener(new BottomNavigationView.OnItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                int id = item.getItemId();
+
+                if (id == R.id.nav_home) {
+                    startActivity(new Intent(PlanFeatureListActivity.this, EmployeeDashboardActivity.class));
+                    finish();
+                    return true;
+                } else if (id == R.id.nav_customers) {
+                    startActivity(new Intent(PlanFeatureListActivity.this, CustomerListActivity.class));
+                    finish();
+                    return true;
+                } else if (id == R.id.nav_plans) {
+                    startActivity(new Intent(PlanFeatureListActivity.this, PlanListActivity.class));
+                    finish();
+                    return true;
+                } else if (id == R.id.nav_profile) {
+                    startActivity(new Intent(PlanFeatureListActivity.this, EmployeeProfileActivity.class));
+                    finish();
+                    return true;
+                }
+
+                return false;
+            }
+        });
     }
 
     private void loadPlanFeatures() {

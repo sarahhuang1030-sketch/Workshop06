@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -16,6 +15,7 @@ import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.InvoiceRequest;
 import com.example.workshop06.model.InvoiceResponse;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
+import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.Calendar;
 import java.util.Locale;
@@ -29,7 +29,7 @@ public class InvoiceFormActivity extends AppCompatActivity {
     private EditText etCustomerName, etInvoiceNumber, etIssueDate, etDueDate,
             etSubtotal, etTaxTotal, etTotal;
     private MaterialAutoCompleteTextView spinnerInvoiceStatus;
-    private ImageButton btnIssueDate, btnDueDate;
+    private TextInputLayout tilIssueDate, tilDueDate;
     private Button btnSaveInvoice;
 
     private String originalInvoiceNumber = null;
@@ -48,8 +48,8 @@ public class InvoiceFormActivity extends AppCompatActivity {
         etSubtotal = findViewById(R.id.etSubtotal);
         etTaxTotal = findViewById(R.id.etTaxTotal);
         etTotal = findViewById(R.id.etTotal);
-        btnIssueDate = findViewById(R.id.btnIssueDate);
-        btnDueDate = findViewById(R.id.btnDueDate);
+        tilIssueDate = findViewById(R.id.tilIssueDate);
+        tilDueDate = findViewById(R.id.tilDueDate);
         btnSaveInvoice = findViewById(R.id.btnSaveInvoice);
 
         setupStatusDropdown();
@@ -86,11 +86,11 @@ public class InvoiceFormActivity extends AppCompatActivity {
     }
 
     private void setupDatePickers() {
-        btnIssueDate.setOnClickListener(v -> showDatePicker(etIssueDate));
-        btnDueDate.setOnClickListener(v -> showDatePicker(etDueDate));
-
         etIssueDate.setOnClickListener(v -> showDatePicker(etIssueDate));
         etDueDate.setOnClickListener(v -> showDatePicker(etDueDate));
+
+        tilIssueDate.setEndIconOnClickListener(v -> showDatePicker(etIssueDate));
+        tilDueDate.setEndIconOnClickListener(v -> showDatePicker(etDueDate));
     }
 
     private void showDatePicker(EditText target) {
@@ -152,13 +152,27 @@ public class InvoiceFormActivity extends AppCompatActivity {
     }
 
     private void saveInvoice() {
-        String invoiceNumber = etInvoiceNumber.getText().toString().trim();
-        String status = spinnerInvoiceStatus.getText().toString().trim();
-        String issueDate = etIssueDate.getText().toString().trim();
-        String dueDate = etDueDate.getText().toString().trim();
-        String subtotalText = etSubtotal.getText().toString().trim();
-        String taxTotalText = etTaxTotal.getText().toString().trim();
-        String totalText = etTotal.getText().toString().trim();
+        String invoiceNumber = etInvoiceNumber.getText() != null
+                ? etInvoiceNumber.getText().toString().trim()
+                : "";
+        String status = spinnerInvoiceStatus.getText() != null
+                ? spinnerInvoiceStatus.getText().toString().trim()
+                : "";
+        String issueDate = etIssueDate.getText() != null
+                ? etIssueDate.getText().toString().trim()
+                : "";
+        String dueDate = etDueDate.getText() != null
+                ? etDueDate.getText().toString().trim()
+                : "";
+        String subtotalText = etSubtotal.getText() != null
+                ? etSubtotal.getText().toString().trim()
+                : "";
+        String taxTotalText = etTaxTotal.getText() != null
+                ? etTaxTotal.getText().toString().trim()
+                : "";
+        String totalText = etTotal.getText() != null
+                ? etTotal.getText().toString().trim()
+                : "";
 
         if (customerId == null) {
             Toast.makeText(this, "Customer information is missing", Toast.LENGTH_SHORT).show();

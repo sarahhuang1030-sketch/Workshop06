@@ -68,7 +68,7 @@ public class PlanAddOnListActivity extends AppCompatActivity {
         loadServiceTypes();
         loadPlanAddOns();
 
-        BottomNavHelper.setup(this, R.id.nav_plans);
+        BottomNavHelper.setup(this, 0);
     }
 
     private void readExtras() {

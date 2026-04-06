@@ -1,6 +1,5 @@
 package com.example.workshop06.adapter;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,7 +44,6 @@ public class SubscriptionAdapter extends RecyclerView.Adapter<SubscriptionAdapte
             filteredItems.addAll(newItems);
         }
 
-        Log.d("SubscriptionAdapter", "updateData size: " + filteredItems.size());
         notifyDataSetChanged();
     }
 
@@ -56,8 +54,8 @@ public class SubscriptionAdapter extends RecyclerView.Adapter<SubscriptionAdapte
         String safeStatus = selectedStatus == null ? "All" : selectedStatus.trim();
 
         for (SubscriptionResponse item : originalItems) {
-            String customerName = safe(item.getCustomerName());
-            String planName = safe(item.getPlanName());
+            String customerName = safe(getDisplayCustomerName(item));
+            String planName = safe(getDisplayPlanName(item));
             String status = safe(item.getStatus());
 
             boolean matchesQuery =
@@ -74,8 +72,33 @@ public class SubscriptionAdapter extends RecyclerView.Adapter<SubscriptionAdapte
             }
         }
 
-        Log.d("SubscriptionAdapter", "filter result size: " + filteredItems.size());
         notifyDataSetChanged();
+    }
+
+    private String getDisplayCustomerName(SubscriptionResponse item) {
+        if (item == null) return "Customer";
+
+        String customerName = safe(item.getCustomerName());
+        if (!customerName.isEmpty()) {
+            return customerName;
+        }
+
+        return item.getCustomerId() != null
+                ? "Customer #" + item.getCustomerId()
+                : "Customer";
+    }
+
+    private String getDisplayPlanName(SubscriptionResponse item) {
+        if (item == null) return "Plan";
+
+        String planName = safe(item.getPlanName());
+        if (!planName.isEmpty()) {
+            return planName;
+        }
+
+        return item.getPlanId() != null
+                ? "Plan #" + item.getPlanId()
+                : "Plan";
     }
 
     private String safe(String value) {
@@ -94,20 +117,11 @@ public class SubscriptionAdapter extends RecyclerView.Adapter<SubscriptionAdapte
     public void onBindViewHolder(@NonNull SubscriptionViewHolder holder, int position) {
         SubscriptionResponse item = filteredItems.get(position);
 
-        holder.tvTitle.setText("Subscription #" + item.getSubscriptionId());
+        String customerName = getDisplayCustomerName(item);
+        String planName = getDisplayPlanName(item);
 
-        String customerName = safe(item.getCustomerName());
-        String planName = safe(item.getPlanName());
-
-        if (customerName.isEmpty()) {
-            customerName = "Customer #" + item.getCustomerId();
-        }
-
-        if (planName.isEmpty()) {
-            planName = "Plan #" + item.getPlanId();
-        }
-
-        holder.tvSubtitle.setText(customerName + " • " + planName);
+        holder.tvTitle.setText(customerName);
+        holder.tvSubtitle.setText(planName);
 
         holder.tvStatus.setText(
                 item.getStatus() != null && !item.getStatus().trim().isEmpty()
@@ -119,15 +133,12 @@ public class SubscriptionAdapter extends RecyclerView.Adapter<SubscriptionAdapte
         String endDate = item.getEndDate() != null ? item.getEndDate() : "—";
         holder.tvDates.setText(startDate + " to " + endDate);
 
-        Log.d("SubscriptionAdapter", "Binding row: " + item.getSubscriptionId());
-
         holder.btnEdit.setOnClickListener(v -> listener.onEdit(item));
         holder.btnDelete.setOnClickListener(v -> listener.onDelete(item));
     }
 
     @Override
     public int getItemCount() {
-        Log.d("SubscriptionAdapter", "getItemCount: " + filteredItems.size());
         return filteredItems.size();
     }
 

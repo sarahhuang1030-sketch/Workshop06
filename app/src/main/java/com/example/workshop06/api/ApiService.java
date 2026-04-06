@@ -132,6 +132,26 @@ public interface ApiService {
     @PATCH("/api/manager/subscriptions/{id}/status")
     Call<SubscriptionRequest> updateSubscriptionStatus(@Path("id") int id, @Body SubscriptionStatusRequest request);
 
+    //subscription add-on
+    // subscription add-ons
+    @GET("/api/manager/subscriptions/{subscriptionId}/addons")
+    Call<List<SubscriptionAddOnResponse>> getSubscriptionAddOns(
+            @Path("subscriptionId") int subscriptionId
+    );
+
+    @POST("/api/manager/subscriptions/{subscriptionId}/addons/{addOnId}")
+    Call<Void> attachAddOnToSubscription(
+            @Path("subscriptionId") int subscriptionId,
+            @Path("addOnId") int addOnId
+    );
+
+    @DELETE("/api/manager/subscriptions/{subscriptionId}/addons/{addOnId}")
+    Call<Void> removeAddOnFromSubscription(
+            @Path("subscriptionId") int subscriptionId,
+            @Path("addOnId") int addOnId
+    );
+
+
     // INVOICES
     @GET("/api/invoices/admin/all")
     Call<List<InvoiceResponse>> getAllInvoicesAdmin();
@@ -301,4 +321,7 @@ Call<List<EmployeeSalesResponse>> getEmployeeSales();
             @Path("planId") int planId,
             @Path("addOnId") int addOnId
     );
+
+    //for dropdown menu with employee and customer
+
 }

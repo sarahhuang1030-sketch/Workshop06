@@ -53,13 +53,11 @@ public class PlanFeatureAdapter extends RecyclerView.Adapter<PlanFeatureAdapter.
 
             for (PlanFeatureResponse item : fullList) {
                 String featureId = item.getFeatureId() != null ? String.valueOf(item.getFeatureId()) : "";
-                String planId = item.getPlanId() != null ? String.valueOf(item.getPlanId()) : "";
                 String featureName = item.getFeatureName() != null ? item.getFeatureName().toLowerCase(Locale.US) : "";
                 String featureValue = item.getFeatureValue() != null ? item.getFeatureValue().toLowerCase(Locale.US) : "";
                 String unit = item.getUnit() != null ? item.getUnit().toLowerCase(Locale.US) : "";
 
                 if (featureId.contains(q)
-                        || planId.contains(q)
                         || featureName.contains(q)
                         || featureValue.contains(q)
                         || unit.contains(q)) {
@@ -83,21 +81,25 @@ public class PlanFeatureAdapter extends RecyclerView.Adapter<PlanFeatureAdapter.
     public void onBindViewHolder(@NonNull PlanFeatureAdapter.ViewHolder holder, int position) {
         PlanFeatureResponse item = filteredList.get(position);
 
-        holder.tvFeatureId.setText(item.getFeatureId() != null
-                ? "Feature #" + item.getFeatureId()
-                : "Feature #-");
-
-        holder.tvPlanId.setText(item.getPlanId() != null
-                ? String.valueOf(item.getPlanId())
-                : "-");
-
-        holder.tvFeatureName.setText(item.getFeatureName() != null && !item.getFeatureName().trim().isEmpty()
-                ? item.getFeatureName()
-                : "Unnamed Feature");
+        holder.tvFeatureName.setText(
+                item.getFeatureName() != null && !item.getFeatureName().trim().isEmpty()
+                        ? item.getFeatureName()
+                        : "Unnamed Feature"
+        );
 
         holder.tvFeatureValue.setText(item.getFeatureValue() != null ? item.getFeatureValue() : "-");
-        holder.tvUnit.setText(item.getUnit() != null ? item.getUnit() : "-");
-        holder.tvSortOrder.setText(item.getSortOrder() != null ? String.valueOf(item.getSortOrder()) : "-");
+
+        holder.tvUnit.setText(
+                item.getUnit() != null && !item.getUnit().trim().isEmpty()
+                        ? "(" + item.getUnit() + ")"
+                        : ""
+        );
+
+        holder.tvSortOrder.setText(
+                item.getSortOrder() != null
+                        ? "Order: " + item.getSortOrder()
+                        : "-"
+        );
 
         holder.btnEdit.setOnClickListener(v -> {
             if (listener != null) listener.onEdit(item);
@@ -114,17 +116,17 @@ public class PlanFeatureAdapter extends RecyclerView.Adapter<PlanFeatureAdapter.
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvFeatureId, tvPlanId, tvFeatureName, tvFeatureValue, tvUnit, tvSortOrder;
+        TextView tvFeatureName, tvFeatureValue, tvUnit, tvSortOrder;
         ImageButton btnEdit, btnDelete;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvFeatureId = itemView.findViewById(R.id.tvFeatureId);
-            tvPlanId = itemView.findViewById(R.id.tvPlanId);
+
             tvFeatureName = itemView.findViewById(R.id.tvFeatureName);
             tvFeatureValue = itemView.findViewById(R.id.tvFeatureValue);
             tvUnit = itemView.findViewById(R.id.tvUnit);
             tvSortOrder = itemView.findViewById(R.id.tvSortOrder);
+
             btnEdit = itemView.findViewById(R.id.btnEdit);
             btnDelete = itemView.findViewById(R.id.btnDelete);
         }

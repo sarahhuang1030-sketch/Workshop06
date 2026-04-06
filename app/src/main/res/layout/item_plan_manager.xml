@@ -25,9 +25,9 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Plan #1"
+                android:textColor="#111827"
                 android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="#111827" />
+                android:textStyle="bold" />
 
             <ImageButton
                 android:id="@+id/btnManageAddOns"
@@ -35,8 +35,8 @@
                 android:layout_height="40dp"
                 android:layout_marginEnd="2dp"
                 android:background="@android:color/transparent"
-                android:src="@android:drawable/ic_menu_add"
                 android:contentDescription="Manage Add-ons"
+                android:src="@android:drawable/ic_menu_add"
                 app:tint="#000" />
 
             <ImageButton
@@ -45,8 +45,8 @@
                 android:layout_height="40dp"
                 android:layout_marginEnd="2dp"
                 android:background="@android:color/transparent"
-                android:src="@android:drawable/ic_menu_edit"
                 android:contentDescription="Edit"
+                android:src="@android:drawable/ic_menu_edit"
                 app:tint="#6F56B3" />
 
             <ImageButton
@@ -54,8 +54,8 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="@android:color/transparent"
-                android:src="@android:drawable/ic_menu_delete"
                 android:contentDescription="Delete"
+                android:src="@android:drawable/ic_menu_delete"
                 app:tint="#D94B7D" />
 
         </LinearLayout>
@@ -63,10 +63,10 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:text="Service Type"
-            android:textStyle="bold"
             android:textColor="#6B7280"
-            android:layout_marginTop="10dp" />
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvServiceTypeId"
@@ -77,10 +77,10 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:text="Monthly Price"
-            android:textStyle="bold"
             android:textColor="#6B7280"
-            android:layout_marginTop="10dp" />
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvMonthlyPrice"
@@ -91,10 +91,10 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:text="Contract Term Months"
-            android:textStyle="bold"
             android:textColor="#6B7280"
-            android:layout_marginTop="10dp" />
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvContractTermMonths"
@@ -105,10 +105,10 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:text="Description"
-            android:textStyle="bold"
             android:textColor="#6B7280"
-            android:layout_marginTop="10dp" />
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvDescription"
@@ -119,10 +119,24 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Addons"
-            android:textStyle="bold"
+            android:layout_marginTop="10dp"
+            android:text="Features"
             android:textColor="#6B7280"
-            android:layout_marginTop="10dp" />
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvFeatures"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Addons"
+            android:textColor="#6B7280"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvAddons"
@@ -133,10 +147,10 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:text="Active"
-            android:textStyle="bold"
             android:textColor="#6B7280"
-            android:layout_marginTop="10dp" />
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvIsActive"

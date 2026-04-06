@@ -7,11 +7,33 @@ public class CreateEmployeeResponse {
     private String role;
     private String username;
     private String tempPassword;
+    private String email;
 
-    public Integer getEmployeeId() { return employeeId; }
-    public String getFirstName() { return firstName; }
-    public String getLastName() { return lastName; }
-    public String getRole() { return role; }
-    public String getUsername() { return username; }
-    public String getTempPassword() { return tempPassword; }
+    public Integer getEmployeeId() {
+        return employeeId;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getTempPassword() {
+        return tempPassword;
+    }
+
+    public String getEmail() {
+        return email;
+    }
 }

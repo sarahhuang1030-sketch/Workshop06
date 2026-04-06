@@ -37,7 +37,7 @@ import retrofit2.Response;
 
 public class EmployeeFormActivity extends AppCompatActivity {
 
-    private EditText etEmployeeId;
+
     private EditText etFirstName;
     private EditText etLastName;
     private EditText etEmail;
@@ -78,7 +78,7 @@ public class EmployeeFormActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        etEmployeeId = findViewById(R.id.etEmployeeId);
+
         etFirstName = findViewById(R.id.etFirstName);
         etLastName = findViewById(R.id.etLastName);
         etEmail = findViewById(R.id.etEmail);
@@ -99,7 +99,7 @@ public class EmployeeFormActivity extends AppCompatActivity {
         ArrayAdapter<String> roleAdapter = new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_dropdown_item_1line,
-                new String[]{"MANAGER", "SALES_AGENT", "SERVICE_TECHNICIAN"}
+                new String[]{"MANAGER", "SALES AGENT", "SERVICE TECHNICIAN"}
         );
         spinnerRole.setAdapter(roleAdapter);
         spinnerRole.setOnClickListener(v -> spinnerRole.showDropDown());
@@ -209,8 +209,6 @@ public class EmployeeFormActivity extends AppCompatActivity {
             String role = getIntent().getStringExtra("role");
             String hireDate = getIntent().getStringExtra("hireDate");
             String status = getIntent().getStringExtra("status");
-
-            etEmployeeId.setText(employeeId > 0 ? String.valueOf(employeeId) : "");
 
             if (primaryLocationId != Integer.MIN_VALUE) {
                 selectedLocationId = primaryLocationId;
@@ -463,12 +461,28 @@ public class EmployeeFormActivity extends AppCompatActivity {
                         new AlertDialog.Builder(EmployeeFormActivity.this)
                                 .setTitle("Employee Created")
                                 .setMessage("Username: " + created.getUsername()
-                                        + "\nTemporary Password: " + created.getTempPassword())
-                                .setPositiveButton("OK", (dialog, which) -> {
+                                        + "\nTemporary Password: " + created.getTempPassword()
+                                        + "\n\nTap COPY to save credentials.")
+                                .setCancelable(false)
+                                .setPositiveButton("Copy", (dialog, which) -> {
+                                    String textToCopy = "Username: " + created.getUsername()
+                                            + "\nTemporary Password: " + created.getTempPassword();
+
+                                    android.content.ClipboardManager clipboard =
+                                            (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+
+                                    android.content.ClipData clip =
+                                            android.content.ClipData.newPlainText("Employee Credentials", textToCopy);
+
+                                    clipboard.setPrimaryClip(clip);
+
+                                    Toast.makeText(EmployeeFormActivity.this,
+                                            "Copied to clipboard",
+                                            Toast.LENGTH_SHORT).show();
+
                                     setResult(RESULT_OK);
                                     finish();
                                 })
-                                .setCancelable(false)
                                 .show();
                     } else {
                         Toast.makeText(EmployeeFormActivity.this,

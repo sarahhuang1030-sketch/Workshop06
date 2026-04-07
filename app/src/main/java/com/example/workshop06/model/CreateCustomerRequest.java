@@ -16,6 +16,8 @@ public class CreateCustomerRequest {
     private String postalCode;
     private String country;
 
+    private Integer assignedEmployeeId;
+
     public CreateCustomerRequest(String firstName,
                                  String lastName,
                                  String businessName,
@@ -28,7 +30,8 @@ public class CreateCustomerRequest {
                                  String city,
                                  String province,
                                  String postalCode,
-                                 String country) {
+                                 String country,
+                                 Integer assignedEmployeeId) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.businessName = businessName;
@@ -42,6 +45,7 @@ public class CreateCustomerRequest {
         this.province = province;
         this.postalCode = postalCode;
         this.country = country;
+        this.assignedEmployeeId = assignedEmployeeId;
     }
 
     public String getFirstName() { return firstName; }
@@ -57,4 +61,5 @@ public class CreateCustomerRequest {
     public String getProvince() { return province; }
     public String getPostalCode() { return postalCode; }
     public String getCountry() { return country; }
+    public Integer getAssignedEmployeeId() { return assignedEmployeeId; }
 }

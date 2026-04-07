@@ -23,7 +23,7 @@ public class EmployeeProfileActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_employee_profile);
-
+        BottomNavHelper.setup(this, R.id.nav_profile);
         bottomNavigation = findViewById(R.id.bottomNavigation);
         tvFirstName = findViewById(R.id.tvFirstName);
         tvUsername = findViewById(R.id.tvUsername);

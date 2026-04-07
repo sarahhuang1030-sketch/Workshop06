@@ -1,9 +1,10 @@
 package com.example.workshop06;
 
-import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.TextView;
-import android.content.SharedPreferences;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -14,6 +15,7 @@ import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.DashboardMenuItem;
 import com.example.workshop06.model.ManagerSummaryResponse;
+import com.example.workshop06.model.ServiceDashboardSummaryResponse;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.ArrayList;
@@ -22,7 +24,6 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import android.widget.Toast;
 
 public class EmployeeDashboardActivity extends AppCompatActivity {
 
@@ -44,20 +45,24 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
         String firstName = prefs.getString("first_name", "");
         String lastName = prefs.getString("last_name", "");
 
-        if ("Manager".equalsIgnoreCase(role)) {
+        if (firstName != null && !firstName.isEmpty()) {
             tvAgentName.setText(firstName + " " + lastName);
-        } else if (firstName != null && !firstName.isEmpty()) {
-            tvAgentName.setText(firstName + " " + lastName);
+        } else if ("Service Technician".equalsIgnoreCase(role)) {
+            tvAgentName.setText("Technician Dashboard");
         } else {
             tvAgentName.setText("Employee Dashboard");
         }
 
         setupDashboardCards();
-        BottomNavHelper.setup(this, R.id.nav_home);
+
+        if ("Service Technician".equalsIgnoreCase(role)) {
+            BottomNavHelper.setup(this, R.id.nav_requests);
+        } else {
+            BottomNavHelper.setup(this, R.id.nav_home);
+        }
     }
 
     private void setupDashboardCards() {
-
         SharedPreferences prefs = getSharedPreferences("teleconnect_prefs", MODE_PRIVATE);
         String role = prefs.getString("user_role", "");
 
@@ -65,16 +70,81 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
 
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
 
+        if ("Service Technician".equalsIgnoreCase(role)) {
+            apiService.getServiceSummary().enqueue(new Callback<ServiceDashboardSummaryResponse>() {
+                @Override
+                public void onResponse(@NonNull Call<ServiceDashboardSummaryResponse> call,
+                                       @NonNull Response<ServiceDashboardSummaryResponse> response) {
+
+                    List<DashboardMenuItem> items = new ArrayList<>();
+
+                    if (response.isSuccessful() && response.body() != null) {
+                        ServiceDashboardSummaryResponse data = response.body();
+
+                        items.add(new DashboardMenuItem(
+                                "📅",
+                                "Jobs",
+                                data.getTodayAppointments() + " today",
+                                R.drawable.bg_card_top_accent_blue,
+                                R.drawable.bg_icon_blue,
+                                ServiceAppointmentListActivity.class
+                        ));
+
+                        items.add(new DashboardMenuItem(
+                                "🧑‍🤝‍🧑",
+                                "Requests",
+                                data.getOpenRequests() + " open",
+                                R.drawable.bg_card_top_accent_magenta,
+                                R.drawable.bg_icon_lavender,
+                                ServiceRequestListActivity.class
+                        ));
+
+                        items.add(new DashboardMenuItem(
+                                "🛠️",
+                                "Assigned",
+                                data.getAssignedRequests() + " assigned",
+                                R.drawable.bg_card_top_accent_purple,
+                                R.drawable.bg_icon_lavender,
+                                ServiceRequestListActivity.class
+                        ));
+
+                        items.add(new DashboardMenuItem(
+                                "✅",
+                                "Completed",
+                                data.getCompletedRequests() + " done",
+                                R.drawable.bg_card_top_accent_pink,
+                                R.drawable.bg_icon_pink,
+                                ServiceRequestListActivity.class
+                        ));
+
+                        DashboardMenuAdapter adapter = new DashboardMenuAdapter(EmployeeDashboardActivity.this, items);
+                        rvDashboardCards.setAdapter(adapter);
+                    } else {
+                        Toast.makeText(EmployeeDashboardActivity.this,
+                                "Failed to load technician summary",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<ServiceDashboardSummaryResponse> call, @NonNull Throwable t) {
+                    Toast.makeText(EmployeeDashboardActivity.this,
+                            "Error: " + t.getMessage(),
+                            Toast.LENGTH_LONG).show();
+                }
+            });
+            return;
+        }
+
         apiService.getManagerSummary().enqueue(new Callback<ManagerSummaryResponse>() {
             @Override
-            public void onResponse(Call<ManagerSummaryResponse> call, Response<ManagerSummaryResponse> response) {
+            public void onResponse(@NonNull Call<ManagerSummaryResponse> call,
+                                   @NonNull Response<ManagerSummaryResponse> response) {
 
                 List<DashboardMenuItem> items = new ArrayList<>();
 
                 if (response.isSuccessful() && response.body() != null) {
-
                     ManagerSummaryResponse data = response.body();
-
 
                     if ("Manager".equalsIgnoreCase(role)) {
                         items.add(new DashboardMenuItem(
@@ -145,7 +215,7 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
 
                     if ("Manager".equalsIgnoreCase(role)) {
                         items.add(new DashboardMenuItem(
-                                "🧑‍🤝‍🧑",
+                                "🧩",
                                 "Plan Features",
                                 data.getTotalPlanFeatures() + " active",
                                 R.drawable.bg_card_top_accent_magenta,
@@ -155,7 +225,9 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
                     }
 
                 } else {
-                    Toast.makeText(EmployeeDashboardActivity.this, "Failed to load summary", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(EmployeeDashboardActivity.this,
+                            "Failed to load summary",
+                            Toast.LENGTH_SHORT).show();
                 }
 
                 DashboardMenuAdapter adapter = new DashboardMenuAdapter(EmployeeDashboardActivity.this, items);
@@ -163,11 +235,11 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<ManagerSummaryResponse> call, Throwable t) {
-                Toast.makeText(EmployeeDashboardActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            public void onFailure(@NonNull Call<ManagerSummaryResponse> call, @NonNull Throwable t) {
+                Toast.makeText(EmployeeDashboardActivity.this,
+                        "Error: " + t.getMessage(),
+                        Toast.LENGTH_LONG).show();
             }
         });
     }
-
-
 }

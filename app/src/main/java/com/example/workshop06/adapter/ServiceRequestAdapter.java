@@ -28,8 +28,15 @@ public class ServiceRequestAdapter extends RecyclerView.Adapter<ServiceRequestAd
     private final List<ServiceRequestResponse> filteredList = new ArrayList<>();
     private final OnRequestActionListener listener;
 
+    private boolean readOnlyMode = false;
+
     public ServiceRequestAdapter(OnRequestActionListener listener) {
         this.listener = listener;
+    }
+
+    public void setReadOnlyMode(boolean readOnlyMode) {
+        this.readOnlyMode = readOnlyMode;
+        notifyDataSetChanged();
     }
 
     public void setData(List<ServiceRequestResponse> data) {
@@ -114,12 +121,16 @@ public class ServiceRequestAdapter extends RecyclerView.Adapter<ServiceRequestAd
         holder.tvDescription.setText(item.getDescription() != null ? item.getDescription() : "—");
         holder.tvCreatedAt.setText(item.getCreatedAt() != null ? item.getCreatedAt() : "—");
 
+        holder.btnEdit.setVisibility(readOnlyMode ? View.GONE : View.VISIBLE);
+        holder.btnDelete.setVisibility(readOnlyMode ? View.GONE : View.VISIBLE);
+        holder.btnAppointments.setVisibility(View.VISIBLE);
+
         holder.btnEdit.setOnClickListener(v -> {
-            if (listener != null) listener.onEdit(item);
+            if (!readOnlyMode && listener != null) listener.onEdit(item);
         });
 
         holder.btnDelete.setOnClickListener(v -> {
-            if (listener != null) listener.onDelete(item);
+            if (!readOnlyMode && listener != null) listener.onDelete(item);
         });
 
         holder.btnAppointments.setOnClickListener(v -> {

@@ -58,8 +58,6 @@ public class ServiceRequestListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_service_request_list);
 
-        BottomNavHelper.setup(this, 0);
-
         initViews();
         setupRecyclerView();
         setupSearch();
@@ -67,6 +65,8 @@ public class ServiceRequestListActivity extends AppCompatActivity {
         setupStaticPriorityFilter();
         setupTechnicianFilter();
         loadServiceRequests();
+
+        BottomNavHelper.setup(this, R.id.nav_requests);
     }
 
     private void initViews() {

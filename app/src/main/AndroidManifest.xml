@@ -63,6 +63,11 @@
         <activity android:name=".ChangePasswordFirstLoginActivity"/>
         <activity android:name=".PlanAddOnListActivity" />
         <activity android:name=".PlanAddOnFormActivity" />
+        <activity android:name=".NavMapActivity" />
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyD5Tuu3y5QdtwRY02WzIjngDi1ZpnUQc_8" />
+
     </application>
 
 </manifest>

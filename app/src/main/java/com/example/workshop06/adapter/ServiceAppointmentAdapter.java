@@ -27,8 +27,15 @@ public class ServiceAppointmentAdapter extends RecyclerView.Adapter<ServiceAppoi
     private final List<ServiceAppointmentResponse> filteredList = new ArrayList<>();
     private final OnAppointmentActionListener listener;
 
+    private boolean readOnlyMode = false;
+
     public ServiceAppointmentAdapter(OnAppointmentActionListener listener) {
         this.listener = listener;
+    }
+
+    public void setReadOnlyMode(boolean readOnlyMode) {
+        this.readOnlyMode = readOnlyMode;
+        notifyDataSetChanged();
     }
 
     public void setData(List<ServiceAppointmentResponse> data) {
@@ -113,12 +120,15 @@ public class ServiceAppointmentAdapter extends RecyclerView.Adapter<ServiceAppoi
         holder.tvStatus.setText(item.getStatus() != null ? item.getStatus() : "—");
         holder.tvNotes.setText(item.getNotes() != null ? item.getNotes() : "—");
 
+        holder.btnEdit.setVisibility(readOnlyMode ? View.GONE : View.VISIBLE);
+        holder.btnDelete.setVisibility(readOnlyMode ? View.GONE : View.VISIBLE);
+
         holder.btnEdit.setOnClickListener(v -> {
-            if (listener != null) listener.onEdit(item);
+            if (!readOnlyMode && listener != null) listener.onEdit(item);
         });
 
         holder.btnDelete.setOnClickListener(v -> {
-            if (listener != null) listener.onDelete(item);
+            if (!readOnlyMode && listener != null) listener.onDelete(item);
         });
     }
 

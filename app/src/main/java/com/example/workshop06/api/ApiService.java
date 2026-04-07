@@ -322,6 +322,12 @@ Call<List<EmployeeSalesResponse>> getEmployeeSales();
             @Path("addOnId") int addOnId
     );
 
-    //for dropdown menu with employee and customer
+    @GET("/api/service/summary")
+    Call<ServiceDashboardSummaryResponse> getServiceSummary();
 
+    @GET("/api/service/customers")
+    Call<List<CustomerResponse>> getCustomersForTechnician();
+
+    @GET("/api/service/customers/{customerId}/address")
+    Call<CustomerAddressResponse> getCustomerAddressForTechnician(@Path("customerId") int customerId);
 }

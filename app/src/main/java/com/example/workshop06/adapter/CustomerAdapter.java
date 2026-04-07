@@ -28,13 +28,19 @@ public class CustomerAdapter extends RecyclerView.Adapter<CustomerAdapter.ViewHo
     private final List<CustomerResponse> filteredList = new ArrayList<>();
     private final OnCustomerActionListener listener;
 
+    private boolean readOnlyMode = false;
+
     public CustomerAdapter(OnCustomerActionListener listener) {
         this.listener = listener;
     }
 
+    public void setReadOnlyMode(boolean readOnlyMode) {
+        this.readOnlyMode = readOnlyMode;
+        notifyDataSetChanged();
+    }
+
     public void setData(List<CustomerResponse> data) {
         fullList.clear();
-        filteredList.clear();
         filteredList.clear();
 
         if (data != null) {
@@ -71,7 +77,6 @@ public class CustomerAdapter extends RecyclerView.Adapter<CustomerAdapter.ViewHo
                             || business.contains(search)
                             || email.contains(search)
                             || phone.contains(search);
-
 
             boolean matchesStatus =
                     status.equalsIgnoreCase("All Status")
@@ -124,12 +129,16 @@ public class CustomerAdapter extends RecyclerView.Adapter<CustomerAdapter.ViewHo
         holder.tvStatus.setText(item.getStatus() != null ? item.getStatus() : "-");
         holder.tvCreatedAt.setText(item.getCreatedAt() != null ? item.getCreatedAt() : "-");
 
+        holder.btnEdit.setVisibility(readOnlyMode ? View.GONE : View.VISIBLE);
+        holder.btnDelete.setVisibility(readOnlyMode ? View.GONE : View.VISIBLE);
+        holder.btnAddress.setVisibility(View.VISIBLE);
+
         holder.btnEdit.setOnClickListener(v -> {
-            if (listener != null) listener.onEdit(item);
+            if (!readOnlyMode && listener != null) listener.onEdit(item);
         });
 
         holder.btnDelete.setOnClickListener(v -> {
-            if (listener != null) listener.onDelete(item);
+            if (!readOnlyMode && listener != null) listener.onDelete(item);
         });
 
         holder.btnAddress.setOnClickListener(v -> {

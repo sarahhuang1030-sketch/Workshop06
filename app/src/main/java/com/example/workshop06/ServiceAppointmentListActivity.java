@@ -2,9 +2,10 @@ package com.example.workshop06;
 
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ImageButton;
+import android.widget.ArrayAdapter;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -20,17 +21,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.workshop06.adapter.ServiceAppointmentAdapter;
 import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
-import com.example.workshop06.model.ServiceAppointmentResponse;
 import com.example.workshop06.model.EmployeeResponse;
+import com.example.workshop06.model.ServiceAppointmentResponse;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
-import android.widget.ArrayAdapter;
+
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
-
 import java.util.List;
 
 import retrofit2.Call;
@@ -44,7 +40,6 @@ public class ServiceAppointmentListActivity extends AppCompatActivity {
     private TextView tvEmpty;
     private TextView tvSubtitle;
     private SearchView searchView;
-
     private FloatingActionButton fabAdd;
 
     private ServiceAppointmentAdapter adapter;
@@ -59,6 +54,8 @@ public class ServiceAppointmentListActivity extends AppCompatActivity {
     private String selectedLocationType = "All";
     private String selectedTechnician = "All";
 
+    private boolean isTechnician = false;
+
     private final ActivityResultLauncher<Intent> formLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> loadAppointments());
 
@@ -67,15 +64,20 @@ public class ServiceAppointmentListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_service_appointment_list);
 
+        SharedPreferences prefs = getSharedPreferences("teleconnect_prefs", MODE_PRIVATE);
+        String role = prefs.getString("user_role", "");
+        isTechnician = "Service Technician".equalsIgnoreCase(role);
+
         requestId = getIntent().getIntExtra("requestId", -1);
 
         initViews();
         setupRecyclerView();
         setupSearch();
         setupButtons();
-        BottomNavHelper.setup(this, 0);
+        BottomNavHelper.setup(this, R.id.nav_jobs);
         setupStaticFilters();
         setupTechnicianFilter();
+
         String customerName = getIntent().getStringExtra("customerName");
         String requestType = getIntent().getStringExtra("requestType");
         if (tvSubtitle != null) {
@@ -108,6 +110,8 @@ public class ServiceAppointmentListActivity extends AppCompatActivity {
         adapter = new ServiceAppointmentAdapter(new ServiceAppointmentAdapter.OnAppointmentActionListener() {
             @Override
             public void onEdit(ServiceAppointmentResponse item) {
+                if (isTechnician) return;
+
                 Intent intent = new Intent(ServiceAppointmentListActivity.this, ServiceAppointmentFormActivity.class);
                 intent.putExtra("mode", "edit");
                 intent.putExtra("requestId", requestId);
@@ -127,7 +131,7 @@ public class ServiceAppointmentListActivity extends AppCompatActivity {
 
             @Override
             public void onDelete(ServiceAppointmentResponse item) {
-                if (item.getAppointmentId() == null) return;
+                if (isTechnician || item.getAppointmentId() == null) return;
 
                 new AlertDialog.Builder(ServiceAppointmentListActivity.this)
                         .setTitle("Delete Appointment")
@@ -137,6 +141,8 @@ public class ServiceAppointmentListActivity extends AppCompatActivity {
                         .show();
             }
         });
+
+        adapter.setReadOnlyMode(isTechnician);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setHasFixedSize(true);
@@ -165,14 +171,15 @@ public class ServiceAppointmentListActivity extends AppCompatActivity {
     }
 
     private void setupButtons() {
-
-
-        fabAdd.setOnClickListener(v -> {
-            Intent intent = new Intent(ServiceAppointmentListActivity.this, ServiceAppointmentFormActivity.class);
-            intent.putExtra("mode", "add");
-            intent.putExtra("requestId", requestId);
-            formLauncher.launch(intent);
-        });
+        if (fabAdd != null) {
+            fabAdd.setVisibility(isTechnician ? View.GONE : View.VISIBLE);
+            fabAdd.setOnClickListener(v -> {
+                Intent intent = new Intent(ServiceAppointmentListActivity.this, ServiceAppointmentFormActivity.class);
+                intent.putExtra("mode", "add");
+                intent.putExtra("requestId", requestId);
+                formLauncher.launch(intent);
+            });
+        }
     }
 
     private void loadAppointments() {
@@ -343,6 +350,4 @@ public class ServiceAppointmentListActivity extends AppCompatActivity {
         adapter.applyFilters(currentSearch, selectedStatus, selectedLocationType, selectedTechnician);
         showEmpty(adapter.getItemCount() == 0);
     }
-
-
 }

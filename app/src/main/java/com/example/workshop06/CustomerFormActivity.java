@@ -17,9 +17,13 @@ import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.CreateCustomerRequest;
 import com.example.workshop06.model.CreateCustomerResponse;
 import com.example.workshop06.model.CustomerResponse;
+import com.example.workshop06.model.EmployeeResponse;
 import com.example.workshop06.util.FormFormatUtils;
 import com.example.workshop06.util.ValidationUtils;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -37,8 +41,15 @@ public class CustomerFormActivity extends AppCompatActivity {
     private Button btnSave;
     private ProgressBar progressBar;
 
+    private MaterialAutoCompleteTextView spinnerAssignedAgent;
+    private List<EmployeeResponse> agentList = new ArrayList<>();
+
     private String mode = "add";
     private int customerId = -1;
+
+
+
+    private Integer existingAssignedEmployeeId = null;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -51,6 +62,7 @@ public class CustomerFormActivity extends AppCompatActivity {
         loadIntentData();
         setupTypeBehavior();
         updateCustomerTypeUI();
+        loadAgents();
         setupButtons();
     }
 
@@ -64,6 +76,8 @@ public class CustomerFormActivity extends AppCompatActivity {
         spinnerStatus = findViewById(R.id.spinnerStatus);
         btnSave = findViewById(R.id.btnSave);
         progressBar = findViewById(R.id.progressBar);
+        spinnerAssignedAgent = findViewById(R.id.spinnerAssignedAgent);
+
     }
 
     private void setupSpinners() {
@@ -96,7 +110,10 @@ public class CustomerFormActivity extends AppCompatActivity {
 
         if ("edit".equalsIgnoreCase(mode)) {
             customerId = getIntent().getIntExtra("customerId", -1);
-
+            if (getIntent().hasExtra("assignedEmployeeId")) {
+                int value = getIntent().getIntExtra("assignedEmployeeId", -1);
+                existingAssignedEmployeeId = (value == -1) ? null : value;
+            }
             setDropdownValue(spinnerCustomerType, getIntent().getStringExtra("customerType"));
             etFirstName.setText(getIntent().getStringExtra("firstName"));
             etLastName.setText(getIntent().getStringExtra("lastName"));
@@ -223,7 +240,8 @@ public class CustomerFormActivity extends AppCompatActivity {
                 null,       // city
                 null,       // province
                 null,       // postalCode
-                "Canada"    // country
+                "Canada",    // country
+                getSelectedAgentId()
         );
 
         showLoading(true);
@@ -313,5 +331,84 @@ public class CustomerFormActivity extends AppCompatActivity {
     private void showLoading(boolean isLoading) {
         progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         btnSave.setEnabled(!isLoading);
+    }
+
+    private void loadAgents() {
+        ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
+
+        apiService.getEmployees().enqueue(new Callback<List<EmployeeResponse>>() {
+            @Override
+            public void onResponse(Call<List<EmployeeResponse>> call, Response<List<EmployeeResponse>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+
+                    agentList.clear();
+
+                    List<String> names = new ArrayList<>();
+                    names.add("None"); // allow NULL
+
+                    for (EmployeeResponse e : response.body()) {
+                        String role = e.getRoleName();
+
+                        if ("Manager".equalsIgnoreCase(role) ||
+                                "Sales Agent".equalsIgnoreCase(role)) {
+
+                            agentList.add(e);
+                            names.add(e.getFirstName() + " " + e.getLastName());
+                        }
+                    }
+
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                            CustomerFormActivity.this,
+                            android.R.layout.simple_list_item_1,
+                            names
+                    );
+
+                    spinnerAssignedAgent.setAdapter(adapter);
+
+                    if (existingAssignedEmployeeId == null) {
+                        spinnerAssignedAgent.setText("None", false);
+                    } else {
+                        boolean found = false;
+
+                        for (EmployeeResponse e : agentList) {
+                            if (e.getEmployeeId() == existingAssignedEmployeeId) {
+                                spinnerAssignedAgent.setText(
+                                        e.getFirstName() + " " + e.getLastName(),
+                                        false
+                                );
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        if (!found) {
+                            spinnerAssignedAgent.setText("None", false);
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<EmployeeResponse>> call, Throwable t) {
+                Toast.makeText(CustomerFormActivity.this,
+                        "Failed to load agents",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private Integer getSelectedAgentId() {
+        String selected = spinnerAssignedAgent.getText().toString();
+
+        if (selected.equals("None")) return null;
+
+        for (EmployeeResponse e : agentList) {
+            String name = e.getFirstName() + " " + e.getLastName();
+            if (name.equals(selected)) {
+                return e.getEmployeeId();
+            }
+        }
+
+        return null;
     }
 }

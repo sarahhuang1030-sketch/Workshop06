@@ -73,8 +73,8 @@ public class EditProfileActivity extends AppCompatActivity {
                     if (me.getEmail() != null) {
                         etEmail.setText(me.getEmail());
                     }
-                    if (me.getHomePhone() != null) {
-                        etPhone.setText(me.getHomePhone());
+                    if (me.getResolvedPhone() != null) {
+                        etPhone.setText(me.getResolvedPhone());
                     }
                 } else {
                     Toast.makeText(EditProfileActivity.this, "Failed to load profile", Toast.LENGTH_SHORT).show();

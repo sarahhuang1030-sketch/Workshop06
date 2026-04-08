@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -56,6 +57,8 @@ public class ServiceAppointmentListActivity extends AppCompatActivity {
 
     private boolean isTechnician = false;
 
+    private ImageButton btnBack;
+
     private final ActivityResultLauncher<Intent> formLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> loadAppointments());
 
@@ -69,7 +72,9 @@ public class ServiceAppointmentListActivity extends AppCompatActivity {
         isTechnician = "Service Technician".equalsIgnoreCase(role);
 
         requestId = getIntent().getIntExtra("requestId", -1);
+        btnBack = findViewById(R.id.btnBack);
 
+        btnBack.setOnClickListener(v -> finish());
         initViews();
         setupRecyclerView();
         setupSearch();

@@ -54,6 +54,7 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
     private String mode = "add";
     private int requestId = -1;
 
+
     private final List<CustomerResponse> customerList = new ArrayList<>();
     private final List<EmployeeResponse> createdByList = new ArrayList<>();
     private final List<EmployeeResponse> technicianList = new ArrayList<>();
@@ -66,7 +67,9 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
         setContentView(R.layout.activity_service_request_form);
 
         apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
+        btnBack = findViewById(R.id.btnBack);
 
+        btnBack.setOnClickListener(v -> finish());
         initViews();
         setupDropdowns();
         loadIntentData();

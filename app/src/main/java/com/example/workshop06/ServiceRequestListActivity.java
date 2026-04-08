@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -49,6 +50,7 @@ public class ServiceRequestListActivity extends AppCompatActivity {
     private String currentSearch = "";
     private String selectedTechnician = "All";
     private String selectedPriority = "All";
+    private ImageButton btnBack;
 
     private final ActivityResultLauncher<Intent> formLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> loadServiceRequests());
@@ -57,7 +59,9 @@ public class ServiceRequestListActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_service_request_list);
+        btnBack = findViewById(R.id.btnBack);
 
+        btnBack.setOnClickListener(v -> finish());
         initViews();
         setupRecyclerView();
         setupSearch();

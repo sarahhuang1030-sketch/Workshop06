@@ -11,32 +11,50 @@
         android:orientation="vertical"
         android:padding="20dp">
 
-        <LinearLayout
+        <!-- HEADER WITH BACK BUTTON -->
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:background="@drawable/bg_employee_dashboard_header"
-            android:orientation="vertical"
-            android:paddingStart="18dp"
-            android:paddingEnd="18dp"
-            android:paddingTop="20dp">
+            android:layout_height="120dp"
+            android:background="@drawable/bg_employee_dashboard_header">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Location Form"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:textColor="#fff"
-                android:paddingTop="8dp" />
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_margin="12dp"
+                android:layout_gravity="start|top"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Back"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="@android:color/white" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Create or update a location"
-                android:textColor="#fff"
-                android:textSize="14sp" />
-        </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center_vertical"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="30dp"
+                    android:text="Location Form"
+                    android:textColor="#fff"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Create or update a location"
+                    android:textColor="#fff"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+        </FrameLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -45,12 +63,12 @@
             android:orientation="horizontal">
 
             <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginEnd="6dp"
-                android:hint="Location Type"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu">
+                android:hint="Location Type">
 
                 <com.google.android.material.textfield.MaterialAutoCompleteTextView
                     android:id="@+id/spinnerLocationType"
@@ -60,12 +78,12 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginHorizontal="6dp"
-                android:hint="Location Name"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+                android:hint="Location Name">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etLocationName"
@@ -74,12 +92,12 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginStart="6dp"
-                android:hint="Status"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu">
+                android:hint="Status">
 
                 <com.google.android.material.textfield.MaterialAutoCompleteTextView
                     android:id="@+id/spinnerStatus"
@@ -90,11 +108,11 @@
         </LinearLayout>
 
         <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:hint="Street 1"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+            android:hint="Street 1">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etStreet1"
@@ -103,11 +121,11 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:hint="Street 2"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+            android:hint="Street 2">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etStreet2"
@@ -122,12 +140,12 @@
             android:orientation="horizontal">
 
             <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
-                android:hint="City"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+                android:hint="City">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etCity"
@@ -136,11 +154,11 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="Province"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+                android:hint="Province">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etProvince"
@@ -156,12 +174,12 @@
             android:orientation="horizontal">
 
             <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
-                android:hint="Postal Code"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+                android:hint="Postal Code">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etPostalCode"
@@ -170,11 +188,11 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="Country"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+                android:hint="Country">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etCountry"
@@ -184,11 +202,11 @@
         </LinearLayout>
 
         <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:hint="Phone"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+            android:hint="Phone">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPhone"
@@ -202,9 +220,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
+            android:layout_marginBottom="20dp"
             android:backgroundTint="#6F56B3"
             android:text="Save"
             android:textAllCaps="false"
             android:textColor="@android:color/white" />
+
     </LinearLayout>
 </ScrollView>

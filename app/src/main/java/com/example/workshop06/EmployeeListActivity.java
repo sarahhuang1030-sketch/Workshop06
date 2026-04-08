@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -52,6 +53,7 @@ public class EmployeeListActivity extends AppCompatActivity {
     private final Map<Integer, String> managerNameMap = new HashMap<>();
     private final Map<Integer, String> locationNameMap = new HashMap<>();
     private boolean filtersReady = false;
+    private ImageButton btnBack;
 
     private final ActivityResultLauncher<Intent> formLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> loadEmployees());
@@ -60,14 +62,14 @@ public class EmployeeListActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_employee_list);
-
+        btnBack = findViewById(R.id.btnBack);
         initViews();
         setupRecyclerView();
         setupSearch();
         setupFilterControls();
         setupButtons();
         loadEmployees();
-
+        btnBack.setOnClickListener(v -> finish());
         BottomNavHelper.setup(this, 0);
     }
 

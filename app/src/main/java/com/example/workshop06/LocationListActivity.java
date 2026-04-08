@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -43,6 +44,8 @@ public class LocationListActivity extends AppCompatActivity {
     private final List<LocationResponse> allLocations = new ArrayList<>();
     private boolean filtersReady = false;
 
+    private ImageButton btnBack;
+
     private final ActivityResultLauncher<Intent> formLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == RESULT_OK) {
@@ -60,7 +63,7 @@ public class LocationListActivity extends AppCompatActivity {
         fabAdd = findViewById(R.id.fabAddLocation);
         searchViewLocation = findViewById(R.id.searchViewLocation);
         spinnerLocationTypeFilter = findViewById(R.id.spinnerLocationTypeFilter);
-
+        btnBack = findViewById(R.id.btnBack);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         adapter = new LocationAdapter(new ArrayList<>(), new LocationAdapter.LocationActionListener() {
@@ -77,7 +80,7 @@ public class LocationListActivity extends AppCompatActivity {
             }
         });
         recyclerView.setAdapter(adapter);
-
+        btnBack.setOnClickListener(v -> finish());
         fabAdd.setOnClickListener(v -> {
             Intent intent = new Intent(LocationListActivity.this, LocationFormActivity.class);
             formLauncher.launch(intent);

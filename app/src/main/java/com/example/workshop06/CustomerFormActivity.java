@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -47,6 +48,7 @@ public class CustomerFormActivity extends AppCompatActivity {
     private String mode = "add";
     private int customerId = -1;
 
+    private ImageButton btnBack;
 
 
     private Integer existingAssignedEmployeeId = null;
@@ -55,7 +57,7 @@ public class CustomerFormActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_customer_form);
-
+        btnBack = findViewById(R.id.btnBack);
         initViews();
         setupSpinners();
         attachFormatters();
@@ -64,6 +66,7 @@ public class CustomerFormActivity extends AppCompatActivity {
         updateCustomerTypeUI();
         loadAgents();
         setupButtons();
+        btnBack.setOnClickListener(v -> finish());
     }
 
     private void initViews() {

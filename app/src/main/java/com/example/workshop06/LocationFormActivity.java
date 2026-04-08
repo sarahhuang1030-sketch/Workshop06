@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -30,6 +31,8 @@ public class LocationFormActivity extends AppCompatActivity {
 
     private Integer locationId = null;
 
+    private ImageButton btnBack;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,6 +50,7 @@ public class LocationFormActivity extends AppCompatActivity {
         etCountry = findViewById(R.id.etCountry);
         etPhone = findViewById(R.id.etPhone);
         btnSave = findViewById(R.id.btnSaveLocation);
+        btnBack = findViewById(R.id.btnBack);
 
         setupLocationTypeDropdown();
         setupStatusDropdown();
@@ -61,7 +65,7 @@ public class LocationFormActivity extends AppCompatActivity {
                 loadLocation(id);
             }
         }
-
+        btnBack.setOnClickListener(v -> finish());
         btnSave.setOnClickListener(v -> saveLocation());
     }
 

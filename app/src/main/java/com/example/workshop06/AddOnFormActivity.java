@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -43,6 +44,8 @@ public class AddOnFormActivity extends AppCompatActivity {
     private ArrayAdapter<String> activeAdapter;
     private int selectedActivePosition = 0; // 0 = Yes, 1 = No
 
+    private ImageButton btnBack;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,7 +57,9 @@ public class AddOnFormActivity extends AppCompatActivity {
         etMonthlyPrice = findViewById(R.id.etMonthlyPrice);
         etDescription = findViewById(R.id.etDescription);
         btnSaveAddOn = findViewById(R.id.btnSaveAddOn);
+        btnBack = findViewById(R.id.btnBack);
 
+        btnBack.setOnClickListener(v -> finish());
         serviceTypeAdapter = new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_dropdown_item_1line,

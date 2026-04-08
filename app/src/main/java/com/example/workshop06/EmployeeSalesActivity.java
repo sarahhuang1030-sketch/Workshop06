@@ -58,7 +58,7 @@ public class EmployeeSalesActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         tvEmpty = findViewById(R.id.tvEmpty);
         searchViewEmployee = findViewById(R.id.searchViewEmployee);
-        btnBack = findViewById(R.id.btnBack);
+
     }
 
     private void setupRecyclerView() {

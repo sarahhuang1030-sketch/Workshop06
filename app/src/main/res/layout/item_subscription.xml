@@ -16,71 +16,70 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <!-- Top summary -->
+        <TextView
+            android:id="@+id/tvSubscriptionTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sarah Chen"
+            android:textColor="#2D1F5E"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvSubscriptionSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="2 subscriptions"
+            android:textColor="#8A89C8"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tvSubscriptionStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="Active"
+            android:textColor="#6F56B3"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvSubscriptionDates"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Tap View More to see all subscription details"
+            android:textColor="#7D7896"
+            android:textSize="13sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnViewMoreSubscription"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="View More"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            app:backgroundTint="#6F56B3"
+            app:cornerRadius="14dp" />
+
+        <!-- Expanded details area -->
         <LinearLayout
+            android:id="@+id/layoutSubscriptionDetails"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:layout_marginTop="12dp"
+            android:orientation="vertical"
+            android:visibility="gone">
 
             <LinearLayout
-                android:layout_width="0dp"
+                android:id="@+id/containerSubscriptionDetails"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:orientation="vertical" />
 
-                <TextView
-                    android:id="@+id/tvSubscriptionTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Subscription #1"
-                    android:textColor="#2D1F5E"
-                    android:textSize="17sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvSubscriptionSubtitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Customer 10 • Plan 2"
-                    android:textColor="#8A89C8"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/tvSubscriptionStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Active"
-                    android:textColor="#6F56B3"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvSubscriptionDates"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="2026-01-01 to 2026-12-31"
-                    android:textColor="#7D7896"
-                    android:textSize="13sp" />
-            </LinearLayout>
-
-            <ImageButton
-                android:id="@+id/btnEditSubscription"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@android:color/transparent"
-                android:src="@android:drawable/ic_menu_edit"
-                app:tint="#6F56B3" />
-
-            <ImageButton
-                android:id="@+id/btnDeleteSubscription"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@android:color/transparent"
-                android:src="@android:drawable/ic_menu_delete"
-                app:tint="#D94B7D" />
         </LinearLayout>
 
     </LinearLayout>

@@ -3,6 +3,7 @@ package com.example.workshop06;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -30,6 +31,8 @@ public class PlanAddOnFormActivity extends AppCompatActivity {
 
     private int planId = -1;
 
+    private ImageButton btnBack;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,14 +42,14 @@ public class PlanAddOnFormActivity extends AppCompatActivity {
 
         spinnerAddOn = findViewById(R.id.spinnerAddOn);
         btnSave = findViewById(R.id.btnSave);
-
+        btnBack = findViewById(R.id.btnBack);
         spinnerAddOn.setOnItemClickListener((parent, view, position, id) -> {
             selectedAddOnPosition = position;
             spinnerAddOn.setError(null);
         });
 
         btnSave.setOnClickListener(v -> attachAddOn());
-
+        btnBack.setOnClickListener(v -> finish());
         loadAvailableAddOns();
     }
 

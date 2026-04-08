@@ -51,9 +51,9 @@ public class PlanFeatureFormActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plan_feature_form);
-
+        btnBack = findViewById(R.id.btnBack);
         apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
-
+        btnBack.setOnClickListener(v -> finish());
         initViews();
         loadIntentData();
         setupButtons();

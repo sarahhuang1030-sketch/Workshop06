@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -39,6 +40,7 @@ public class SubscriptionListActivity extends AppCompatActivity {
     private SearchView searchViewSubscription;
     private MaterialAutoCompleteTextView spinnerStatusFilter;
     private BottomNavigationView bottomNavigation;
+    private ImageButton btnBack;
 
     private SubscriptionAdapter adapter;
     private final List<SubscriptionResponse> subscriptions = new ArrayList<>();
@@ -63,34 +65,19 @@ public class SubscriptionListActivity extends AppCompatActivity {
         searchViewSubscription = findViewById(R.id.searchViewSubscription);
         spinnerStatusFilter = findViewById(R.id.spinnerStatusFilter);
         bottomNavigation = findViewById(R.id.bottomNavigation);
+        btnBack = findViewById(R.id.btnBack);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        adapter = new SubscriptionAdapter(subscriptions, new SubscriptionAdapter.SubscriptionActionListener() {
-            @Override
-            public void onEdit(SubscriptionResponse item) {
-                Intent intent = new Intent(SubscriptionListActivity.this, SubscriptionFormActivity.class);
-
-                intent.putExtra("subscriptionId", item.getSubscriptionId());
-                intent.putExtra("customerId", item.getCustomerId());
-                intent.putExtra("customerName", item.getCustomerName());   // ✅ THIS FIX
-                intent.putExtra("planId", item.getPlanId());
-                intent.putExtra("planName", item.getPlanName());           // ✅ THIS FIX
-
-                formLauncher.launch(intent);
-            }
-
-            @Override
-            public void onDelete(SubscriptionResponse item) {
-                deleteSubscription(item.getSubscriptionId());
-            }
-        });
-
+        adapter = new SubscriptionAdapter(new ArrayList<>());
         recyclerView.setAdapter(adapter);
 
         setupSearch();
         setupStatusFilter();
+
         BottomNavHelper.setup(this, 0);
+
+        btnBack.setOnClickListener(v -> finish());
 
         bottomNavigation.post(() -> {
             bottomNavigation.getMenu().setGroupCheckable(0, true, false);
@@ -165,18 +152,14 @@ public class SubscriptionListActivity extends AppCompatActivity {
                     for (SubscriptionResponse s : data) {
                         Log.d("API_DEBUG",
                                 "ID=" + s.getSubscriptionId()
+                                        + " | customerId=" + s.getCustomerId()
                                         + " | customerName=" + s.getCustomerName()
-                                        + " | planName=" + s.getPlanName());
+                                        + " | planName=" + s.getPlanName()
+                                        + " | status=" + s.getStatus());
                     }
 
                     adapter.updateData(data);
                     applyFilters();
-
-                    Toast.makeText(
-                            SubscriptionListActivity.this,
-                            "Loaded: " + data.size(),
-                            Toast.LENGTH_LONG
-                    ).show();
 
                     Log.d("SubscriptionListActivity", "Loaded subscriptions: " + data.size());
                 } else {
@@ -191,43 +174,6 @@ public class SubscriptionListActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<List<SubscriptionResponse>> call, Throwable t) {
                 progressBar.setVisibility(View.GONE);
-                Toast.makeText(
-                        SubscriptionListActivity.this,
-                        "Error: " + t.getMessage(),
-                        Toast.LENGTH_LONG
-                ).show();
-            }
-        });
-    }
-
-    private void deleteSubscription(Integer subscriptionId) {
-        if (subscriptionId == null) {
-            Toast.makeText(this, "Invalid subscription id", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
-        apiService.deleteSubscription(subscriptionId).enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.isSuccessful()) {
-                    Toast.makeText(
-                            SubscriptionListActivity.this,
-                            "Subscription deleted",
-                            Toast.LENGTH_SHORT
-                    ).show();
-                    loadSubscriptions();
-                } else {
-                    Toast.makeText(
-                            SubscriptionListActivity.this,
-                            "Delete failed",
-                            Toast.LENGTH_SHORT
-                    ).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<Void> call, Throwable t) {
                 Toast.makeText(
                         SubscriptionListActivity.this,
                         "Error: " + t.getMessage(),

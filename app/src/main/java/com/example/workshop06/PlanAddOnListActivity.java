@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -46,6 +47,8 @@ public class PlanAddOnListActivity extends AppCompatActivity {
 
     private PlanAddOnAdapter adapter;
 
+    private ImageButton btnBack;
+
     private final List<ServiceTypeResponse> serviceTypes = new ArrayList<>();
 
     private int planId = -1;
@@ -58,7 +61,7 @@ public class PlanAddOnListActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plan_add_on_list);
-
+        btnBack = findViewById(R.id.btnBack);
         readExtras();
         initViews();
         setupRecyclerView();
@@ -67,7 +70,7 @@ public class PlanAddOnListActivity extends AppCompatActivity {
         setupFilters();
         loadServiceTypes();
         loadPlanAddOns();
-
+        btnBack.setOnClickListener(v -> finish());
         BottomNavHelper.setup(this, 0);
     }
 

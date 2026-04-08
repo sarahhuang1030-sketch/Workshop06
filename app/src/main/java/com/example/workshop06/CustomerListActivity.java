@@ -8,6 +8,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -53,6 +54,8 @@ public class CustomerListActivity extends AppCompatActivity {
     private String currentStatusFilter = "All Status";
     private String currentTypeFilter = "All Types";
 
+    private ImageButton btnBack;
+
     private final ActivityResultLauncher<Intent> formLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> loadCustomers());
 
@@ -61,6 +64,7 @@ public class CustomerListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_customer_list);
         bottomNavigation = findViewById(R.id.bottomNavigation);
+        btnBack = findViewById(R.id.btnBack);
 
         initViews();
         setupRecyclerView();
@@ -74,7 +78,7 @@ public class CustomerListActivity extends AppCompatActivity {
         if (fabAdd != null) {
             fabAdd.setVisibility(isTechnician ? View.GONE : View.VISIBLE);
         }
-
+        btnBack.setOnClickListener(v -> finish());
         setupFilterDropdowns();
         setupSearch();
         setupFilterInputs();

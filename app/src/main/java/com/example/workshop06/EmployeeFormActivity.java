@@ -8,6 +8,7 @@ import android.view.ViewParent;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -52,6 +53,7 @@ public class EmployeeFormActivity extends AppCompatActivity {
 
     private Button btnSave;
     private ProgressBar progressBar;
+    private ImageButton btnBack;
 
     private String mode = "add";
     private int employeeId = -1;
@@ -66,7 +68,7 @@ public class EmployeeFormActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_employee_form);
-
+        btnBack = findViewById(R.id.btnBack);
         initViews();
         setupDropdowns();
         setupFormatters();
@@ -75,6 +77,7 @@ public class EmployeeFormActivity extends AppCompatActivity {
         loadLocations();
         loadManagers();
         setupButtons();
+        btnBack.setOnClickListener(v -> finish());
     }
 
     private void initViews() {

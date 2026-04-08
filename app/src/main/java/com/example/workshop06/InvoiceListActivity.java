@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -48,6 +49,8 @@ public class InvoiceListActivity extends AppCompatActivity {
     private final List<InvoiceResponse> allInvoices = new ArrayList<>();
     private boolean filtersReady = false;
 
+    private ImageButton btnBack;
+
     private final ActivityResultLauncher<Intent> formLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == RESULT_OK) {
@@ -69,9 +72,9 @@ public class InvoiceListActivity extends AppCompatActivity {
         searchViewInvoice = findViewById(R.id.searchViewInvoice);
         spinnerStatusFilter = findViewById(R.id.spinnerInvoiceStatusFilter);
         spinnerAmountFilter = findViewById(R.id.spinnerInvoiceAmountFilter);
-
+        btnBack = findViewById(R.id.btnBack);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-
+        btnBack.setOnClickListener(v -> finish());
         adapter = new InvoiceAdapter(new ArrayList<>(), new InvoiceAdapter.InvoiceActionListener() {
             @Override
             public void onView(InvoiceResponse item) {

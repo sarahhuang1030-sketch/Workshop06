@@ -6,40 +6,52 @@
     android:layout_height="match_parent"
     android:background="#F3EEFF">
 
-    <!-- TOP HEADER -->
+    <!-- HEADER -->
     <LinearLayout
-        android:id="@+id/topContainer"
+        android:id="@+id/headerContainer"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="20dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <LinearLayout
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="20dp">
+            android:layout_height="120dp"
+            android:background="@drawable/bg_employee_dashboard_header">
 
+            <!-- BACK BUTTON -->
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_margin="12dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="@android:color/white"
+                android:contentDescription="Back"
+                android:layout_gravity="start|top" />
+
+            <!-- TITLE -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="120dp"
-                android:background="@drawable/bg_employee_dashboard_header"
+                android:layout_height="match_parent"
                 android:orientation="vertical"
+                android:gravity="center_vertical"
                 android:paddingStart="18dp"
-                android:paddingEnd="18dp"
-                android:paddingTop="20dp">
+                android:paddingEnd="18dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Locations"
-                    android:paddingTop="24dp"
                     android:textColor="#fff"
                     android:textSize="28sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:layout_marginTop="45dp"/>
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -50,9 +62,10 @@
                     android:textSize="14sp" />
             </LinearLayout>
 
-        </LinearLayout>
+        </FrameLayout>
     </LinearLayout>
 
+    <!-- FILTER -->
     <LinearLayout
         android:id="@+id/filterContainer"
         android:layout_width="0dp"
@@ -61,7 +74,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginTop="8dp"
-        app:layout_constraintTop_toBottomOf="@id/topContainer"
+        app:layout_constraintTop_toBottomOf="@id/headerContainer"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -70,8 +83,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_search_border"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
             android:queryHint="Search location name or phone number"
             android:iconifiedByDefault="false" />
 
@@ -88,6 +99,7 @@
                 android:layout_height="wrap_content"
                 android:inputType="none" />
         </com.google.android.material.textfield.TextInputLayout>
+
     </LinearLayout>
 
     <!-- LIST -->
@@ -95,7 +107,9 @@
         android:id="@+id/recyclerLocations"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:padding="16dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="80dp"
         android:clipToPadding="false"
         app:layout_constraintTop_toBottomOf="@id/filterContainer"
         app:layout_constraintBottom_toTopOf="@id/bottomNavigation"
@@ -113,20 +127,21 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- ADD BUTTON -->
+    <!-- FAB -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAddLocation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:contentDescription="Add Location"
         android:layout_marginEnd="20dp"
         android:layout_marginBottom="16dp"
+        android:contentDescription="Add Location"
         app:backgroundTint="#7C3AED"
         app:tint="@android:color/white"
         app:srcCompat="@android:drawable/ic_input_add"
         app:layout_constraintBottom_toTopOf="@id/bottomNavigation"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- BOTTOM NAV -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigation"
         android:layout_width="0dp"

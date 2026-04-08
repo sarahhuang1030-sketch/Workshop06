@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -35,6 +36,8 @@ public class InvoiceFormActivity extends AppCompatActivity {
     private String originalInvoiceNumber = null;
     private Integer customerId = null;
 
+    private ImageButton btnBack;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,7 +54,7 @@ public class InvoiceFormActivity extends AppCompatActivity {
         tilIssueDate = findViewById(R.id.tilIssueDate);
         tilDueDate = findViewById(R.id.tilDueDate);
         btnSaveInvoice = findViewById(R.id.btnSaveInvoice);
-
+        btnBack = findViewById(R.id.btnBack);
         setupStatusDropdown();
         setupDatePickers();
 
@@ -61,7 +64,7 @@ public class InvoiceFormActivity extends AppCompatActivity {
                 loadInvoice(originalInvoiceNumber);
             }
         }
-
+        btnBack.setOnClickListener(v -> finish());
         btnSaveInvoice.setOnClickListener(v -> saveInvoice());
     }
 

@@ -6,6 +6,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -53,6 +54,8 @@ public class AddOnListActivity extends AppCompatActivity {
     private String selectedStatus = "All";
     private Double maxPriceFilter = null;
 
+    private ImageButton btnBack;
+
     private final ActivityResultLauncher<Intent> formLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> loadAddOns());
 
@@ -68,7 +71,9 @@ public class AddOnListActivity extends AppCompatActivity {
         searchViewAddOns = findViewById(R.id.searchViewAddOns);
         etFilterPrice = findViewById(R.id.etFilterPrice);
         spinnerStatusFilter = findViewById(R.id.spinnerStatusFilter);
+        btnBack = findViewById(R.id.btnBack);
 
+        btnBack.setOnClickListener(v -> finish());
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         adapter = new AddOnAdapter(filteredAddOns, new AddOnAdapter.AddOnActionListener() {

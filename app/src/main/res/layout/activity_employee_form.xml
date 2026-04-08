@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="#F3EEFF">
 
     <LinearLayout
@@ -11,32 +11,48 @@
         android:orientation="vertical"
         android:padding="20dp">
 
-        <LinearLayout
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:background="@drawable/bg_employee_dashboard_header"
-            android:orientation="vertical"
-            android:paddingStart="18dp"
-            android:paddingEnd="18dp"
-            android:paddingTop="20dp">
+            android:layout_height="120dp"
+            android:background="@drawable/bg_employee_dashboard_header">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Employee Form"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:textColor="#fff"
-                android:paddingTop="8dp" />
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_margin="12dp"
+                android:layout_gravity="start|top"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Back"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="@android:color/white" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Create or update an employee"
-                android:textColor="#fff"
-                android:textSize="14sp" />
-        </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center_vertical"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="30dp"
+                    android:text="Employee Form"
+                    android:textSize="26sp"
+                    android:textStyle="bold"
+                    android:textColor="#fff" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Create or update an employee"
+                    android:textColor="#fff"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </FrameLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -44,14 +60,13 @@
             android:layout_marginTop="18dp"
             android:orientation="horizontal">
 
-            <!-- Role -->
             <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginHorizontal="6dp"
-                android:hint="Role"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu">
+                android:hint="Role">
 
                 <com.google.android.material.textfield.MaterialAutoCompleteTextView
                     android:id="@+id/spinnerRole"
@@ -60,14 +75,13 @@
                     android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Status -->
             <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginStart="6dp"
-                android:hint="Status"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu">
+                android:hint="Status">
 
                 <com.google.android.material.textfield.MaterialAutoCompleteTextView
                     android:id="@+id/spinnerStatus"
@@ -75,15 +89,14 @@
                     android:layout_height="wrap_content"
                     android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
-
         </LinearLayout>
 
         <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:hint="Primary Location"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu">
+            android:hint="Primary Location">
 
             <com.google.android.material.textfield.MaterialAutoCompleteTextView
                 android:id="@+id/spinnerLocation"
@@ -98,14 +111,13 @@
             android:layout_marginTop="14dp"
             android:orientation="horizontal">
 
-            <!-- First Name -->
             <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
-                android:hint="First Name"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+                android:hint="First Name">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etFirstName"
@@ -114,13 +126,12 @@
                     android:inputType="textCapWords" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Last Name -->
             <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="Last Name"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+                android:hint="Last Name">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etLastName"
@@ -128,14 +139,14 @@
                     android:layout_height="wrap_content"
                     android:inputType="textCapWords" />
             </com.google.android.material.textfield.TextInputLayout>
-
         </LinearLayout>
+
         <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:hint="Email"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+            android:hint="Email">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etEmail"
@@ -145,11 +156,11 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:hint="Phone"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+            android:hint="Phone">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPhone"
@@ -158,24 +169,20 @@
                 android:inputType="phone" />
         </com.google.android.material.textfield.TextInputLayout>
 
-
-
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
             android:orientation="horizontal">
 
-            <!-- Salary -->
             <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
                 android:hint="Salary"
-                app:prefixText="$"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+                app:prefixText="$">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etSalary"
@@ -184,7 +191,6 @@
                     android:inputType="numberDecimal" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Hire Date -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -192,11 +198,11 @@
                 android:orientation="horizontal">
 
                 <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:hint="Hire Date"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
                     app:endIconMode="custom"
                     app:endIconDrawable="@android:drawable/ic_menu_my_calendar">
 
@@ -209,14 +215,14 @@
                         android:inputType="none" />
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
-
         </LinearLayout>
+
         <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:hint="Manager"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu">
+            android:hint="Manager">
 
             <com.google.android.material.textfield.MaterialAutoCompleteTextView
                 android:id="@+id/spinnerManager"
@@ -238,6 +244,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
+            android:layout_marginBottom="20dp"
             android:backgroundTint="#6F56B3"
             android:text="Save"
             android:textAllCaps="false"

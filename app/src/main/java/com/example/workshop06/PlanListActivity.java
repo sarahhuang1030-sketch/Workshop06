@@ -3,14 +3,11 @@ package com.example.workshop06;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -23,14 +20,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.workshop06.adapter.PlanManagerAdapter;
 import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
-import com.example.workshop06.model.PlanFeatureResponse;
 import com.example.workshop06.model.PlanResponse;
 import com.example.workshop06.model.ServiceTypeResponse;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 
-import java.util.*;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -53,16 +49,22 @@ public class PlanListActivity extends AppCompatActivity {
     private PlanManagerAdapter adapter;
     private boolean filtersReady = false;
 
-    // 🔥 NEW: store features grouped by planId
-    private Map<Integer, List<PlanFeatureResponse>> featureMap = new HashMap<>();
+    private ImageButton btnBack;
 
     private final ActivityResultLauncher<Intent> formLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> loadAllData());
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> loadPlans());
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plan_list);
+        btnBack = findViewById(R.id.btnBack);
+        btnBack.setOnClickListener(v -> {
+            Intent intent = new Intent(PlanListActivity.this, EmployeeDashboardActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            finish();
+        });
 
         initViews();
         setupRecyclerView();
@@ -70,8 +72,7 @@ public class PlanListActivity extends AppCompatActivity {
         setupFilterControls();
         setupButtons();
 
-        loadAllData(); // 🔥 load both plans + features
-
+        loadPlans();
         loadServiceTypes();
         BottomNavHelper.setup(this, R.id.nav_plans);
     }
@@ -117,14 +118,6 @@ public class PlanListActivity extends AppCompatActivity {
                         .setNegativeButton("Cancel", null)
                         .show();
             }
-
-            @Override
-            public void onManageAddOns(PlanResponse item) {
-                Intent intent = new Intent(PlanListActivity.this, PlanAddOnListActivity.class);
-                intent.putExtra("planId", item.getPlanId());
-                intent.putExtra("planName", item.getPlanName());
-                startActivity(intent);
-            }
         });
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -137,12 +130,6 @@ public class PlanListActivity extends AppCompatActivity {
             intent.putExtra("mode", "add");
             formLauncher.launch(intent);
         });
-    }
-
-    // 🔥 LOAD BOTH DATA
-    private void loadAllData() {
-        loadPlans();
-        loadFeatures();
     }
 
     private void loadPlans() {
@@ -162,10 +149,6 @@ public class PlanListActivity extends AppCompatActivity {
 
                 List<PlanResponse> data = response.body();
                 adapter.setData(data);
-
-                // 🔥 pass features to adapter
-                adapter.setFeatureMap(featureMap);
-
                 applyFilters();
             }
 
@@ -177,36 +160,6 @@ public class PlanListActivity extends AppCompatActivity {
         });
     }
 
-    // 🔥 NEW: load features
-    private void loadFeatures() {
-        ApiService api = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
-
-        api.getPlanFeatures().enqueue(new Callback<List<PlanFeatureResponse>>() {
-            @Override
-            public void onResponse(Call<List<PlanFeatureResponse>> call, Response<List<PlanFeatureResponse>> response) {
-                if (!response.isSuccessful() || response.body() == null) return;
-
-                featureMap.clear();
-
-                for (PlanFeatureResponse f : response.body()) {
-                    if (f.getPlanId() == null) continue;
-
-                    featureMap
-                            .computeIfAbsent(f.getPlanId(), k -> new ArrayList<>())
-                            .add(f);
-                }
-
-                // 🔥 update adapter after loading
-                adapter.setFeatureMap(featureMap);
-            }
-
-            @Override
-            public void onFailure(Call<List<PlanFeatureResponse>> call, Throwable t) {
-                Toast.makeText(PlanListActivity.this, "Failed to load features", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
     private void deletePlan(int planId) {
         ApiService api = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
 
@@ -214,7 +167,7 @@ public class PlanListActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
-                    loadAllData();
+                    loadPlans();
                 }
             }
 
@@ -229,7 +182,7 @@ public class PlanListActivity extends AppCompatActivity {
     }
 
     private void showError(String msg) {
-        Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+        tvEmpty.setVisibility(View.VISIBLE);
     }
 
     private void applyFilters() {
@@ -243,6 +196,6 @@ public class PlanListActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        loadAllData();
+        loadPlans();
     }
 }

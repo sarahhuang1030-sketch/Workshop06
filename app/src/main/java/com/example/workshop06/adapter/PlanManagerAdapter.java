@@ -25,7 +25,6 @@ public class PlanManagerAdapter extends RecyclerView.Adapter<PlanManagerAdapter.
     public interface OnPlanActionListener {
         void onEdit(PlanResponse item);
         void onDelete(PlanResponse item);
-        void onManageAddOns(PlanResponse item);
     }
 
     private final List<PlanResponse> fullList = new ArrayList<>();
@@ -156,11 +155,7 @@ public class PlanManagerAdapter extends RecyclerView.Adapter<PlanManagerAdapter.
                         : "-"
         );
 
-        holder.tvAddons.setText(
-                item.getAddOnNames() != null && !item.getAddOnNames().trim().isEmpty()
-                        ? item.getAddOnNames()
-                        : "No add-ons"
-        );
+
 
         // NEW: show features
         holder.tvFeatures.setText(buildFeatureText(item.getPlanId()));
@@ -171,9 +166,7 @@ public class PlanManagerAdapter extends RecyclerView.Adapter<PlanManagerAdapter.
                         : "No"
         );
 
-        holder.btnManageAddOns.setOnClickListener(v -> {
-            if (listener != null) listener.onManageAddOns(item);
-        });
+
 
         holder.btnEdit.setOnClickListener(v -> {
             if (listener != null) listener.onEdit(item);
@@ -191,8 +184,8 @@ public class PlanManagerAdapter extends RecyclerView.Adapter<PlanManagerAdapter.
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvPlanTitle, tvServiceTypeId, tvMonthlyPrice, tvContractTermMonths,
-                tvDescription, tvAddons, tvFeatures, tvIsActive;
-        ImageButton btnManageAddOns, btnEdit, btnDelete;
+                tvDescription, tvFeatures, tvIsActive;
+        ImageButton btnEdit, btnDelete;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -202,11 +195,11 @@ public class PlanManagerAdapter extends RecyclerView.Adapter<PlanManagerAdapter.
             tvMonthlyPrice = itemView.findViewById(R.id.tvMonthlyPrice);
             tvContractTermMonths = itemView.findViewById(R.id.tvContractTermMonths);
             tvDescription = itemView.findViewById(R.id.tvDescription);
-            tvAddons = itemView.findViewById(R.id.tvAddons);
+
             tvFeatures = itemView.findViewById(R.id.tvFeatures);
             tvIsActive = itemView.findViewById(R.id.tvIsActive);
 
-            btnManageAddOns = itemView.findViewById(R.id.btnManageAddOns);
+
             btnEdit = itemView.findViewById(R.id.btnEdit);
             btnDelete = itemView.findViewById(R.id.btnDelete);
         }

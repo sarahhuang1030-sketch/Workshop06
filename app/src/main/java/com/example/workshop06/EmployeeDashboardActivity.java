@@ -2,6 +2,7 @@ package com.example.workshop06;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -15,6 +16,7 @@ import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.DashboardMenuItem;
 import com.example.workshop06.model.ManagerSummaryResponse;
+import com.example.workshop06.model.MeResponse;
 import com.example.workshop06.model.ServiceDashboardSummaryResponse;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -30,6 +32,8 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
     private TextView tvAgentName;
     private RecyclerView rvDashboardCards;
     private BottomNavigationView bottomNavigation;
+    private TextView tvStatus;
+    private View statusDot;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +43,8 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
         tvAgentName = findViewById(R.id.tvAgentName);
         rvDashboardCards = findViewById(R.id.rvDashboardCards);
         bottomNavigation = findViewById(R.id.bottomNavigation);
+        tvStatus = findViewById(R.id.tvStatus);
+        statusDot = findViewById(R.id.statusDot);
 
         SharedPreferences prefs = getSharedPreferences("teleconnect_prefs", MODE_PRIVATE);
         String role = prefs.getString("user_role", "");
@@ -53,6 +59,7 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
             tvAgentName.setText("Employee Dashboard");
         }
 
+        loadEmployeeStatus();
         setupDashboardCards();
 
         if ("Service Technician".equalsIgnoreCase(role)) {
@@ -60,6 +67,61 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
         } else {
             BottomNavHelper.setup(this, R.id.nav_home);
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadEmployeeStatus();
+    }
+
+    private void loadEmployeeStatus() {
+        SharedPreferences prefs = getSharedPreferences("teleconnect_prefs", MODE_PRIVATE);
+        String token = prefs.getString("jwt_token", null);
+
+        if (token == null || token.trim().isEmpty()) {
+            tvStatus.setText("Unknown");
+            statusDot.setBackgroundResource(R.drawable.bg_status_dot_red);
+            Toast.makeText(this, "Missing JWT token", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
+
+        apiService.getMe("Bearer " + token).enqueue(new Callback<MeResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<MeResponse> call,
+                                   @NonNull Response<MeResponse> response) {
+
+                if (response.isSuccessful() && response.body() != null) {
+                    MeResponse me = response.body();
+                    String status = me.getStatus();
+
+                    if ("Active".equalsIgnoreCase(status)) {
+                        tvStatus.setText("Active");
+                        statusDot.setBackgroundResource(R.drawable.bg_status_dot_green);
+                    } else {
+                        tvStatus.setText(status != null && !status.trim().isEmpty() ? status : "Inactive");
+                        statusDot.setBackgroundResource(R.drawable.bg_status_dot_red);
+                    }
+                } else {
+                    tvStatus.setText("Unknown");
+                    statusDot.setBackgroundResource(R.drawable.bg_status_dot_red);
+                    Toast.makeText(EmployeeDashboardActivity.this,
+                            "Failed to load status: " + response.code(),
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<MeResponse> call, @NonNull Throwable t) {
+                tvStatus.setText("Unknown");
+                statusDot.setBackgroundResource(R.drawable.bg_status_dot_red);
+                Toast.makeText(EmployeeDashboardActivity.this,
+                        "Error: " + t.getMessage(),
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void setupDashboardCards() {

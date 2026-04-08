@@ -9,6 +9,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.workshop06.api.ApiService;
@@ -16,6 +17,8 @@ import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.LoginRequest;
 import com.example.workshop06.model.LoginResponse;
 import com.example.workshop06.util.ValidationUtils;
+
+import org.json.JSONObject;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -32,6 +35,7 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
         etUsername = findViewById(R.id.etUsername);
         etPassword = findViewById(R.id.etPassword);
         btnLogin = findViewById(R.id.btnLogin);
@@ -46,9 +50,8 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void doLogin() {
-
-        String password = etPassword.getText().toString().trim();
         String username = etUsername.getText().toString().trim();
+        String password = etPassword.getText().toString().trim();
 
         if (!ValidationUtils.username(etUsername)) return;
         if (!ValidationUtils.required(etPassword, "Password is required")) return;
@@ -74,14 +77,11 @@ public class LoginActivity extends AppCompatActivity {
                             .putString("first_name", loginResponse.getFirstName())
                             .putString("last_name", loginResponse.getLastName())
                             .putString("username", loginResponse.getUsername())
-
-//                            .putString("email", etEmail.getText().toString().trim())
                             .apply();
 
                     Toast.makeText(LoginActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
 
                     Intent intent;
-
                     if (Boolean.TRUE.equals(loginResponse.getMustChangePassword())) {
                         intent = new Intent(LoginActivity.this, ChangePasswordFirstLoginActivity.class);
                     } else if (loginResponse.getEmployeeId() != null) {
@@ -93,8 +93,29 @@ public class LoginActivity extends AppCompatActivity {
                     startActivity(intent);
                     finish();
 
+                } else if (response.code() == 403) {
+                    String message = "Your profile is inactive now, so you can't access your dashboard.";
+
+                    try {
+                        if (response.errorBody() != null) {
+                            String errorJson = response.errorBody().string();
+                            JSONObject jsonObject = new JSONObject(errorJson);
+                            if (jsonObject.has("message")) {
+                                message = jsonObject.getString("message");
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    new AlertDialog.Builder(LoginActivity.this)
+                            .setTitle("Access Denied")
+                            .setMessage(message)
+                            .setPositiveButton("OK", null)
+                            .show();
+
                 } else {
-                    Toast.makeText(LoginActivity.this, "Invalid email or password", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, "Invalid username or password", Toast.LENGTH_SHORT).show();
                 }
             }
 

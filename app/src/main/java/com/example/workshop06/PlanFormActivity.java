@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -42,6 +43,8 @@ public class PlanFormActivity extends AppCompatActivity {
     private String mode = "add";
     private int planId = -1;
 
+    private ImageButton btnBack;
+
     private final List<ServiceTypeResponse> serviceTypeList = new ArrayList<>();
     private Integer selectedServiceTypeId = null;
 
@@ -49,7 +52,9 @@ public class PlanFormActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plan_form);
+        btnBack = findViewById(R.id.btnBack);
 
+        btnBack.setOnClickListener(v -> finish());
         initViews();
         setupStatusDropdown();
         loadIntentData();

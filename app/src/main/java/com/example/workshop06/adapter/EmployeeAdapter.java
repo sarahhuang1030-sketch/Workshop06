@@ -31,6 +31,8 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.ViewHo
     private Map<Integer, String> managerNameMap = new HashMap<>();
     private Map<Integer, String> locationNameMap = new HashMap<>();
 
+
+
     public EmployeeAdapter(OnEmployeeActionListener listener) {
         this.listener = listener;
     }

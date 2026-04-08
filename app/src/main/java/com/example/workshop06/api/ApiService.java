@@ -274,12 +274,23 @@ Call<List<EmployeeSalesResponse>> getEmployeeSales();
     Call<Void> deleteCustomer(@Path("id") int id);
 
     @GET("/api/manager/customers/{customerId}/address")
-    Call<CustomerAddressResponse> getCustomerAddress(@Path("customerId") int customerId);
+    Call<List<CustomerAddressResponse>> getCustomerAddresses(@Path("customerId") int customerId);
 
     @PUT("/api/manager/customers/{customerId}/address")
     Call<CustomerAddressResponse> saveCustomerAddress(
             @Path("customerId") int customerId,
             @Body SaveCustomerAddressRequest request
+    );
+
+    @DELETE("/api/manager/customers/{customerId}/address/{addressType}")
+    Call<Void> deleteCustomerAddressByType(
+            @Path("customerId") int customerId,
+            @Path("addressType") String addressType
+    );
+
+    @GET("/api/service/customers/{customerId}/address")
+    Call<List<CustomerAddressResponse>> getCustomerAddressesForTechnician(
+            @Path("customerId") int customerId
     );
 
 

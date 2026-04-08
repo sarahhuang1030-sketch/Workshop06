@@ -78,10 +78,11 @@ public class BottomNavHelper {
 
             Intent intent = null;
 
-            if (id == R.id.nav_jobs) {
-                intent = new Intent(activity, ServiceAppointmentListActivity.class);
-            } else if (id == R.id.nav_requests) {
-                intent = new Intent(activity, ServiceRequestListActivity.class);
+            if (id == R.id.nav_home) {
+                intent = new Intent(activity, EmployeeDashboardActivity.class);
+
+//            } else if (id == R.id.nav_requests) {
+//                intent = new Intent(activity, ServiceRequestListActivity.class);
             } else if (id == R.id.nav_maps) {
                 intent = new Intent(activity, NavMapActivity.class); // temp reuse
             } else if (id == R.id.nav_customers) {

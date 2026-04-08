@@ -63,7 +63,7 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
         setupDashboardCards();
 
         if ("Service Technician".equalsIgnoreCase(role)) {
-            BottomNavHelper.setup(this, R.id.nav_requests);
+            BottomNavHelper.setup(this, R.id.nav_home);
         } else {
             BottomNavHelper.setup(this, R.id.nav_home);
         }

@@ -4,7 +4,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -15,7 +18,10 @@ import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.CustomerAddressResponse;
 import com.example.workshop06.model.SaveCustomerAddressRequest;
-import com.google.android.material.textfield.MaterialAutoCompleteTextView;
+import com.example.workshop06.util.FormFormatUtils;
+import com.example.workshop06.util.ValidationUtils;
+import android.content.SharedPreferences;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -25,10 +31,13 @@ public class CustomerAddressFormActivity extends AppCompatActivity {
 
     private static final String TAG = "CustomerAddressForm";
 
-    private MaterialAutoCompleteTextView spinnerAddressType;
     private EditText etStreet1, etStreet2, etCity, etProvince, etPostalCode, etCountry;
+    private EditText etServiceStreet1, etServiceStreet2, etServiceCity, etServiceProvince, etServicePostalCode, etServiceCountry;
+    private ImageButton btnBack;
     private Button btnSave;
     private ProgressBar progressBar;
+    private CheckBox cbSameAsBilling;
+    private LinearLayout layoutServiceAddressSection;
 
     private int customerId = -1;
     private boolean readOnly = false;
@@ -43,7 +52,9 @@ public class CustomerAddressFormActivity extends AppCompatActivity {
         customerId = getIntent().getIntExtra("customerId", -1);
         readOnly = getIntent().getBooleanExtra("readOnly", false);
 
-        setupAddressType();
+
+        setupFormatting();
+        setupSameAsBillingToggle();
 
         if (customerId <= 0) {
             Toast.makeText(this, "Invalid customer id", Toast.LENGTH_SHORT).show();
@@ -57,136 +68,284 @@ public class CustomerAddressFormActivity extends AppCompatActivity {
             setupButtons();
         }
 
-        loadAddress();
+        loadAddresses();
     }
 
     private void initViews() {
-        spinnerAddressType = findViewById(R.id.spinnerAddressType);
+        btnBack = findViewById(R.id.btnBack);
+
         etStreet1 = findViewById(R.id.etStreet1);
         etStreet2 = findViewById(R.id.etStreet2);
         etCity = findViewById(R.id.etCity);
         etProvince = findViewById(R.id.etProvince);
         etPostalCode = findViewById(R.id.etPostalCode);
         etCountry = findViewById(R.id.etCountry);
+
+        etServiceStreet1 = findViewById(R.id.etServiceStreet1);
+        etServiceStreet2 = findViewById(R.id.etServiceStreet2);
+        etServiceCity = findViewById(R.id.etServiceCity);
+        etServiceProvince = findViewById(R.id.etServiceProvince);
+        etServicePostalCode = findViewById(R.id.etServicePostalCode);
+        etServiceCountry = findViewById(R.id.etServiceCountry);
+        btnBack = findViewById(R.id.btnBack);
+        cbSameAsBilling = findViewById(R.id.cbSameAsBilling);
+        layoutServiceAddressSection = findViewById(R.id.layoutServiceAddressSection);
+
         btnSave = findViewById(R.id.btnSave);
         progressBar = findViewById(R.id.progressBar);
+        btnBack.setOnClickListener(v -> finish());
     }
 
-    private void setupAddressType() {
-        String[] types = {"Billing", "Service"};
-        android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<>(
-                this,
-                android.R.layout.simple_list_item_1,
-                types
-        );
-        spinnerAddressType.setAdapter(adapter);
-        spinnerAddressType.setText("Billing", false);
+
+
+    private void setupFormatting() {
+        FormFormatUtils.attachCanadianPostalCodeFormatter(etPostalCode);
+        FormFormatUtils.attachCanadianPostalCodeFormatter(etServicePostalCode);
     }
 
-    private void loadAddress() {
+    private void setupSameAsBillingToggle() {
+        cbSameAsBilling.setChecked(true);
+        layoutServiceAddressSection.setVisibility(View.GONE);
+
+        cbSameAsBilling.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            layoutServiceAddressSection.setVisibility(isChecked ? View.GONE : View.VISIBLE);
+        });
+    }
+
+    private void setupButtons() {
+        btnSave.setOnClickListener(v -> saveAddresses());
+    }
+
+    private void loadAddresses() {
         showLoading(true);
 
+        // ✅ GET ROLE FROM SHARED PREFERENCES
+        SharedPreferences prefs = getSharedPreferences("teleconnect_prefs", MODE_PRIVATE);
+        String role = prefs.getString("user_role", "");
+        boolean isTechnician = "Service Technician".equalsIgnoreCase(role);
+
+        // ✅ API SERVICE
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
 
-        Call<CustomerAddressResponse> call = readOnly
-                ? apiService.getCustomerAddressForTechnician(customerId)
-                : apiService.getCustomerAddress(customerId);
+        // ✅ CALL CORRECT ENDPOINT BASED ON ROLE
+        Call<List<CustomerAddressResponse>> call = isTechnician
+                ? apiService.getCustomerAddressesForTechnician(customerId)
+                : apiService.getCustomerAddresses(customerId);
 
-        call.enqueue(new Callback<CustomerAddressResponse>() {
+        call.enqueue(new Callback<List<CustomerAddressResponse>>() {
             @Override
-            public void onResponse(Call<CustomerAddressResponse> call, Response<CustomerAddressResponse> response) {
+            public void onResponse(Call<List<CustomerAddressResponse>> call, Response<List<CustomerAddressResponse>> response) {
                 showLoading(false);
-
-                Log.d(TAG, "loadAddress code=" + response.code() + ", customerId=" + customerId + ", readOnly=" + readOnly);
 
                 if (!response.isSuccessful()) {
                     Toast.makeText(CustomerAddressFormActivity.this,
-                            "No saved address returned. Code: " + response.code(),
+                            "Failed to load address. Code: " + response.code(),
                             Toast.LENGTH_LONG).show();
                     return;
                 }
 
-                CustomerAddressResponse data = response.body();
-                if (data == null) return;
+                List<CustomerAddressResponse> list = response.body();
+                if (list == null || list.isEmpty()) return;
 
-                if (data.getAddressType() != null) spinnerAddressType.setText(data.getAddressType(), false);
-                if (data.getStreet1() != null) etStreet1.setText(data.getStreet1());
-                if (data.getStreet2() != null) etStreet2.setText(data.getStreet2());
-                if (data.getCity() != null) etCity.setText(data.getCity());
-                if (data.getProvince() != null) etProvince.setText(data.getProvince());
-                if (data.getPostalCode() != null) etPostalCode.setText(data.getPostalCode());
-                if (data.getCountry() != null) etCountry.setText(data.getCountry());
+                // ✅ fill billing + service
+                CustomerAddressResponse billing = null;
+                CustomerAddressResponse service = null;
+
+                for (CustomerAddressResponse a : list) {
+                    if ("Billing".equalsIgnoreCase(a.getAddressType())) {
+                        billing = a;
+                    } else if ("Service".equalsIgnoreCase(a.getAddressType())) {
+                        service = a;
+                    }
+                }
+
+                if (billing != null) {
+                    etStreet1.setText(billing.getStreet1());
+                    etStreet2.setText(billing.getStreet2());
+                    etCity.setText(billing.getCity());
+                    etProvince.setText(billing.getProvince());
+                    etPostalCode.setText(billing.getPostalCode());
+                    etCountry.setText(billing.getCountry());
+                }
+
+                if (service != null) {
+                    cbSameAsBilling.setChecked(false);
+                    layoutServiceAddressSection.setVisibility(View.VISIBLE);
+
+                    etServiceStreet1.setText(service.getStreet1());
+                    etServiceStreet2.setText(service.getStreet2());
+                    etServiceCity.setText(service.getCity());
+                    etServiceProvince.setText(service.getProvince());
+                    etServicePostalCode.setText(service.getPostalCode());
+                    etServiceCountry.setText(service.getCountry());
+                } else {
+                    cbSameAsBilling.setChecked(true);
+                    layoutServiceAddressSection.setVisibility(View.GONE);
+                }
             }
 
             @Override
-            public void onFailure(Call<CustomerAddressResponse> call, Throwable t) {
+            public void onFailure(Call<List<CustomerAddressResponse>> call, Throwable t) {
                 showLoading(false);
                 Toast.makeText(CustomerAddressFormActivity.this,
-                        "Unable to load address",
+                        "Unable to load address: " + t.getMessage(),
                         Toast.LENGTH_LONG).show();
             }
         });
     }
 
-    private void setupButtons() {
-        btnSave.setOnClickListener(v -> saveAddress());
+    private boolean validateBillingAddress() {
+        if (!ValidationUtils.required(etStreet1, "Street 1 is required")) return false;
+        if (!ValidationUtils.required(etCity, "City is required")) return false;
+        if (!ValidationUtils.required(etProvince, "Province is required")) return false;
+        if (!ValidationUtils.canadianPostalCode(etPostalCode)) return false;
+        if (!ValidationUtils.required(etCountry, "Country is required")) return false;
+        return true;
     }
 
-    private void saveAddress() {
+    private boolean validateServiceAddress() {
+        if (!ValidationUtils.required(etServiceStreet1, "Service street 1 is required")) return false;
+        if (!ValidationUtils.required(etServiceCity, "Service city is required")) return false;
+        if (!ValidationUtils.required(etServiceProvince, "Service province is required")) return false;
+        if (!ValidationUtils.canadianPostalCode(etServicePostalCode)) return false;
+        if (!ValidationUtils.required(etServiceCountry, "Service country is required")) return false;
+        return true;
+    }
+
+    private void saveAddresses() {
         if (readOnly) {
             Toast.makeText(this, "Technicians can only view addresses", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        SaveCustomerAddressRequest request = new SaveCustomerAddressRequest(
-                spinnerAddressType.getText() != null ? spinnerAddressType.getText().toString().trim() : "Billing",
-                etStreet1.getText().toString().trim(),
-                etStreet2.getText().toString().trim(),
-                etCity.getText().toString().trim(),
-                etProvince.getText().toString().trim(),
-                etPostalCode.getText().toString().trim(),
-                etCountry.getText().toString().trim()
-        );
+        if (!validateBillingAddress()) return;
+
+        boolean sameAsBilling = cbSameAsBilling.isChecked();
+        if (!sameAsBilling && !validateServiceAddress()) return;
 
         showLoading(true);
 
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
-        apiService.saveCustomerAddress(customerId, request).enqueue(new Callback<CustomerAddressResponse>() {
+
+        SaveCustomerAddressRequest billingRequest = new SaveCustomerAddressRequest(
+                "Billing",
+                getTextValue(etStreet1),
+                getTextValue(etStreet2),
+                getTextValue(etCity),
+                getTextValue(etProvince),
+                getTextValue(etPostalCode).toUpperCase(),
+                getTextValue(etCountry)
+        );
+
+        apiService.saveCustomerAddress(customerId, billingRequest).enqueue(new Callback<CustomerAddressResponse>() {
             @Override
             public void onResponse(Call<CustomerAddressResponse> call, Response<CustomerAddressResponse> response) {
-                showLoading(false);
-
-                if (response.isSuccessful()) {
+                if (!response.isSuccessful()) {
+                    showLoading(false);
                     Toast.makeText(CustomerAddressFormActivity.this,
-                            "Address saved",
-                            Toast.LENGTH_SHORT).show();
-                    setResult(RESULT_OK);
-                    finish();
-                } else {
-                    Toast.makeText(CustomerAddressFormActivity.this,
-                            "Save failed. Code: " + response.code(),
+                            "Billing address save failed. Code: " + response.code(),
                             Toast.LENGTH_LONG).show();
+                    return;
                 }
+
+                if (sameAsBilling) {
+                    deleteServiceIfNeeded(apiService);
+                    return;
+                }
+
+                SaveCustomerAddressRequest serviceRequest = new SaveCustomerAddressRequest(
+                        "Service",
+                        getTextValue(etServiceStreet1),
+                        getTextValue(etServiceStreet2),
+                        getTextValue(etServiceCity),
+                        getTextValue(etServiceProvince),
+                        getTextValue(etServicePostalCode).toUpperCase(),
+                        getTextValue(etServiceCountry)
+                );
+
+                apiService.saveCustomerAddress(customerId, serviceRequest).enqueue(new Callback<CustomerAddressResponse>() {
+                    @Override
+                    public void onResponse(Call<CustomerAddressResponse> call, Response<CustomerAddressResponse> response) {
+                        showLoading(false);
+
+                        if (response.isSuccessful()) {
+                            Toast.makeText(CustomerAddressFormActivity.this,
+                                    "Billing and service addresses saved",
+                                    Toast.LENGTH_SHORT).show();
+                            setResult(RESULT_OK);
+                            finish();
+                        } else {
+                            Toast.makeText(CustomerAddressFormActivity.this,
+                                    "Service address save failed. Code: " + response.code(),
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<CustomerAddressResponse> call, Throwable t) {
+                        showLoading(false);
+                        Toast.makeText(CustomerAddressFormActivity.this,
+                                "Unable to save service address",
+                                Toast.LENGTH_LONG).show();
+                    }
+                });
             }
 
             @Override
             public void onFailure(Call<CustomerAddressResponse> call, Throwable t) {
                 showLoading(false);
                 Toast.makeText(CustomerAddressFormActivity.this,
-                        "Unable to save address",
+                        "Unable to save billing address",
                         Toast.LENGTH_LONG).show();
             }
         });
     }
 
+    private void deleteServiceIfNeeded(ApiService apiService) {
+        Call<Void> deleteCall = apiService.deleteCustomerAddressByType(customerId, "Service");
+        deleteCall.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                showLoading(false);
+                Toast.makeText(CustomerAddressFormActivity.this,
+                        "Address saved",
+                        Toast.LENGTH_SHORT).show();
+                setResult(RESULT_OK);
+                finish();
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                showLoading(false);
+                Toast.makeText(CustomerAddressFormActivity.this,
+                        "Address saved",
+                        Toast.LENGTH_SHORT).show();
+                setResult(RESULT_OK);
+                finish();
+            }
+        });
+    }
+
+    private String getTextValue(EditText editText) {
+        return editText.getText() != null ? editText.getText().toString().trim() : "";
+    }
+
     private void makeReadOnly() {
-        spinnerAddressType.setEnabled(false);
         etStreet1.setEnabled(false);
         etStreet2.setEnabled(false);
         etCity.setEnabled(false);
         etProvince.setEnabled(false);
         etPostalCode.setEnabled(false);
         etCountry.setEnabled(false);
+
+        etServiceStreet1.setEnabled(false);
+        etServiceStreet2.setEnabled(false);
+        etServiceCity.setEnabled(false);
+        etServiceProvince.setEnabled(false);
+        etServicePostalCode.setEnabled(false);
+        etServiceCountry.setEnabled(false);
+
+        cbSameAsBilling.setEnabled(false);
 
         if (btnSave != null) {
             btnSave.setVisibility(View.GONE);
@@ -195,8 +354,13 @@ public class CustomerAddressFormActivity extends AppCompatActivity {
 
     private void showLoading(boolean isLoading) {
         progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+
         if (btnSave != null) {
             btnSave.setEnabled(!isLoading && !readOnly);
+        }
+
+        if (btnBack != null) {
+            btnBack.setEnabled(!isLoading);
         }
     }
 }

@@ -65,14 +65,14 @@ public class NavMapActivity extends AppCompatActivity {
         bottomNavigation.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
 
-            if (id == R.id.nav_jobs) {
+            if (id == R.id.nav_home) {
                 startActivity(new Intent(this, ServiceAppointmentListActivity.class));
                 finish();
                 return true;
-            } else if (id == R.id.nav_requests) {
-                startActivity(new Intent(this, ServiceRequestListActivity.class));
-                finish();
-                return true;
+//            } else if (id == R.id.nav_requests) {
+//                startActivity(new Intent(this, ServiceRequestListActivity.class));
+//                finish();
+//                return true;
             } else if (id == R.id.nav_maps) {
                 return true;
             } else if (id == R.id.nav_customers) {

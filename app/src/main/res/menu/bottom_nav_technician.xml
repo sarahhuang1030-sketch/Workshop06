@@ -2,14 +2,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/nav_jobs"
-        android:icon="@android:drawable/ic_menu_my_calendar"
-        android:title="Jobs" />
+        android:id="@+id/nav_home"
+        android:title="Home"
+        android:icon="@drawable/ic_home" />
 
-    <item
-        android:id="@+id/nav_requests"
-        android:icon="@android:drawable/ic_menu_agenda"
-        android:title="Requests" />
+<!--    <item-->
+<!--        android:id="@+id/nav_requests"-->
+<!--        android:icon="@android:drawable/ic_menu_agenda"-->
+<!--        android:title="Requests" />-->
 
     <item
         android:id="@+id/nav_maps"
@@ -18,12 +18,12 @@
 
     <item
         android:id="@+id/nav_customers"
-        android:icon="@android:drawable/ic_menu_myplaces"
-        android:title="Customers" />
+        android:title="Customers"
+        android:icon="@drawable/ic_customers" />
 
     <item
         android:id="@+id/nav_profile"
-        android:icon="@android:drawable/ic_menu_manage"
-        android:title="Profile" />
+        android:title="Profile"
+        android:icon="@drawable/ic_profile" />
 
 </menu>

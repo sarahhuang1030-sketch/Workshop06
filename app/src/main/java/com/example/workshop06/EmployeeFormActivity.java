@@ -172,9 +172,20 @@ public class EmployeeFormActivity extends AppCompatActivity {
     private void showDatePicker() {
         Calendar calendar = Calendar.getInstance();
 
+        int currentYear = calendar.get(Calendar.YEAR);
+
         DatePickerDialog dialog = new DatePickerDialog(
                 this,
                 (view, year, month, dayOfMonth) -> {
+
+                    // 🚫 Block different year
+                    if (year != currentYear) {
+                        Toast.makeText(this,
+                                "Hire date must be within current year",
+                                Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
                     String formatted = String.format(
                             Locale.US,
                             "%04d-%02d-%02d",
@@ -182,7 +193,11 @@ public class EmployeeFormActivity extends AppCompatActivity {
                             month + 1,
                             dayOfMonth
                     );
+
                     etHireDate.setText(formatted);
+
+                    // 🔥 auto-handle status after picking date
+                    handleHireDateStatus(formatted);
                 },
                 calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH),
@@ -406,6 +421,40 @@ public class EmployeeFormActivity extends AppCompatActivity {
             return;
         }
 
+        if (!TextUtils.isEmpty(hireDate)) {
+            try {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US);
+                sdf.setLenient(false);
+
+                java.util.Date selectedDate = sdf.parse(hireDate);
+                if (selectedDate == null) {
+                    Toast.makeText(this, "Invalid hire date", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                Calendar selectedCal = Calendar.getInstance();
+                selectedCal.setTime(selectedDate);
+
+                Calendar todayCal = Calendar.getInstance();
+                int currentYear = todayCal.get(Calendar.YEAR);
+
+                if (selectedCal.get(Calendar.YEAR) != currentYear) {
+                    Toast.makeText(this,
+                            "Hire date must be within current year",
+                            Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if (isFutureDate(hireDate)) {
+                    status = "Inactive";
+                }
+
+            } catch (Exception e) {
+                Toast.makeText(this, "Invalid hire date", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+
         Integer primaryLocationId = selectedLocationId > 0 ? selectedLocationId : null;
         Double salary = TextUtils.isEmpty(salaryText) ? null : Double.parseDouble(salaryText);
         Integer managerId = selectedManagerId > 0 ? selectedManagerId : null;
@@ -512,5 +561,55 @@ public class EmployeeFormActivity extends AppCompatActivity {
 
     private String safe(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private void handleHireDateStatus(String hireDateStr) {
+        if (isFutureDate(hireDateStr)) {
+            spinnerStatus.setText("Inactive", false);
+            spinnerStatus.setEnabled(false);
+
+            Toast.makeText(this,
+                    "Future hire date: employee stays inactive until that date",
+                    Toast.LENGTH_SHORT).show();
+        } else {
+            spinnerStatus.setEnabled(true);
+
+            String currentStatus = spinnerStatus.getText() != null
+                    ? spinnerStatus.getText().toString().trim()
+                    : "";
+
+            if (currentStatus.isEmpty() || "Inactive".equalsIgnoreCase(currentStatus)) {
+                spinnerStatus.setText("Active", false);
+            }
+        }
+    }
+
+    private boolean isFutureDate(String dateStr) {
+        try {
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US);
+            sdf.setLenient(false);
+
+            java.util.Date selectedDate = sdf.parse(dateStr);
+            if (selectedDate == null) return false;
+
+            Calendar selectedCal = Calendar.getInstance();
+            selectedCal.setTime(selectedDate);
+            selectedCal.set(Calendar.HOUR_OF_DAY, 0);
+            selectedCal.set(Calendar.MINUTE, 0);
+            selectedCal.set(Calendar.SECOND, 0);
+            selectedCal.set(Calendar.MILLISECOND, 0);
+
+            Calendar todayCal = Calendar.getInstance();
+            todayCal.set(Calendar.HOUR_OF_DAY, 0);
+            todayCal.set(Calendar.MINUTE, 0);
+            todayCal.set(Calendar.SECOND, 0);
+            todayCal.set(Calendar.MILLISECOND, 0);
+
+            return selectedCal.after(todayCal);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

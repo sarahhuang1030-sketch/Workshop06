@@ -29,6 +29,7 @@
                 android:textStyle="bold"
                 android:textColor="#111827" />
 
+
             <ImageButton
                 android:id="@+id/btnEdit"
                 android:layout_width="40dp"
@@ -183,6 +184,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="-" />
+
+
+        <Button
+            android:id="@+id/btnViewAddress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="View Address"
+            android:layout_marginTop="5dp"/>
 
     </LinearLayout>
 

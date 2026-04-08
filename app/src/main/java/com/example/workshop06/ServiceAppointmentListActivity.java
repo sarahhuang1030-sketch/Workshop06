@@ -79,7 +79,7 @@ public class ServiceAppointmentListActivity extends AppCompatActivity {
         setupRecyclerView();
         setupSearch();
         setupButtons();
-        BottomNavHelper.setup(this, R.id.nav_jobs);
+        BottomNavHelper.setup(this,0);
         setupStaticFilters();
         setupTechnicianFilter();
 

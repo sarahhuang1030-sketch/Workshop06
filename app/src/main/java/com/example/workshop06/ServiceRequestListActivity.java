@@ -70,7 +70,7 @@ public class ServiceRequestListActivity extends AppCompatActivity {
         setupTechnicianFilter();
         loadServiceRequests();
 
-        BottomNavHelper.setup(this, R.id.nav_requests);
+        BottomNavHelper.setup(this, 0);
     }
 
     private void initViews() {

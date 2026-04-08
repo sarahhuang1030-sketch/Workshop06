@@ -335,54 +335,112 @@ public class ServiceAppointmentFormActivity extends AppCompatActivity {
     private void loadAddressesForCustomer(int customerId) {
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
 
-        apiService.getCustomerAddress(customerId).enqueue(new Callback<CustomerAddressResponse>() {
+        apiService.getCustomerAddresses(customerId).enqueue(new Callback<List<CustomerAddressResponse>>() {
             @Override
-            public void onResponse(Call<CustomerAddressResponse> call, Response<CustomerAddressResponse> response) {
-                if (!response.isSuccessful() || response.body() == null) {
+            public void onResponse(Call<List<CustomerAddressResponse>> call, Response<List<CustomerAddressResponse>> response) {
+                addressOptions.clear();
+
+                if (!response.isSuccessful() || response.body() == null || response.body().isEmpty()) {
                     etAddressId.setText("");
                     spinnerAddress.setText("", false);
                     etAddressText.setText("—");
+                    spinnerAddress.setAdapter(null);
 
                     Toast.makeText(ServiceAppointmentFormActivity.this, "No address found", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                CustomerAddressResponse address = response.body();
+                List<CustomerAddressResponse> addresses = response.body();
+                List<String> labels = new ArrayList<>();
 
-                if (address.getAddressId() != null) {
-                    etAddressId.setText(String.valueOf(address.getAddressId()));
+                CustomerAddressResponse defaultAddress = null;
+
+                for (CustomerAddressResponse address : addresses) {
+                    if (address == null || address.getAddressId() == null) continue;
+
+                    String addressLabel = buildAddressLabel(address);
+                    String type = address.getAddressType() != null ? address.getAddressType().trim() : "";
+
+                    String fullLabel = type.isEmpty()
+                            ? addressLabel
+                            : type + " - " + addressLabel;
+
+                    addressOptions.add(new AddressOption(address.getAddressId(), fullLabel));
+                    labels.add(fullLabel);
+
+                    if (defaultAddress == null && "Service".equalsIgnoreCase(type)) {
+                        defaultAddress = address;
+                    }
+                }
+
+                if (addressOptions.isEmpty()) {
+                    etAddressId.setText("");
+                    spinnerAddress.setText("", false);
+                    etAddressText.setText("—");
+                    spinnerAddress.setAdapter(null);
+
+                    Toast.makeText(ServiceAppointmentFormActivity.this, "No address found", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if (defaultAddress == null) {
+                    for (CustomerAddressResponse address : addresses) {
+                        if (address != null
+                                && address.getAddressType() != null
+                                && "Billing".equalsIgnoreCase(address.getAddressType())
+                                && address.getAddressId() != null) {
+                            defaultAddress = address;
+                            break;
+                        }
+                    }
+                }
+
+                if (defaultAddress == null) {
+                    defaultAddress = addresses.get(0);
+                }
+
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                        ServiceAppointmentFormActivity.this,
+                        android.R.layout.simple_dropdown_item_1line,
+                        labels
+                );
+                spinnerAddress.setAdapter(adapter);
+
+                Integer defaultAddressId = defaultAddress.getAddressId();
+                String defaultLabel = null;
+
+                for (AddressOption option : addressOptions) {
+                    if (option.addressId == defaultAddressId) {
+                        defaultLabel = option.label;
+                        break;
+                    }
+                }
+
+                if (defaultAddressId != null) {
+                    etAddressId.setText(String.valueOf(defaultAddressId));
                 } else {
                     etAddressId.setText("");
                 }
 
-                String addressLabel = buildAddressLabel(address);
-
-                addressOptions.clear();
-                if (address.getAddressId() != null) {
-                    addressOptions.add(new AddressOption(address.getAddressId(), addressLabel));
-                }
-
-                spinnerAddress.setAdapter(new ArrayAdapter<>(
-                        ServiceAppointmentFormActivity.this,
-                        android.R.layout.simple_dropdown_item_1line,
-                        new String[]{addressLabel}
-                ));
-                spinnerAddress.setText(addressLabel, false);
-                etAddressText.setText(addressLabel);
+                spinnerAddress.setText(defaultLabel != null ? defaultLabel : "", false);
+                etAddressText.setText(defaultLabel != null ? defaultLabel : "—");
 
                 spinnerAddress.setOnClickListener(v -> spinnerAddress.showDropDown());
                 spinnerAddress.setOnItemClickListener((parent, view, position, id) -> {
                     AddressOption selected = addressOptions.get(position);
                     etAddressId.setText(String.valueOf(selected.addressId));
                     spinnerAddress.setText(selected.label, false);
+                    etAddressText.setText(selected.label);
                 });
             }
 
             @Override
-            public void onFailure(Call<CustomerAddressResponse> call, Throwable t) {
+            public void onFailure(Call<List<CustomerAddressResponse>> call, Throwable t) {
+                addressOptions.clear();
                 etAddressId.setText("");
                 spinnerAddress.setText("", false);
                 etAddressText.setText("—");
+                spinnerAddress.setAdapter(null);
 
                 Toast.makeText(ServiceAppointmentFormActivity.this, "Failed to load address", Toast.LENGTH_LONG).show();
             }

@@ -20,15 +20,19 @@ import com.example.workshop06.model.*;
 import com.example.workshop06.model.ServiceRequestResponse;
 
 import java.util.List;
+import java.util.Map;
 
+import okhttp3.MultipartBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
+import retrofit2.http.Multipart;
 import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
+import retrofit2.http.Part;
 import retrofit2.http.Path;
 
 public interface ApiService {
@@ -358,5 +362,27 @@ Call<List<EmployeeSalesResponse>> getEmployeeSales();
     @GET("/api/service/customers/{customerId}/address")
     Call<CustomerAddressResponse> getCustomerAddressForTechnician(@Path("customerId") int customerId);
 
+    //    profile images
+    @Multipart
+    @PUT("api/me/avatar")
+    Call<ProfileImageUploadResponse> uploadAvatar(
+            @Header("Authorization") String token,
+            @Part MultipartBody.Part avatar
+    );
 
+    @DELETE("api/me/avatar")
+    Call<Map<String, Boolean>> deleteAvatar(@Header("Authorization") String token);
+
+    @Multipart
+    @POST("/api/manager/employees/{id}/avatar")
+    Call<Void> uploadEmployeeAvatar(
+            @Path("id") int employeeId,
+            @Part MultipartBody.Part avatar
+    );
+
+    @POST("api/auth/change-password-first-login")
+    Call<Void> changePasswordFirstLogin(
+            @Header("Authorization") String token,
+            @Body FirstLoginPasswordChangeRequest request
+    );
 }

@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Fix warning: declare camera optional -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
 
     <application
         android:usesCleartextTraffic="true"
@@ -14,6 +22,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Workshop06">
 
+        <!-- Activities -->
         <activity android:name=".DashboardActivity" />
 
         <activity
@@ -24,7 +33,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
 
         <activity android:name=".SupportActivity"/>
         <activity android:name=".UsageActivity" />
@@ -64,9 +72,22 @@
         <activity android:name=".PlanAddOnListActivity" />
         <activity android:name=".PlanAddOnFormActivity" />
         <activity android:name=".NavMapActivity" />
+
+        <!-- Google Maps -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyD5Tuu3y5QdtwRY02WzIjngDi1ZpnUQc_8" />
+
+        <!-- ✅ MOVE FileProvider INSIDE application -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 

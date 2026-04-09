@@ -1,6 +1,8 @@
 package com.example.workshop06;
 
 import android.app.DatePickerDialog;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -9,13 +11,20 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 
+import com.bumptech.glide.Glide;
 import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.CreateEmployeeResponse;
@@ -27,17 +36,23 @@ import com.example.workshop06.util.ValidationUtils;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class EmployeeFormActivity extends AppCompatActivity {
-
 
     private EditText etFirstName;
     private EditText etLastName;
@@ -51,6 +66,11 @@ public class EmployeeFormActivity extends AppCompatActivity {
     private MaterialAutoCompleteTextView spinnerManager;
     private MaterialAutoCompleteTextView spinnerLocation;
 
+    private ImageView imgAvatarPreview;
+    private TextView tvAvatarStatus;
+    private Button btnTakePhoto;
+    private Button btnChoosePhoto;
+
     private Button btnSave;
     private ProgressBar progressBar;
     private ImageButton btnBack;
@@ -58,17 +78,49 @@ public class EmployeeFormActivity extends AppCompatActivity {
     private String mode = "add";
     private int employeeId = -1;
 
+    private Uri selectedAvatarUri;
+    private Uri cameraImageUri;
+
     private int selectedLocationId = -1;
     private final List<LocationResponse> locationList = new ArrayList<>();
 
     private final List<EmployeeResponse> managerList = new ArrayList<>();
     private int selectedManagerId = -1;
 
+    private final ActivityResultLauncher<String> pickImageLauncher =
+            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+                if (uri != null) {
+                    selectedAvatarUri = uri;
+                    showSelectedAvatar(uri);
+                }
+            });
+
+    private final ActivityResultLauncher<String> requestCameraPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    launchCameraCapture();
+                } else {
+                    Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+    private final ActivityResultLauncher<Uri> takePictureLauncher =
+            registerForActivityResult(new ActivityResultContracts.TakePicture(), success -> {
+                if (success && cameraImageUri != null) {
+                    selectedAvatarUri = cameraImageUri;
+                    showSelectedAvatar(cameraImageUri);
+                } else {
+                    Toast.makeText(this, "Camera cancelled", Toast.LENGTH_SHORT).show();
+                }
+            });
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_employee_form);
+
         btnBack = findViewById(R.id.btnBack);
+
         initViews();
         setupDropdowns();
         setupFormatters();
@@ -77,11 +129,11 @@ public class EmployeeFormActivity extends AppCompatActivity {
         loadLocations();
         loadManagers();
         setupButtons();
+
         btnBack.setOnClickListener(v -> finish());
     }
 
     private void initViews() {
-
         etFirstName = findViewById(R.id.etFirstName);
         etLastName = findViewById(R.id.etLastName);
         etEmail = findViewById(R.id.etEmail);
@@ -94,8 +146,64 @@ public class EmployeeFormActivity extends AppCompatActivity {
         spinnerManager = findViewById(R.id.spinnerManager);
         spinnerLocation = findViewById(R.id.spinnerLocation);
 
+        imgAvatarPreview = findViewById(R.id.imgAvatarPreview);
+        tvAvatarStatus = findViewById(R.id.tvAvatarStatus);
+        btnTakePhoto = findViewById(R.id.btnTakePhoto);
+        btnChoosePhoto = findViewById(R.id.btnChoosePhoto);
+
         btnSave = findViewById(R.id.btnSave);
         progressBar = findViewById(R.id.progressBar);
+    }
+
+    private void setupButtons() {
+        btnTakePhoto.setOnClickListener(v -> openCamera());
+        btnChoosePhoto.setOnClickListener(v -> openImagePicker());
+        btnSave.setOnClickListener(v -> saveEmployee());
+    }
+
+    private void showSelectedAvatar(Uri uri) {
+        Glide.with(this)
+                .load(uri)
+                .circleCrop()
+                .placeholder(R.drawable.ic_user_placeholder)
+                .error(R.drawable.ic_user_placeholder)
+                .into(imgAvatarPreview);
+
+        tvAvatarStatus.setText("Photo selected");
+    }
+
+    private void openImagePicker() {
+        pickImageLauncher.launch("image/*");
+    }
+
+    private void openCamera() {
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED) {
+            launchCameraCapture();
+        } else {
+            requestCameraPermissionLauncher.launch(android.Manifest.permission.CAMERA);
+        }
+    }
+
+    private void launchCameraCapture() {
+        try {
+            File imageDir = new File(getCacheDir(), "images");
+            if (!imageDir.exists()) {
+                imageDir.mkdirs();
+            }
+
+            File imageFile = File.createTempFile("employee_avatar_", ".jpg", imageDir);
+
+            cameraImageUri = FileProvider.getUriForFile(
+                    this,
+                    getPackageName() + ".fileprovider",
+                    imageFile
+            );
+
+            takePictureLauncher.launch(cameraImageUri);
+        } catch (IOException e) {
+            Toast.makeText(this, "Unable to open camera", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void setupDropdowns() {
@@ -171,14 +279,11 @@ public class EmployeeFormActivity extends AppCompatActivity {
 
     private void showDatePicker() {
         Calendar calendar = Calendar.getInstance();
-
         int currentYear = calendar.get(Calendar.YEAR);
 
         DatePickerDialog dialog = new DatePickerDialog(
                 this,
                 (view, year, month, dayOfMonth) -> {
-
-                    // 🚫 Block different year
                     if (year != currentYear) {
                         Toast.makeText(this,
                                 "Hire date must be within current year",
@@ -195,8 +300,6 @@ public class EmployeeFormActivity extends AppCompatActivity {
                     );
 
                     etHireDate.setText(formatted);
-
-                    // 🔥 auto-handle status after picking date
                     handleHireDateStatus(formatted);
                 },
                 calendar.get(Calendar.YEAR),
@@ -389,10 +492,6 @@ public class EmployeeFormActivity extends AppCompatActivity {
         dropdown.setText(value, false);
     }
 
-    private void setupButtons() {
-        btnSave.setOnClickListener(v -> saveEmployee());
-    }
-
     private void saveEmployee() {
         if (!ValidationUtils.required(etFirstName, "First name is required")) return;
         if (!ValidationUtils.required(etLastName, "Last name is required")) return;
@@ -408,6 +507,11 @@ public class EmployeeFormActivity extends AppCompatActivity {
         String salaryText = etSalary.getText().toString().trim();
         String hireDate = etHireDate.getText().toString().trim();
         String status = spinnerStatus.getText() != null ? spinnerStatus.getText().toString().trim() : "";
+
+        if (selectedAvatarUri == null) {
+            Toast.makeText(this, "Please take or choose a profile photo first.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         if (TextUtils.isEmpty(role)) {
             spinnerRole.setError("Role is required");
@@ -510,33 +614,39 @@ public class EmployeeFormActivity extends AppCompatActivity {
                     if (response.isSuccessful() && response.body() != null) {
                         CreateEmployeeResponse created = response.body();
 
-                        new AlertDialog.Builder(EmployeeFormActivity.this)
-                                .setTitle("Employee Created")
-                                .setMessage("Username: " + created.getUsername()
-                                        + "\nTemporary Password: " + created.getTempPassword()
-                                        + "\n\nTap COPY to save credentials.")
-                                .setCancelable(false)
-                                .setPositiveButton("Copy", (dialog, which) -> {
-                                    String textToCopy = "Username: " + created.getUsername()
-                                            + "\nTemporary Password: " + created.getTempPassword();
+                        int newEmployeeId = created.getEmployeeId();
 
-                                    android.content.ClipboardManager clipboard =
-                                            (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                        uploadAvatar(newEmployeeId, () -> {
+                            new AlertDialog.Builder(EmployeeFormActivity.this)
+                                    .setTitle("Employee Created")
+                                    .setMessage("Username: " + created.getUsername()
+                                            + "\nTemporary Password: " + created.getTempPassword()
+                                            + "\n\nTap COPY to save credentials.")
+                                    .setCancelable(false)
+                                    .setPositiveButton("Copy", (dialog, which) -> {
+                                        String textToCopy = "Username: " + created.getUsername()
+                                                + "\nTemporary Password: " + created.getTempPassword();
 
-                                    android.content.ClipData clip =
-                                            android.content.ClipData.newPlainText("Employee Credentials", textToCopy);
+                                        android.content.ClipboardManager clipboard =
+                                                (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
 
-                                    clipboard.setPrimaryClip(clip);
+                                        android.content.ClipData clip =
+                                                android.content.ClipData.newPlainText("Employee Credentials", textToCopy);
 
-                                    Toast.makeText(EmployeeFormActivity.this,
-                                            "Copied to clipboard",
-                                            Toast.LENGTH_SHORT).show();
+                                        clipboard.setPrimaryClip(clip);
 
-                                    setResult(RESULT_OK);
-                                    finish();
-                                })
-                                .show();
+                                        Toast.makeText(EmployeeFormActivity.this,
+                                                "Copied to clipboard",
+                                                Toast.LENGTH_SHORT).show();
+
+                                        setResult(RESULT_OK);
+                                        finish();
+                                    })
+                                    .show();
+                        });
+
                     } else {
+                        showLoading(false);
                         Toast.makeText(EmployeeFormActivity.this,
                                 "Create failed. Code: " + response.code(),
                                 Toast.LENGTH_LONG).show();
@@ -554,9 +664,64 @@ public class EmployeeFormActivity extends AppCompatActivity {
         }
     }
 
+    private void uploadAvatar(int employeeId, Runnable onSuccess) {
+        if (selectedAvatarUri == null) {
+            onSuccess.run();
+            return;
+        }
+
+        try {
+            ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
+
+            InputStream inputStream = getContentResolver().openInputStream(selectedAvatarUri);
+            if (inputStream == null) {
+                onSuccess.run();
+                return;
+            }
+
+            byte[] bytes = readBytes(inputStream);
+
+            RequestBody requestFile = RequestBody.create(bytes, MediaType.parse("image/*"));
+            MultipartBody.Part body = MultipartBody.Part.createFormData("avatar", "avatar.jpg", requestFile);
+
+            apiService.uploadEmployeeAvatar(employeeId, body).enqueue(new Callback<Void>() {
+                @Override
+                public void onResponse(Call<Void> call, Response<Void> response) {
+                    onSuccess.run();
+                }
+
+                @Override
+                public void onFailure(Call<Void> call, Throwable t) {
+                    Toast.makeText(EmployeeFormActivity.this,
+                            "Avatar upload failed",
+                            Toast.LENGTH_SHORT).show();
+                    onSuccess.run();
+                }
+            });
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            onSuccess.run();
+        }
+    }
+
+    private byte[] readBytes(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        byte[] data = new byte[4096];
+        int nRead;
+
+        while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
+            buffer.write(data, 0, nRead);
+        }
+
+        return buffer.toByteArray();
+    }
+
     private void showLoading(boolean isLoading) {
         progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         btnSave.setEnabled(!isLoading);
+        btnTakePhoto.setEnabled(!isLoading);
+        btnChoosePhoto.setEnabled(!isLoading);
     }
 
     private String safe(String value) {

@@ -33,8 +33,7 @@ public class PlanManagerAdapter extends RecyclerView.Adapter<PlanManagerAdapter.
 
     private List<ServiceTypeResponse> serviceTypes;
 
-    // NEW: features grouped by planId
-    private Map<Integer, List<PlanFeatureResponse>> featureMap = new HashMap<>();
+
 
     public PlanManagerAdapter(OnPlanActionListener listener) {
         this.listener = listener;
@@ -45,11 +44,7 @@ public class PlanManagerAdapter extends RecyclerView.Adapter<PlanManagerAdapter.
         notifyDataSetChanged();
     }
 
-    // NEW
-    public void setFeatureMap(Map<Integer, List<PlanFeatureResponse>> featureMap) {
-        this.featureMap = featureMap != null ? featureMap : new HashMap<>();
-        notifyDataSetChanged();
-    }
+
 
     public void setData(List<PlanResponse> data) {
         fullList.clear();
@@ -158,7 +153,7 @@ public class PlanManagerAdapter extends RecyclerView.Adapter<PlanManagerAdapter.
 
 
         // NEW: show features
-        holder.tvFeatures.setText(buildFeatureText(item.getPlanId()));
+        holder.tvFeatures.setText(buildFeatureText(item.getFeatures()));
 
         holder.tvIsActive.setText(
                 item.getIsActive() != null && item.getIsActive() == 1
@@ -216,12 +211,7 @@ public class PlanManagerAdapter extends RecyclerView.Adapter<PlanManagerAdapter.
         return String.valueOf(id);
     }
 
-    private String buildFeatureText(Integer planId) {
-        if (planId == null || featureMap == null) {
-            return "No features";
-        }
-
-        List<PlanFeatureResponse> features = featureMap.get(planId);
+    private String buildFeatureText(List<PlanFeatureResponse> features) {
         if (features == null || features.isEmpty()) {
             return "No features";
         }

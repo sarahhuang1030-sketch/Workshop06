@@ -16,7 +16,6 @@
             android:layout_height="110dp"
             android:background="@drawable/bg_employee_dashboard_header">
 
-            <!-- BACK BUTTON -->
             <ImageButton
                 android:id="@+id/btnBack"
                 android:layout_width="40dp"
@@ -26,9 +25,8 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_arrow_back"
                 android:contentDescription="Back"
-                app:tint="@android:color/white"/>
+                app:tint="@android:color/white" />
 
-            <!-- TITLE -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -43,7 +41,7 @@
                     android:textSize="24sp"
                     android:textStyle="bold"
                     android:textColor="#fff"
-                    android:layout_marginTop="45dp"/>
+                    android:layout_marginTop="45dp" />
 
                 <TextView
                     android:layout_width="match_parent"
@@ -51,9 +49,8 @@
                     android:text="Create or update a plan"
                     android:textColor="#fff"
                     android:textSize="14sp"
-                    android:layout_marginTop="4dp"/>
+                    android:layout_marginTop="4dp" />
             </LinearLayout>
-
         </FrameLayout>
 
         <LinearLayout
@@ -90,7 +87,6 @@
                     android:layout_height="wrap_content"
                     android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
-
         </LinearLayout>
 
         <LinearLayout
@@ -127,8 +123,21 @@
                     android:layout_height="wrap_content"
                     android:inputType="numberDecimal" />
             </com.google.android.material.textfield.TextInputLayout>
-
         </LinearLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:hint="Contract Term"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu">
+
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                android:id="@+id/spinnerContractTerm"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -145,6 +154,54 @@
                 android:inputType="textMultiLine"
                 android:minLines="3" />
         </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="Plan Features"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="#222222" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:gravity="bottom">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:hint="Select a feature"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu">
+
+                <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                    android:id="@+id/spinnerFeature"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="none" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <Button
+                android:id="@+id/btnAddFeature"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Add Feature"
+                android:textAllCaps="false" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvSelectedFeatures"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="No features selected yet."
+            android:textColor="#666666"
+            android:textSize="14sp" />
 
         <ProgressBar
             android:id="@+id/progressBar"

@@ -1,5 +1,7 @@
 package com.example.workshop06.model;
 
+import java.util.List;
+
 public class PlanResponse {
     private Integer planId;
     private Integer serviceTypeId;
@@ -35,5 +37,15 @@ public class PlanResponse {
 
     public void setAddOnNames(String addOnNames) {
         this.addOnNames = addOnNames;
+    }
+
+    private List<PlanFeatureResponse> features;
+
+    public List<PlanFeatureResponse> getFeatures() {
+        return features;
+    }
+
+    public void setFeatures(List<PlanFeatureResponse> features) {
+        this.features = features;
     }
 }

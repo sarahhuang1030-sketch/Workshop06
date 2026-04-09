@@ -72,6 +72,7 @@ public class AddOnFormActivity extends AppCompatActivity {
             spinnerServiceType.setError(null);
         });
 
+
         activeAdapter = new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_dropdown_item_1line,
@@ -210,7 +211,21 @@ public class AddOnFormActivity extends AppCompatActivity {
         try {
             monthlyPrice = Double.parseDouble(monthlyPriceText);
         } catch (NumberFormatException e) {
-            etMonthlyPrice.setError("Invalid monthly price");
+            etMonthlyPrice.setError("Monthly price must be a valid number");
+            etMonthlyPrice.requestFocus();
+            return;
+        }
+
+// ✅ POSITIVE ONLY
+        if (monthlyPrice <= 0) {
+            etMonthlyPrice.setError("Price must be greater than 0");
+            etMonthlyPrice.requestFocus();
+            return;
+        }
+
+// ✅ MAX = 100
+        if (monthlyPrice > 100) {
+            etMonthlyPrice.setError("Add-on price cannot exceed $100");
             etMonthlyPrice.requestFocus();
             return;
         }

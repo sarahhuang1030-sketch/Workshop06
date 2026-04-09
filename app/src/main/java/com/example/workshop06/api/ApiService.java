@@ -313,6 +313,22 @@ Call<List<EmployeeSalesResponse>> getEmployeeSales();
     @DELETE("/api/manager/plans/{id}")
     Call<Void> deletePlanManager(@Path("id") int id);
 
+    @GET("/api/manager/plans/{planId}/features")
+    Call<List<PlanFeatureResponse>> getPlanFeaturesByPlanId(@Path("planId") int planId);
+
+
+    @POST("/api/manager/plans/{planId}/features")
+    Call<PlanFeatureResponse> createPlanFeatureForPlan(
+            @Path("planId") int planId,
+            @Body PlanFeatureCreateUpdateRequest request
+    );
+
+    @DELETE("/api/manager/plans/{planId}/features/{featureId}")
+    Call<Void> deletePlanFeatureForPlan(
+            @Path("planId") int planId,
+            @Path("featureId") int featureId
+    );
+
     //Service type
     @GET("/api/manager/servicetypes")
     Call<List<ServiceTypeResponse>> getServiceTypes();
@@ -341,4 +357,6 @@ Call<List<EmployeeSalesResponse>> getEmployeeSales();
 
     @GET("/api/service/customers/{customerId}/address")
     Call<CustomerAddressResponse> getCustomerAddressForTechnician(@Path("customerId") int customerId);
+
+
 }

@@ -45,6 +45,7 @@
         <activity android:name=".EmployeeProfileActivity" />
         <activity android:name=".LocationListActivity" />
         <activity android:name=".LocationFormActivity" />
+        <activity android:name=".SubscriptionFormActivity" />
         <activity android:name=".AddOnListActivity" />
         <activity android:name=".AddOnFormActivity" />
         <activity android:name=".QuotesListActivity" />

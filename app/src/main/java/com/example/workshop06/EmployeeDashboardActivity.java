@@ -260,7 +260,7 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
                             data.getActiveSubscriptions() + " active",
                             R.drawable.bg_card_top_accent_pink,
                             R.drawable.bg_icon_pink,
-                            QuotesListActivity.class
+                            SubscriptionFormActivity.class
                     ));
 
                     items.add(new DashboardMenuItem(

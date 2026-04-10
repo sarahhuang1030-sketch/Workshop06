@@ -238,7 +238,7 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
                             "View customer quotes",
                             R.drawable.bg_card_top_accent_purple,
                             R.drawable.bg_icon_lavender,
-                            SubscriptionListActivity.class
+                            QuotesListActivity.class
                     );
                     quotesItem.setExtra("statusFilter", "Pending");
                     items.add(quotesItem);
@@ -260,7 +260,7 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
                             data.getActiveSubscriptions() + " active",
                             R.drawable.bg_card_top_accent_pink,
                             R.drawable.bg_icon_pink,
-                            SubscriptionListActivity.class
+                            QuotesListActivity.class
                     ));
 
                     items.add(new DashboardMenuItem(
@@ -301,14 +301,16 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
                     pastDueItem.setExtra("pastDueFilter", "true");
                     items.add(pastDueItem);
 
-                    items.add(new DashboardMenuItem(
+                    DashboardMenuItem bundleItem = new DashboardMenuItem(
                             "📦",
                             "Custom Bundle",
                             "Create and send bundles",
                             R.drawable.bg_card_top_accent_purple,
                             R.drawable.bg_icon_lavender,
                             CustomBundleActivity.class
-                    ));
+                    );
+                    bundleItem.setExtra("customBundleMode", "true");
+                    items.add(bundleItem);
 
                     items.add(new DashboardMenuItem(
                             "📊",

@@ -385,4 +385,7 @@ Call<List<EmployeeSalesResponse>> getEmployeeSales();
             @Header("Authorization") String token,
             @Body FirstLoginPasswordChangeRequest request
     );
+
+    @GET("/api/quotes")
+    Call<List<QuoteResponse>> getQuotes();
 }

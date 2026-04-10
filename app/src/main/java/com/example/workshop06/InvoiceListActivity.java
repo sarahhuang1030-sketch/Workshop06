@@ -280,7 +280,10 @@ public class InvoiceListActivity extends AppCompatActivity {
             if (pastDueMode) {
                 matchesPastDue = false;
                 String issueDate = item.getIssueDate();
-                if (issueDate != null) {
+                String itemStatus = safe(item.getStatus());
+                boolean isUnpaid = !itemStatus.equalsIgnoreCase("Paid") && !itemStatus.equalsIgnoreCase("Success");
+
+                if (issueDate != null && isUnpaid) {
                     try {
                         java.util.Date date = sdf.parse(issueDate);
                         cal.setTime(date);

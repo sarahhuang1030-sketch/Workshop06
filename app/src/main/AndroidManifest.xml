@@ -47,7 +47,7 @@
         <activity android:name=".LocationFormActivity" />
         <activity android:name=".AddOnListActivity" />
         <activity android:name=".AddOnFormActivity" />
-        <activity android:name=".SubscriptionListActivity" />
+        <activity android:name=".QuotesListActivity" />
         <activity android:name=".CustomBundleActivity" />
         <activity android:name=".InvoiceListActivity" />
         <activity android:name=".InvoiceDetailActivity" />

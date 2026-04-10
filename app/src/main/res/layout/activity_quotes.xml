@@ -53,7 +53,7 @@
                         android:id="@+id/tvHeaderTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Subscription"
+                        android:text="Quotes"
                         android:textColor="#fff"
                         android:textSize="28sp"
                         android:textStyle="bold"
@@ -63,7 +63,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="Manage all subscriptions"
+                        android:text="Manage all quotes"
                         android:textColor="#fff"
                         android:textSize="14sp" />
                 </LinearLayout>

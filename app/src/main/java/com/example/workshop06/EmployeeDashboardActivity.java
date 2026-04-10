@@ -1,5 +1,6 @@
 package com.example.workshop06;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
@@ -61,6 +62,11 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
 
         loadEmployeeStatus();
         setupDashboardCards();
+
+        tvAgentName.setOnClickListener(v -> {
+            Intent intent = new Intent(EmployeeDashboardActivity.this, EmployeeProfileActivity.class);
+            startActivity(intent);
+        });
 
         if ("Service Technician".equalsIgnoreCase(role)) {
             BottomNavHelper.setup(this, R.id.nav_home);
@@ -208,9 +214,108 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     ManagerSummaryResponse data = response.body();
 
+                    items.add(new DashboardMenuItem(
+                            "👥",
+                            "Customers",
+                            "Manage customer base",
+                            R.drawable.bg_card_top_accent_blue,
+                            R.drawable.bg_icon_blue,
+                            CustomerListActivity.class
+                    ));
+
+                    items.add(new DashboardMenuItem(
+                            "💳",
+                            "Invoices",
+                            "View and manage invoices",
+                            R.drawable.bg_card_top_accent_red,
+                            R.drawable.bg_icon_red,
+                            InvoiceListActivity.class
+                    ));
+
+                    items.add(new DashboardMenuItem(
+                            "📄",
+                            "Quotes",
+                            "View customer quotes",
+                            R.drawable.bg_card_top_accent_purple,
+                            R.drawable.bg_icon_lavender,
+                            null // Placeholder
+                    ));
+
+                    items.add(new DashboardMenuItem(
+                            "💰",
+                            "Monthly Revenue",
+                            String.format("$%.2f", data.getEstimatedMonthlyRevenue()),
+                            R.drawable.bg_card_top_accent_pink,
+                            R.drawable.bg_icon_pink,
+                            null // Placeholder
+                    ));
+
+                    items.add(new DashboardMenuItem(
+                            "🖥️",
+                            "Subscriptions",
+                            data.getActiveSubscriptions() + " active",
+                            R.drawable.bg_card_top_accent_pink,
+                            R.drawable.bg_icon_pink,
+                            SubscriptionListActivity.class
+                    ));
+
+                    items.add(new DashboardMenuItem(
+                            "➕",
+                            "Add-Ons",
+                            data.getTotalAddons() + " available",
+                            R.drawable.bg_card_top_accent_blue,
+                            R.drawable.bg_icon_blue,
+                            AddOnListActivity.class
+                    ));
+
+                    items.add(new DashboardMenuItem(
+                            "🧩",
+                            "Plan Features",
+                            data.getTotalPlanFeatures() + " active",
+                            R.drawable.bg_card_top_accent_magenta,
+                            R.drawable.bg_icon_lavender,
+                            PlanFeatureListActivity.class
+                    ));
+
+                    items.add(new DashboardMenuItem(
+                            "🛠️",
+                            "Services",
+                            "Manage service requests",
+                            R.drawable.bg_card_top_accent_magenta,
+                            R.drawable.bg_icon_lavender,
+                            ServiceRequestListActivity.class
+                    ));
+
+                    items.add(new DashboardMenuItem(
+                            "⚠️",
+                            "Past Due",
+                            data.getOpenInvoices() + " past due",
+                            R.drawable.bg_card_top_accent_red,
+                            R.drawable.bg_icon_red,
+                            PastDueActivity.class
+                    ));
+
+                    items.add(new DashboardMenuItem(
+                            "📦",
+                            "Custom Bundle",
+                            "Configure bundles",
+                            R.drawable.bg_card_top_accent_purple,
+                            R.drawable.bg_icon_lavender,
+                            CustomBundleActivity.class
+                    ));
+
+                    items.add(new DashboardMenuItem(
+                            "📊",
+                            "Employee Sales",
+                            "See Agents' Performance",
+                            R.drawable.bg_card_top_accent_pink,
+                            R.drawable.bg_icon_blue,
+                            EmployeeSalesActivity.class
+                    ));
+
                     if ("Manager".equalsIgnoreCase(role)) {
                         items.add(new DashboardMenuItem(
-                                "👥",
+                                "🏢",
                                 "Branches\nLocation",
                                 data.getTotalLocations() + " active",
                                 R.drawable.bg_card_top_accent_purple,
@@ -225,64 +330,6 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
                                 R.drawable.bg_card_top_accent_blue,
                                 R.drawable.bg_icon_blue,
                                 EmployeeListActivity.class
-                        ));
-                    }
-
-                    items.add(new DashboardMenuItem(
-                            "🖥️",
-                            "Subscriptions",
-                            data.getActiveSubscriptions() + " active",
-                            R.drawable.bg_card_top_accent_pink,
-                            R.drawable.bg_icon_pink,
-                            SubscriptionListActivity.class
-                    ));
-
-                    items.add(new DashboardMenuItem(
-                            "💳",
-                            "Invoices",
-                            data.getOpenInvoices() + " past due",
-                            R.drawable.bg_card_top_accent_red,
-                            R.drawable.bg_icon_red,
-                            InvoiceListActivity.class
-                    ));
-
-                    items.add(new DashboardMenuItem(
-                            "📄",
-                            "Add-Ons",
-                            data.getTotalAddons() + " available",
-                            R.drawable.bg_card_top_accent_blue,
-                            R.drawable.bg_icon_blue,
-                            AddOnListActivity.class
-                    ));
-
-                    if ("Manager".equalsIgnoreCase(role)) {
-                        items.add(new DashboardMenuItem(
-                                "📊",
-                                "Agents Reports",
-                                "See Agents' Performance",
-                                R.drawable.bg_card_top_accent_pink,
-                                R.drawable.bg_icon_blue,
-                                EmployeeSalesActivity.class
-                        ));
-                    }
-
-                    items.add(new DashboardMenuItem(
-                            "🧑‍🤝‍🧑",
-                            "Service Requests",
-                            "Live feed",
-                            R.drawable.bg_card_top_accent_magenta,
-                            R.drawable.bg_icon_lavender,
-                            ServiceRequestListActivity.class
-                    ));
-
-                    if ("Manager".equalsIgnoreCase(role)) {
-                        items.add(new DashboardMenuItem(
-                                "🧩",
-                                "Plan Features",
-                                data.getTotalPlanFeatures() + " active",
-                                R.drawable.bg_card_top_accent_magenta,
-                                R.drawable.bg_icon_lavender,
-                                PlanFeatureListActivity.class
                         ));
                     }
 

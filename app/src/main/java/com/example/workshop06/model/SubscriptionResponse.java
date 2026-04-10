@@ -13,15 +13,7 @@ public class SubscriptionResponse {
     private String notes;
     private String customerName;
     private String planName;
-
-    public String getPlanName() {
-        return planName;
-    }
-
-    public String getCustomerName() {
-        return customerName;
-    }
-
+    private Double monthlyPrice;
     private List<SubscriptionAddOnResponse> addons;
 
     public Integer getSubscriptionId() { return subscriptionId; }
@@ -32,5 +24,33 @@ public class SubscriptionResponse {
     public String getStatus() { return status; }
     public Integer getBillingCycleDay() { return billingCycleDay; }
     public String getNotes() { return notes; }
+    public String getCustomerName() { return customerName; }
+    public String getPlanName() { return planName; }
+    public Double getMonthlyPrice() { return monthlyPrice; }
     public List<SubscriptionAddOnResponse> getAddons() { return addons; }
+
+    public double getTotalAmount() {
+        double total = monthlyPrice != null ? monthlyPrice : 0.0;
+
+        if (addons != null) {
+            for (SubscriptionAddOnResponse addOn : addons) {
+                if (addOn == null) continue;
+
+                Double price = addOn.getPrice();
+                String addOnStatus = addOn.getStatus();
+
+                boolean includeInTotal =
+                        price != null &&
+                                (addOnStatus == null
+                                        || addOnStatus.trim().isEmpty()
+                                        || addOnStatus.equalsIgnoreCase("Active"));
+
+                if (includeInTotal) {
+                    total += price;
+                }
+            }
+        }
+
+        return total;
+    }
 }

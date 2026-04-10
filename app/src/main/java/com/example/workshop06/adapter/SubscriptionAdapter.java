@@ -1,6 +1,7 @@
 package com.example.workshop06.adapter;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,6 +26,11 @@ import java.util.Locale;
 import java.util.Map;
 
 public class SubscriptionAdapter extends RecyclerView.Adapter<SubscriptionAdapter.SubscriptionViewHolder> {
+
+    public interface OnSubscriptionStatusActionListener {
+        void onActivateClicked(SubscriptionResponse subscription);
+        void onDeactivateClicked(SubscriptionResponse subscription);
+    }
 
     public static class CustomerSubscriptionGroup {
         private final Integer customerId;
@@ -81,8 +87,11 @@ public class SubscriptionAdapter extends RecyclerView.Adapter<SubscriptionAdapte
 
     private final List<SubscriptionResponse> originalItems = new ArrayList<>();
     private final List<CustomerSubscriptionGroup> groupedItems = new ArrayList<>();
+    private final OnSubscriptionStatusActionListener listener;
 
-    public SubscriptionAdapter(List<SubscriptionResponse> items) {
+    public SubscriptionAdapter(List<SubscriptionResponse> items,
+                               OnSubscriptionStatusActionListener listener) {
+        this.listener = listener;
         if (items != null) {
             originalItems.addAll(items);
         }
@@ -104,6 +113,14 @@ public class SubscriptionAdapter extends RecyclerView.Adapter<SubscriptionAdapte
     private void regroupAndDisplay(List<SubscriptionResponse> source,
                                    String query,
                                    String selectedStatus) {
+
+        Map<String, Boolean> expandedStateMap = new LinkedHashMap<>();
+        for (CustomerSubscriptionGroup group : groupedItems) {
+            String key = group.getCustomerId() != null
+                    ? "ID_" + group.getCustomerId()
+                    : "NAME_" + group.getCustomerName().toLowerCase(Locale.US);
+            expandedStateMap.put(key, group.isExpanded());
+        }
 
         groupedItems.clear();
 
@@ -137,6 +154,8 @@ public class SubscriptionAdapter extends RecyclerView.Adapter<SubscriptionAdapte
             CustomerSubscriptionGroup group = groupedMap.get(groupKey);
             if (group == null) {
                 group = new CustomerSubscriptionGroup(item.getCustomerId(), customerName);
+                Boolean wasExpanded = expandedStateMap.get(groupKey);
+                group.setExpanded(wasExpanded != null && wasExpanded);
                 groupedMap.put(groupKey, group);
             }
 
@@ -201,7 +220,7 @@ public class SubscriptionAdapter extends RecyclerView.Adapter<SubscriptionAdapte
 
         holder.btnViewMore.setOnClickListener(v -> {
             group.setExpanded(!group.isExpanded());
-            notifyItemChanged(position);
+            notifyItemChanged(holder.getBindingAdapterPosition());
         });
     }
 
@@ -221,7 +240,7 @@ public class SubscriptionAdapter extends RecyclerView.Adapter<SubscriptionAdapte
             detailCard.setRadius(dp(context, 16));
             detailCard.setCardElevation(0f);
             detailCard.setStrokeWidth(dp(context, 1));
-            detailCard.setStrokeColor(ContextCompat.getColor(context, android.R.color.darker_gray));
+            detailCard.setStrokeColor(Color.parseColor("#DDD6F3"));
             detailCard.setCardBackgroundColor(ContextCompat.getColor(context, android.R.color.white));
 
             LinearLayout content = new LinearLayout(context);
@@ -239,40 +258,50 @@ public class SubscriptionAdapter extends RecyclerView.Adapter<SubscriptionAdapte
                     "Dates: " + startDate + " to " + endDate,
                     13, false, "#7D7896");
 
+            double planPrice = item.getMonthlyPrice() != null ? item.getMonthlyPrice() : 0.0;
+            TextView tvPlanPrice = buildText(
+                    context,
+                    String.format(Locale.US, "Plan Amount: $%.2f/mo", planPrice),
+                    13,
+                    false,
+                    "#444444"
+            );
+
+            TextView tvTotal = buildText(
+                    context,
+                    String.format(Locale.US, "Total Amount: $%.2f/mo", item.getTotalAmount()),
+                    14,
+                    true,
+                    "#2D1F5E"
+            );
+
             content.addView(tvPlan);
             content.addView(tvStatus);
             content.addView(tvDates);
+            content.addView(tvPlanPrice);
 
             List<SubscriptionAddOnResponse> addOns = item.getAddons();
             if (addOns != null && !addOns.isEmpty()) {
                 TextView tvAddOnTitle = buildText(context, "Add-ons", 13, true, "#2D1F5E");
                 LinearLayout.LayoutParams titleParams = (LinearLayout.LayoutParams) tvAddOnTitle.getLayoutParams();
-                if (titleParams != null) {
-                    titleParams.topMargin = dp(context, 10);
-                } else {
-                    tvAddOnTitle.setPadding(0, dp(context, 10), 0, 0);
-                }
+                titleParams.topMargin = dp(context, 10);
+                tvAddOnTitle.setLayoutParams(titleParams);
                 content.addView(tvAddOnTitle);
 
                 for (SubscriptionAddOnResponse addOn : addOns) {
-                    String addOnName = "Add-on";
-                    String addOnStatus = "—";
+                    String addOnName = safe(addOn.getAddOnName()).isEmpty() ? "Add-on" : addOn.getAddOnName();
+                    String addOnStatus = safe(addOn.getStatus()).isEmpty() ? "—" : addOn.getStatus();
+                    String priceText = addOn.getPrice() != null
+                            ? String.format(Locale.US, " - $%.2f", addOn.getPrice())
+                            : "";
 
-                    try {
-                        if (addOn.getAddOnName() != null && !addOn.getAddOnName().trim().isEmpty()) {
-                            addOnName = addOn.getAddOnName();
-                        }
-                    } catch (Exception ignored) { }
-
-                    try {
-                        if (addOn.getStatus() != null && !addOn.getStatus().trim().isEmpty()) {
-                            addOnStatus = addOn.getStatus();
-                        }
-                    } catch (Exception ignored) { }
-
-                    TextView tvAddOn = buildText(context,
-                            "• " + addOnName + " (" + addOnStatus + ")",
-                            13, false, "#444444");
+                    TextView tvAddOn = buildText(
+                            context,
+                            "• " + addOnName + " (" + addOnStatus + ")" + priceText,
+                            13,
+                            false,
+                            "#444444"
+                    );
                     content.addView(tvAddOn);
                 }
             } else {
@@ -285,6 +314,75 @@ public class SubscriptionAdapter extends RecyclerView.Adapter<SubscriptionAdapte
                 tvNoAddOn.setLayoutParams(params);
                 content.addView(tvNoAddOn);
             }
+
+            LinearLayout.LayoutParams totalParams = (LinearLayout.LayoutParams) tvTotal.getLayoutParams();
+            totalParams.topMargin = dp(context, 10);
+            tvTotal.setLayoutParams(totalParams);
+            content.addView(tvTotal);
+
+            LinearLayout buttonRow = new LinearLayout(context);
+            buttonRow.setOrientation(LinearLayout.HORIZONTAL);
+            LinearLayout.LayoutParams buttonRowParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            buttonRowParams.topMargin = dp(context, 12);
+            buttonRow.setLayoutParams(buttonRowParams);
+
+            MaterialButton btnActivate = new MaterialButton(context);
+            LinearLayout.LayoutParams activateParams = new LinearLayout.LayoutParams(
+                    0,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    1f
+            );
+            activateParams.setMarginEnd(dp(context, 6));
+            btnActivate.setLayoutParams(activateParams);
+            btnActivate.setText("Activate");
+            btnActivate.setAllCaps(false);
+            btnActivate.setCornerRadius(dp(context, 12));
+            btnActivate.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#6F56B3")));
+            btnActivate.setTextColor(ContextCompat.getColor(context, android.R.color.white));
+
+            MaterialButton btnDeactivate = new MaterialButton(context);
+            LinearLayout.LayoutParams deactivateParams = new LinearLayout.LayoutParams(
+                    0,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    1f
+            );
+            deactivateParams.setMarginStart(dp(context, 6));
+            btnDeactivate.setLayoutParams(deactivateParams);
+            btnDeactivate.setText("Deactivate");
+            btnDeactivate.setAllCaps(false);
+            btnDeactivate.setCornerRadius(dp(context, 12));
+            btnDeactivate.setBackgroundTintList(ContextCompat.getColorStateList(context, android.R.color.white));
+            btnDeactivate.setStrokeWidth(dp(context, 1));
+            btnDeactivate.setStrokeColor(android.content.res.ColorStateList.valueOf(Color.parseColor("#6F56B3")));
+            btnDeactivate.setTextColor(Color.parseColor("#6F56B3"));
+
+            String status = safe(item.getStatus());
+            boolean isActive = status.equalsIgnoreCase("Active");
+
+            btnActivate.setEnabled(!isActive);
+            btnDeactivate.setEnabled(isActive);
+
+            btnActivate.setAlpha(!isActive ? 1f : 0.5f);
+            btnDeactivate.setAlpha(isActive ? 1f : 0.5f);
+
+            btnActivate.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onActivateClicked(item);
+                }
+            });
+
+            btnDeactivate.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onDeactivateClicked(item);
+                }
+            });
+
+            buttonRow.addView(btnActivate);
+            buttonRow.addView(btnDeactivate);
+            content.addView(buttonRow);
 
             detailCard.addView(content);
             container.addView(detailCard);
@@ -299,7 +397,7 @@ public class SubscriptionAdapter extends RecyclerView.Adapter<SubscriptionAdapte
         TextView tv = new TextView(context);
         tv.setText(text);
         tv.setTextSize(textSizeSp);
-        tv.setTextColor(android.graphics.Color.parseColor(colorHex));
+        tv.setTextColor(Color.parseColor(colorHex));
         tv.setTypeface(null, bold ? Typeface.BOLD : Typeface.NORMAL);
 
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(

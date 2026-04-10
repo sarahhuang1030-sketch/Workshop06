@@ -21,6 +21,7 @@ import com.example.workshop06.adapter.SubscriptionAdapter;
 import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.SubscriptionResponse;
+import com.example.workshop06.model.SubscriptionStatusRequest;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
@@ -69,7 +70,21 @@ public class SubscriptionListActivity extends AppCompatActivity {
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        adapter = new SubscriptionAdapter(new ArrayList<>());
+        adapter = new SubscriptionAdapter(
+                new ArrayList<>(),
+                new SubscriptionAdapter.OnSubscriptionStatusActionListener() {
+                    @Override
+                    public void onActivateClicked(SubscriptionResponse subscription) {
+                        updateSubscriptionStatus(subscription.getSubscriptionId(), "Active");
+                    }
+
+                    @Override
+                    public void onDeactivateClicked(SubscriptionResponse subscription) {
+                        updateSubscriptionStatus(subscription.getSubscriptionId(), "Inactive");
+                    }
+                }
+        );
+
         recyclerView.setAdapter(adapter);
 
         setupSearch();
@@ -155,7 +170,9 @@ public class SubscriptionListActivity extends AppCompatActivity {
                                         + " | customerId=" + s.getCustomerId()
                                         + " | customerName=" + s.getCustomerName()
                                         + " | planName=" + s.getPlanName()
-                                        + " | status=" + s.getStatus());
+                                        + " | status=" + s.getStatus()
+                                        + " | monthlyPrice=" + s.getMonthlyPrice()
+                                        + " | total=" + s.getTotalAmount());
                     }
 
                     adapter.updateData(data);
@@ -181,5 +198,49 @@ public class SubscriptionListActivity extends AppCompatActivity {
                 ).show();
             }
         });
+    }
+
+    private void updateSubscriptionStatus(Integer subscriptionId, String newStatus) {
+        if (subscriptionId == null) {
+            Toast.makeText(this, "Subscription ID is missing", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        progressBar.setVisibility(View.VISIBLE);
+
+        ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
+        apiService.updateSubscriptionStatus(subscriptionId, new SubscriptionStatusRequest(newStatus))
+                .enqueue(new Callback<com.example.workshop06.model.SubscriptionRequest>() {
+                    @Override
+                    public void onResponse(Call<com.example.workshop06.model.SubscriptionRequest> call,
+                                           Response<com.example.workshop06.model.SubscriptionRequest> response) {
+                        progressBar.setVisibility(View.GONE);
+
+                        if (response.isSuccessful()) {
+                            Toast.makeText(
+                                    SubscriptionListActivity.this,
+                                    "Subscription updated to " + newStatus,
+                                    Toast.LENGTH_SHORT
+                            ).show();
+                            loadSubscriptions();
+                        } else {
+                            Toast.makeText(
+                                    SubscriptionListActivity.this,
+                                    "Failed to update subscription status",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<com.example.workshop06.model.SubscriptionRequest> call, Throwable t) {
+                        progressBar.setVisibility(View.GONE);
+                        Toast.makeText(
+                                SubscriptionListActivity.this,
+                                "Error: " + t.getMessage(),
+                                Toast.LENGTH_LONG
+                        ).show();
+                    }
+                });
     }
 }

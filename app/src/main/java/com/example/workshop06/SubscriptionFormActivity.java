@@ -25,6 +25,8 @@ import com.example.workshop06.model.SubscriptionRequest;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -152,6 +154,15 @@ public class SubscriptionFormActivity extends AppCompatActivity {
     private void showDatePicker(EditText targetEditText) {
         Calendar calendar = Calendar.getInstance();
 
+        String existingDate = targetEditText.getText() != null ? targetEditText.getText().toString().trim() : "";
+        if (!existingDate.isEmpty()) {
+            try {
+                LocalDate localDate = LocalDate.parse(existingDate);
+                calendar.set(localDate.getYear(), localDate.getMonthValue() - 1, localDate.getDayOfMonth());
+            } catch (Exception ignored) {
+            }
+        }
+
         DatePickerDialog dialog = new DatePickerDialog(
                 this,
                 (view, year, month, dayOfMonth) -> {
@@ -163,6 +174,10 @@ public class SubscriptionFormActivity extends AppCompatActivity {
                             dayOfMonth
                     );
                     targetEditText.setText(formattedDate);
+
+                    if (targetEditText == etStartDate) {
+                        autoPopulateDatesFromPlanAndStartDate();
+                    }
                 },
                 calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH),
@@ -274,16 +289,19 @@ public class SubscriptionFormActivity extends AppCompatActivity {
                         PlanResponse selected = planList.get(position);
                         planId = selected.getPlanId();
 
-                        String planName = selected.getPlanName() != null && !selected.getPlanName().trim().isEmpty()
+                        String selectedPlanName = selected.getPlanName() != null && !selected.getPlanName().trim().isEmpty()
                                 ? selected.getPlanName().trim()
                                 : "Plan #" + selected.getPlanId();
 
-                        spinnerPlan.setText(planName, false);
+                        spinnerPlan.setText(selectedPlanName, false);
+                        autoPopulateDatesFromPlanAndStartDate();
                     });
 
                     if (selectedIndex >= 0) {
                         spinnerPlan.setText(labels.get(selectedIndex), false);
                     }
+
+                    autoPopulateDatesFromPlanAndStartDate();
                 } else {
                     Toast.makeText(SubscriptionFormActivity.this, "Failed to load plans", Toast.LENGTH_SHORT).show();
                 }
@@ -354,6 +372,8 @@ public class SubscriptionFormActivity extends AppCompatActivity {
                     if (!status.isEmpty()) {
                         spinnerStatus.setText(status, false);
                     }
+
+                    autoPopulateDatesFromPlanAndStartDate();
                 } else {
                     Toast.makeText(SubscriptionFormActivity.this, "Failed to load subscription", Toast.LENGTH_SHORT).show();
                 }
@@ -424,7 +444,14 @@ public class SubscriptionFormActivity extends AppCompatActivity {
 
         for (int i = 0; i < available.size(); i++) {
             AddOnResponse addOn = available.get(i);
-            names[i] = addOn.getAddOnName() != null ? addOn.getAddOnName() : "Add-on";
+            String name = addOn.getAddOnName() != null ? addOn.getAddOnName() : "Add-on";
+
+            String priceText = "";
+            if (addOn.getMonthlyPrice() != null) {
+                priceText = String.format(Locale.getDefault(), " ($%.2f/mo)", addOn.getMonthlyPrice());
+            }
+
+            names[i] = name + priceText;
 
             boolean isAttached = false;
             for (SubscriptionAddOnResponse attached : currentSubscriptionAddOns) {
@@ -487,6 +514,42 @@ public class SubscriptionFormActivity extends AppCompatActivity {
         }
     }
 
+    private void autoPopulateDatesFromPlanAndStartDate() {
+        if (planId == null) return;
+
+        String startDateText = etStartDate.getText() != null ? etStartDate.getText().toString().trim() : "";
+        if (startDateText.isEmpty()) return;
+
+        PlanResponse selectedPlan = getSelectedPlanById(planId);
+        if (selectedPlan == null) return;
+
+        Integer contractTermMonths = selectedPlan.getContractTermMonths();
+        if (contractTermMonths == null || contractTermMonths <= 0) return;
+
+        try {
+            LocalDate startDate = LocalDate.parse(startDateText);
+            LocalDate endDate = startDate.plusMonths(contractTermMonths);
+
+            etEndDate.setText(endDate.toString());
+            etBillingCycleDay.setText(String.valueOf(startDate.getDayOfMonth()));
+
+        } catch (DateTimeParseException e) {
+            etStartDate.setError("Invalid date format. Use yyyy-MM-dd");
+        }
+    }
+
+    private PlanResponse getSelectedPlanById(Integer selectedPlanId) {
+        if (selectedPlanId == null) return null;
+
+        for (PlanResponse plan : planList) {
+            if (plan != null && plan.getPlanId() != null
+                    && selectedPlanId.intValue() == plan.getPlanId().intValue()) {
+                return plan;
+            }
+        }
+        return null;
+    }
+
     private void saveSubscription() {
         String startDate = etStartDate.getText() != null ? etStartDate.getText().toString().trim() : "";
         String endDate = etEndDate.getText() != null ? etEndDate.getText().toString().trim() : "";
@@ -501,6 +564,18 @@ public class SubscriptionFormActivity extends AppCompatActivity {
 
         if (planId == null) {
             Toast.makeText(this, "Plan is required", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (startDate.isEmpty()) {
+            etStartDate.setError("Start date is required");
+            etStartDate.requestFocus();
+            return;
+        }
+
+        if (endDate.isEmpty()) {
+            etEndDate.setError("End date is required");
+            etEndDate.requestFocus();
             return;
         }
 
@@ -524,8 +599,8 @@ public class SubscriptionFormActivity extends AppCompatActivity {
                 subscriptionId,
                 customerId,
                 planId,
-                startDate.isEmpty() ? null : startDate,
-                endDate.isEmpty() ? null : endDate,
+                startDate,
+                endDate,
                 status,
                 billingCycleDay,
                 notes.isEmpty() ? null : notes

@@ -30,6 +30,7 @@ public class SubscriptionAdapter extends RecyclerView.Adapter<SubscriptionAdapte
     public interface OnSubscriptionStatusActionListener {
         void onActivateClicked(SubscriptionResponse subscription);
         void onDeactivateClicked(SubscriptionResponse subscription);
+        void onEditClicked(SubscriptionResponse subscription);
     }
 
     public static class CustomerSubscriptionGroup {
@@ -350,6 +351,7 @@ public class SubscriptionAdapter extends RecyclerView.Adapter<SubscriptionAdapte
                     1f
             );
             deactivateParams.setMarginStart(dp(context, 6));
+            deactivateParams.setMarginEnd(dp(context, 6));
             btnDeactivate.setLayoutParams(deactivateParams);
             btnDeactivate.setText("Deactivate");
             btnDeactivate.setAllCaps(false);
@@ -358,6 +360,22 @@ public class SubscriptionAdapter extends RecyclerView.Adapter<SubscriptionAdapte
             btnDeactivate.setStrokeWidth(dp(context, 1));
             btnDeactivate.setStrokeColor(android.content.res.ColorStateList.valueOf(Color.parseColor("#6F56B3")));
             btnDeactivate.setTextColor(Color.parseColor("#6F56B3"));
+
+            MaterialButton btnEdit = new MaterialButton(context);
+            LinearLayout.LayoutParams editParams = new LinearLayout.LayoutParams(
+                    0,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    1f
+            );
+            editParams.setMarginStart(dp(context, 6));
+            btnEdit.setLayoutParams(editParams);
+            btnEdit.setText("Edit");
+            btnEdit.setAllCaps(false);
+            btnEdit.setCornerRadius(dp(context, 12));
+            btnEdit.setBackgroundTintList(ContextCompat.getColorStateList(context, android.R.color.white));
+            btnEdit.setStrokeWidth(dp(context, 1));
+            btnEdit.setStrokeColor(android.content.res.ColorStateList.valueOf(Color.parseColor("#6F56B3")));
+            btnEdit.setTextColor(Color.parseColor("#6F56B3"));
 
             String status = safe(item.getStatus());
             boolean isActive = status.equalsIgnoreCase("Active");
@@ -380,8 +398,15 @@ public class SubscriptionAdapter extends RecyclerView.Adapter<SubscriptionAdapte
                 }
             });
 
+            btnEdit.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onEditClicked(item);
+                }
+            });
+
             buttonRow.addView(btnActivate);
             buttonRow.addView(btnDeactivate);
+            buttonRow.addView(btnEdit);
             content.addView(buttonRow);
 
             detailCard.addView(content);

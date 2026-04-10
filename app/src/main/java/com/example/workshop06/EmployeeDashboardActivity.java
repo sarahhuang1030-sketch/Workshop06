@@ -238,7 +238,7 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
                             "View customer quotes",
                             R.drawable.bg_card_top_accent_purple,
                             R.drawable.bg_icon_lavender,
-                            null // Placeholder
+                            QuotesActivity.class
                     ));
 
                     items.add(new DashboardMenuItem(
@@ -247,7 +247,7 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
                             String.format("$%.2f", data.getEstimatedMonthlyRevenue()),
                             R.drawable.bg_card_top_accent_pink,
                             R.drawable.bg_icon_pink,
-                            null // Placeholder
+                            InvoiceListActivity.class
                     ));
 
                     items.add(new DashboardMenuItem(
@@ -307,7 +307,7 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
                     items.add(new DashboardMenuItem(
                             "📊",
                             "Employee Sales",
-                            "See Agents' Performance",
+                            "See Performance",
                             R.drawable.bg_card_top_accent_pink,
                             R.drawable.bg_icon_blue,
                             EmployeeSalesActivity.class

@@ -82,6 +82,13 @@ public class SubscriptionListActivity extends AppCompatActivity {
                     public void onDeactivateClicked(SubscriptionResponse subscription) {
                         updateSubscriptionStatus(subscription.getSubscriptionId(), "Inactive");
                     }
+
+                    @Override
+                    public void onEditClicked(SubscriptionResponse subscription) {
+                        Intent intent = new Intent(SubscriptionListActivity.this, SubscriptionFormActivity.class);
+                        intent.putExtra("subscriptionId", subscription.getSubscriptionId());
+                        formLauncher.launch(intent);
+                    }
                 }
         );
 

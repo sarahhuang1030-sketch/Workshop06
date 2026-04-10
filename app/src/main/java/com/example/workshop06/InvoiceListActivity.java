@@ -36,6 +36,7 @@ import retrofit2.Response;
 
 public class InvoiceListActivity extends AppCompatActivity {
 
+    private TextView tvHeaderTitle;
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private FloatingActionButton fabAddInvoice;
@@ -48,6 +49,8 @@ public class InvoiceListActivity extends AppCompatActivity {
     private InvoiceAdapter adapter;
     private final List<InvoiceResponse> allInvoices = new ArrayList<>();
     private boolean filtersReady = false;
+    private boolean pastDueMode = false;
+    private boolean monthlyRevenueMode = false;
 
     private ImageButton btnBack;
 
@@ -69,6 +72,7 @@ public class InvoiceListActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         fabAddInvoice = findViewById(R.id.fabAddInvoice);
         tvEmpty = findViewById(R.id.tvEmpty);
+        tvHeaderTitle = findViewById(R.id.tvHeaderTitle);
         searchViewInvoice = findViewById(R.id.searchViewInvoice);
         spinnerStatusFilter = findViewById(R.id.spinnerInvoiceStatusFilter);
         spinnerAmountFilter = findViewById(R.id.spinnerInvoiceAmountFilter);
@@ -105,6 +109,20 @@ public class InvoiceListActivity extends AppCompatActivity {
         setupSearch();
         setupStatusFilter();
         setupAmountFilter();
+
+        if (getIntent().getStringExtra("pastDueFilter") != null) {
+            pastDueMode = true;
+            if (tvHeaderTitle != null) tvHeaderTitle.setText("Past Due Orders");
+            TextView tvSubtitle = findViewById(R.id.tvHeaderSubtitle);
+            if (tvSubtitle != null) tvSubtitle.setText("Orders placed before this month");
+        }
+
+        if (getIntent().getStringExtra("monthlyRevenueMode") != null) {
+            monthlyRevenueMode = true;
+            if (tvHeaderTitle != null) tvHeaderTitle.setText("Monthly Revenue Details");
+            TextView tvSubtitle = findViewById(R.id.tvHeaderSubtitle);
+            if (tvSubtitle != null) tvSubtitle.setText("Revenue details for the current period");
+        }
 
         // reuse the same bottom nav helper
         BottomNavHelper.setup(this, 0);
@@ -234,6 +252,12 @@ public class InvoiceListActivity extends AppCompatActivity {
 
         List<InvoiceResponse> filtered = new ArrayList<>();
 
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        int currentYear = cal.get(java.util.Calendar.YEAR);
+        int currentMonth = cal.get(java.util.Calendar.MONTH);
+
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US);
+
         for (InvoiceResponse item : allInvoices) {
             String invoiceNumber = safe(item.getInvoiceNumber());
             String customerName = safe(item.getCustomerName());
@@ -252,7 +276,25 @@ public class InvoiceListActivity extends AppCompatActivity {
 
             boolean matchesAmount = matchesAmountRange(total, selectedAmount);
 
-            if (matchesSearch && matchesStatus && matchesAmount) {
+            boolean matchesPastDue = true;
+            if (pastDueMode) {
+                matchesPastDue = false;
+                String issueDate = item.getIssueDate();
+                if (issueDate != null) {
+                    try {
+                        java.util.Date date = sdf.parse(issueDate);
+                        cal.setTime(date);
+                        int itemYear = cal.get(java.util.Calendar.YEAR);
+                        int itemMonth = cal.get(java.util.Calendar.MONTH);
+
+                        if (itemYear < currentYear || (itemYear == currentYear && itemMonth < currentMonth)) {
+                            matchesPastDue = true;
+                        }
+                    } catch (Exception ignored) {}
+                }
+            }
+
+            if (matchesSearch && matchesStatus && matchesAmount && matchesPastDue) {
                 filtered.add(item);
             }
         }

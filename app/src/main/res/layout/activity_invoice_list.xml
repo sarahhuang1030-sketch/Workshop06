@@ -51,6 +51,7 @@
                     android:paddingStart="18dp">
 
                     <TextView
+                        android:id="@+id/tvHeaderTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Invoices"
@@ -60,6 +61,7 @@
                         android:layout_marginTop="45dp"/>
 
                     <TextView
+                        android:id="@+id/tvHeaderSubtitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Manage invoice records"

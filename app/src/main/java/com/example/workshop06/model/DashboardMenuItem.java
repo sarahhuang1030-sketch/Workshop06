@@ -7,6 +7,8 @@ public class DashboardMenuItem {
     private final int backgroundResId;
     private final int iconBackgroundResId;
     private final Class<?> targetActivity;
+    private String extraKey;
+    private String extraValue;
 
     public DashboardMenuItem(String icon,
                              String title,
@@ -44,5 +46,18 @@ public class DashboardMenuItem {
 
     public Class<?> getTargetActivity() {
         return targetActivity;
+    }
+
+    public void setExtra(String key, String value) {
+        this.extraKey = key;
+        this.extraValue = value;
+    }
+
+    public String getExtraKey() {
+        return extraKey;
+    }
+
+    public String getExtraValue() {
+        return extraValue;
     }
 }

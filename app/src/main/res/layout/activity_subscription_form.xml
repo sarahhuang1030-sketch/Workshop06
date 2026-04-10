@@ -11,6 +11,14 @@
         android:orientation="vertical"
         android:padding="20dp">
 
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            android:title="Subscription"
+            android:titleTextColor="@android:color/white"/>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="100dp"

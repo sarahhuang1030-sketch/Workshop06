@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.TextView;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -35,6 +36,7 @@ import retrofit2.Response;
 
 public class SubscriptionListActivity extends AppCompatActivity {
 
+    private TextView tvHeaderTitle;
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private FloatingActionButton fabAddSubscription;
@@ -66,6 +68,7 @@ public class SubscriptionListActivity extends AppCompatActivity {
         searchViewSubscription = findViewById(R.id.searchViewSubscription);
         spinnerStatusFilter = findViewById(R.id.spinnerStatusFilter);
         bottomNavigation = findViewById(R.id.bottomNavigation);
+        tvHeaderTitle = findViewById(R.id.tvHeaderTitle);
         btnBack = findViewById(R.id.btnBack);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -85,7 +88,7 @@ public class SubscriptionListActivity extends AppCompatActivity {
 
                     @Override
                     public void onEditClicked(SubscriptionResponse subscription) {
-                        Intent intent = new Intent(SubscriptionListActivity.this, SubscriptionFormActivity.class);
+                        Intent intent = new Intent(SubscriptionListActivity.this, CustomBundleActivity.class);
                         intent.putExtra("subscriptionId", subscription.getSubscriptionId());
                         formLauncher.launch(intent);
                     }
@@ -96,6 +99,15 @@ public class SubscriptionListActivity extends AppCompatActivity {
 
         setupSearch();
         setupStatusFilter();
+
+        String statusFilter = getIntent().getStringExtra("statusFilter");
+        if (statusFilter != null) {
+            currentStatus = statusFilter;
+            spinnerStatusFilter.setText(statusFilter, false);
+            if (statusFilter.equalsIgnoreCase("Pending") && tvHeaderTitle != null) {
+                tvHeaderTitle.setText("Quotes / Pending Orders");
+            }
+        }
 
         BottomNavHelper.setup(this, 0);
 
@@ -109,7 +121,7 @@ public class SubscriptionListActivity extends AppCompatActivity {
         });
 
         fabAddSubscription.setOnClickListener(v -> {
-            Intent intent = new Intent(SubscriptionListActivity.this, SubscriptionFormActivity.class);
+            Intent intent = new Intent(SubscriptionListActivity.this, CustomBundleActivity.class);
             formLauncher.launch(intent);
         });
 

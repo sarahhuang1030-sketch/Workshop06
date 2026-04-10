@@ -232,23 +232,27 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
                             InvoiceListActivity.class
                     ));
 
-                    items.add(new DashboardMenuItem(
+                    DashboardMenuItem quotesItem = new DashboardMenuItem(
                             "📄",
                             "Quotes",
                             "View customer quotes",
                             R.drawable.bg_card_top_accent_purple,
                             R.drawable.bg_icon_lavender,
-                            QuotesActivity.class
-                    ));
+                            SubscriptionListActivity.class
+                    );
+                    quotesItem.setExtra("statusFilter", "Pending");
+                    items.add(quotesItem);
 
-                    items.add(new DashboardMenuItem(
+                    DashboardMenuItem revenueItem = new DashboardMenuItem(
                             "💰",
                             "Monthly Revenue",
                             String.format("$%.2f", data.getEstimatedMonthlyRevenue()),
                             R.drawable.bg_card_top_accent_pink,
                             R.drawable.bg_icon_pink,
                             InvoiceListActivity.class
-                    ));
+                    );
+                    revenueItem.setExtra("monthlyRevenueMode", "true");
+                    items.add(revenueItem);
 
                     items.add(new DashboardMenuItem(
                             "🖥️",
@@ -286,19 +290,21 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
                             ServiceRequestListActivity.class
                     ));
 
-                    items.add(new DashboardMenuItem(
+                    DashboardMenuItem pastDueItem = new DashboardMenuItem(
                             "⚠️",
                             "Past Due",
                             data.getOpenInvoices() + " past due",
                             R.drawable.bg_card_top_accent_red,
                             R.drawable.bg_icon_red,
-                            PastDueActivity.class
-                    ));
+                            InvoiceListActivity.class
+                    );
+                    pastDueItem.setExtra("pastDueFilter", "true");
+                    items.add(pastDueItem);
 
                     items.add(new DashboardMenuItem(
                             "📦",
                             "Custom Bundle",
-                            "Configure bundles",
+                            "Create and send bundles",
                             R.drawable.bg_card_top_accent_purple,
                             R.drawable.bg_icon_lavender,
                             CustomBundleActivity.class
@@ -307,7 +313,7 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
                     items.add(new DashboardMenuItem(
                             "📊",
                             "Employee Sales",
-                            "See Performance",
+                            "See Agents' Performance",
                             R.drawable.bg_card_top_accent_pink,
                             R.drawable.bg_icon_blue,
                             EmployeeSalesActivity.class

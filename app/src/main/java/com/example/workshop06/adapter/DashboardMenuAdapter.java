@@ -47,6 +47,9 @@ public class DashboardMenuAdapter extends RecyclerView.Adapter<DashboardMenuAdap
         holder.itemView.setOnClickListener(v -> {
             if (item.getTargetActivity() != null) {
                 Intent intent = new Intent(context, item.getTargetActivity());
+                if (item.getExtraKey() != null && item.getExtraValue() != null) {
+                    intent.putExtra(item.getExtraKey(), item.getExtraValue());
+                }
                 context.startActivity(intent);
             }
         });

@@ -3,7 +3,9 @@ package com.example.workshop06;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.InputType;
 import android.text.TextUtils;
+import android.view.MotionEvent;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -25,11 +27,12 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
+
 public class LoginActivity extends AppCompatActivity {
 
     private EditText etPassword, etUsername;
     private Button btnLogin;
-    private TextView tvGoRegister;
+//    private TextView tvGoRegister;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,14 +42,35 @@ public class LoginActivity extends AppCompatActivity {
         etUsername = findViewById(R.id.etUsername);
         etPassword = findViewById(R.id.etPassword);
         btnLogin = findViewById(R.id.btnLogin);
-        tvGoRegister = findViewById(R.id.tvGoRegister);
+
+        etPassword.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                int drawableStart = etPassword.getWidth() - etPassword.getCompoundPaddingEnd();
+
+                if (event.getX() >= drawableStart) {
+                    boolean isHidden =
+                            etPassword.getTransformationMethod() instanceof android.text.method.PasswordTransformationMethod;
+
+                    if (isHidden) {
+                        etPassword.setTransformationMethod(
+                                android.text.method.HideReturnsTransformationMethod.getInstance()
+                        );
+                        etPassword.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_eye_off, 0);
+                    } else {
+                        etPassword.setTransformationMethod(
+                                android.text.method.PasswordTransformationMethod.getInstance()
+                        );
+                        etPassword.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_eye, 0);
+                    }
+
+                    etPassword.setSelection(etPassword.getText().length());
+                    return true;
+                }
+            }
+            return false;
+        });
 
         btnLogin.setOnClickListener(v -> doLogin());
-
-        tvGoRegister.setOnClickListener(v -> {
-            Toast.makeText(LoginActivity.this, "Going to Register Page", Toast.LENGTH_SHORT).show();
-            startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
-        });
     }
 
     private void doLogin() {

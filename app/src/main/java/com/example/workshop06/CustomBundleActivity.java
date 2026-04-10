@@ -1,37 +1,16 @@
 package com.example.workshop06;
 
-import android.app.AlertDialog;
-import android.app.DatePickerDialog;
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import androidx.annotation.Nullable;
+import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 
 import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
-import com.example.workshop06.model.AddOnResponse;
-import com.example.workshop06.model.CustomerResponse;
-import com.example.workshop06.model.PlanResponse;
-import com.example.workshop06.model.SubscriptionAddOnResponse;
-import com.example.workshop06.model.SubscriptionRequest;
-import com.google.android.material.textfield.MaterialAutoCompleteTextView;
-import com.google.android.material.textfield.TextInputLayout;
+import com.example.workshop06.model.*;
 
-//import java.time.LocalDate;
-//import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -39,659 +18,325 @@ import retrofit2.Response;
 
 public class CustomBundleActivity extends AppCompatActivity {
 
-    private MaterialAutoCompleteTextView spinnerCustomer;
-    private MaterialAutoCompleteTextView spinnerPlan;
-    private MaterialAutoCompleteTextView spinnerStatus;
-    private EditText etStartDate, etEndDate, etBillingCycleDay, etNotes;
-    private TextInputLayout tilStartDate, tilEndDate;
-    private Button btnSaveSubscription;
+    // =========================
+    // UI
+    // =========================
+    private Spinner spinnerCustomer;
+    private RadioGroup rgServiceType;
+    private LinearLayout planContainer, addonContainer;
+    private TextView tvTotal, tvSummary;
+    private Button btnSubmit;
 
-    private LinearLayout layoutSubscriptionAddOns;
-    private TextView tvSubscriptionAddOns;
-    private Button btnManageSubscriptionAddOns;
+    // =========================
+    // DATA
+    // =========================
+    private List<CustomerResponse> customers = new ArrayList<>();
+    private List<PlanResponse> plans = new ArrayList<>();
+    private List<AddOnResponse> addons = new ArrayList<>();
+    private Integer selectedPlanId;
+    private List<Integer> selectedAddonIds = new ArrayList<>();
+    private double total = 0;
 
-    private Integer subscriptionId = null;
-    private Integer customerId = null;
-    private Integer planId = null;
-
-    private final List<CustomerResponse> customerList = new ArrayList<>();
-    private final List<PlanResponse> planList = new ArrayList<>();
-    private final List<AddOnResponse> allAddOns = new ArrayList<>();
-    private final List<SubscriptionAddOnResponse> currentSubscriptionAddOns = new ArrayList<>();
+    private Integer selectedCustomerId;
+    private String selectedServiceType = "Internet";
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_subscription_form);
+        setContentView(R.layout.activity_custom_bundle);
 
-        ImageButton btnBack = findViewById(R.id.btnBack);
+        initViews();
+        loadData();
+    }
 
-        btnBack.setOnClickListener(v -> {
-            finish();
-        });
+    // =========================
+    // INIT UI
+    // =========================
+    private void initViews() {
 
         spinnerCustomer = findViewById(R.id.spinnerCustomer);
-        spinnerPlan = findViewById(R.id.spinnerPlan);
-        spinnerStatus = findViewById(R.id.spinnerStatus);
-        etStartDate = findViewById(R.id.etStartDate);
-        etEndDate = findViewById(R.id.etEndDate);
-        etBillingCycleDay = findViewById(R.id.etBillingCycleDay);
-        etNotes = findViewById(R.id.etNotes);
+        rgServiceType = findViewById(R.id.rgServiceType);
 
-        tilStartDate = findViewById(R.id.tilStartDate);
-        tilEndDate = findViewById(R.id.tilEndDate);
-        btnSaveSubscription = findViewById(R.id.btnSaveSubscription);
+        planContainer = findViewById(R.id.planContainer);
+        addonContainer = findViewById(R.id.addonContainer);
 
-        layoutSubscriptionAddOns = findViewById(R.id.layoutSubscriptionAddOns);
-        tvSubscriptionAddOns = findViewById(R.id.tvSubscriptionAddOns);
-        btnManageSubscriptionAddOns = findViewById(R.id.btnManageSubscriptionAddOns);
+        tvTotal = findViewById(R.id.tvTotal);
+        tvSummary = findViewById(R.id.tvSummary);
 
-        setupStatusDropdown();
-        setupDatePickers();
-        readIntentData();
-        loadCustomers();
-        loadPlans();
-        loadAllAddOns();
+        btnSubmit = findViewById(R.id.btnSubmit);
 
-        if (subscriptionId != null) {
-            loadSubscription(subscriptionId);
-            loadSubscriptionAddOns(subscriptionId);
-            showAddOnSection(true);
-            btnManageSubscriptionAddOns.setEnabled(true);
-        } else {
-            showAddOnSection(true);
-            tvSubscriptionAddOns.setText("Save subscription first to manage add-ons");
-            btnManageSubscriptionAddOns.setEnabled(false);
-        }
-
-        btnManageSubscriptionAddOns.setOnClickListener(v -> {
-            if (subscriptionId == null) {
-                Toast.makeText(this, "Save the subscription first before managing add-ons", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            showManageAddOnsDialog();
+        // service type
+        rgServiceType.setOnCheckedChangeListener((group, checkedId) -> {
+            selectedServiceType = checkedId == R.id.rbMobile ? "Mobile" : "Internet";
+            selectedPlanId = null;
+            selectedAddonIds.clear();
+            total = 0;
+            loadData();
         });
 
-        btnSaveSubscription.setOnClickListener(v -> saveSubscription());
+        btnSubmit.setOnClickListener(v -> createQuote());
     }
 
-    private void readIntentData() {
-        if (getIntent() == null) return;
+    // =========================
+    // LOAD ALL DATA
+    // =========================
+    private void loadData() {
 
-        int id = getIntent().getIntExtra("subscriptionId", -1);
-        if (id != -1) subscriptionId = id;
+        ApiService api = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
 
-        int cId = getIntent().getIntExtra("customerId", -1);
-        if (cId != -1) customerId = cId;
-
-        int pId = getIntent().getIntExtra("planId", -1);
-        if (pId != -1) planId = pId;
-
-        String customerName = getIntent().getStringExtra("customerName");
-        String planName = getIntent().getStringExtra("planName");
-
-        if (customerName != null) {
-            spinnerCustomer.setText(customerName, false);
-        }
-        if (planName != null) {
-            spinnerPlan.setText(planName, false);
-        }
-    }
-
-    private void setupStatusDropdown() {
-        ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_dropdown_item_1line,
-                new String[]{"Active", "Inactive"}
-        );
-        spinnerStatus.setAdapter(statusAdapter);
-//        spinnerStatus.setOnClickListener(v -> spinnerStatus.showDropDown());
-//        spinnerStatus.setOnFocusChangeListener((v, hasFocus) -> {
-//            if (hasFocus) spinnerStatus.showDropDown();
-//        });
-        enableDropdown(spinnerStatus);
-
-    }
-
-    private void enableDropdown(MaterialAutoCompleteTextView view) {
-        view.setOnClickListener(v -> view.showDropDown());
-        view.setOnFocusChangeListener((v, hasFocus) -> {
-            if (hasFocus) view.showDropDown();
-        });
-    }
-
-    private void setupDatePickers() {
-        etStartDate.setOnClickListener(v -> showDatePicker(etStartDate));
-        etEndDate.setOnClickListener(v -> showDatePicker(etEndDate));
-        tilStartDate.setEndIconOnClickListener(v -> showDatePicker(etStartDate));
-        tilEndDate.setEndIconOnClickListener(v -> showDatePicker(etEndDate));
-    }
-
-    private void showDatePicker(EditText targetEditText) {
-        Calendar calendar = Calendar.getInstance();
-
-        String existingDate = targetEditText.getText() != null ? targetEditText.getText().toString().trim() : "";
-        if (!existingDate.isEmpty()) {
-            try {
-                String[] parts = existingDate.split("-");
-                if (parts.length == 3) {
-                    int year = Integer.parseInt(parts[0]);
-                    int month = Integer.parseInt(parts[1]) - 1;
-                    int day = Integer.parseInt(parts[2]);
-                    calendar.set(year, month, day);
-                }
-            } catch (Exception ignored) {
-            }
-        }
-
-        DatePickerDialog dialog = new DatePickerDialog(
-                this,
-                (view, year, month, dayOfMonth) -> {
-                    String formattedDate = String.format(
-                            Locale.getDefault(),
-                            "%04d-%02d-%02d",
-                            year,
-                            month + 1,
-                            dayOfMonth
-                    );
-                    targetEditText.setText(formattedDate);
-
-                    if (targetEditText == etStartDate) {
-                        autoPopulateDatesFromPlanAndStartDate();
-                    }
-                },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-        );
-
-        dialog.show();
-    }
-
-    private void showAddOnSection(boolean show) {
-        if (layoutSubscriptionAddOns != null) {
-            layoutSubscriptionAddOns.setVisibility(show ? View.VISIBLE : View.GONE);
-        }
-    }
-
-    private void loadCustomers() {
-        ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
-
-        apiService.getCustomers().enqueue(new Callback<List<CustomerResponse>>() {
+        api.getCustomers().enqueue(new Callback<List<CustomerResponse>>() {
             @Override
             public void onResponse(Call<List<CustomerResponse>> call, Response<List<CustomerResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    customerList.clear();
-                    customerList.addAll(response.body());
-
-                    List<String> labels = new ArrayList<>();
-                    int selectedIndex = -1;
-
-                    for (int i = 0; i < customerList.size(); i++) {
-                        CustomerResponse customer = customerList.get(i);
-                        labels.add(getCustomerDisplayName(customer));
-                        if (customerId != null && customer.getCustomerId() != null
-                                && customerId.intValue() == customer.getCustomerId().intValue()) {
-                            selectedIndex = i;
-                        }
-                    }
-
-                    ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                            CustomBundleActivity.this,
-                            android.R.layout.simple_dropdown_item_1line,
-                            labels
-                    );
-                    spinnerCustomer.setAdapter(adapter);
-                    spinnerCustomer.setOnClickListener(v -> spinnerCustomer.showDropDown());
-                    spinnerCustomer.setOnFocusChangeListener((v, hasFocus) -> {
-                        if (hasFocus) spinnerCustomer.showDropDown();
-                    });
-
-                    spinnerCustomer.setOnItemClickListener((parent, view, position, id) -> {
-                        CustomerResponse selected = customerList.get(position);
-                        customerId = selected.getCustomerId();
-                        spinnerCustomer.setText(getCustomerDisplayName(selected), false);
-                    });
-
-                    if (selectedIndex >= 0) {
-                        spinnerCustomer.setText(labels.get(selectedIndex), false);
-                    }
-                } else {
-                    Toast.makeText(CustomBundleActivity.this, "Failed to load customers", Toast.LENGTH_SHORT).show();
+                    customers = response.body();
+                    setupCustomerSpinner();
                 }
             }
 
             @Override
-            public void onFailure(Call<List<CustomerResponse>> call, Throwable t) {
-                Toast.makeText(CustomBundleActivity.this, "Failed to load customers", Toast.LENGTH_SHORT).show();
-            }
+            public void onFailure(Call<List<CustomerResponse>> call, Throwable t) {}
         });
-    }
 
-    private void loadPlans() {
-        ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
-
-        apiService.getPlansManager().enqueue(new Callback<List<PlanResponse>>() {
+        api.getPlans().enqueue(new Callback<List<PlanResponse>>() {
             @Override
             public void onResponse(Call<List<PlanResponse>> call, Response<List<PlanResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    planList.clear();
-                    planList.addAll(response.body());
-
-                    List<String> labels = new ArrayList<>();
-                    int selectedIndex = -1;
-
-                    for (int i = 0; i < planList.size(); i++) {
-                        PlanResponse plan = planList.get(i);
-                        String planName = plan.getPlanName() != null && !plan.getPlanName().trim().isEmpty()
-                                ? plan.getPlanName().trim()
-                                : "Plan #" + plan.getPlanId();
-
-                        labels.add(planName);
-
-                        if (planId != null && plan.getPlanId() != null
-                                && planId.intValue() == plan.getPlanId().intValue()) {
-                            selectedIndex = i;
-                        }
-                    }
-
-                    ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                            CustomBundleActivity.this,
-                            android.R.layout.simple_dropdown_item_1line,
-                            labels
-                    );
-                    spinnerPlan.setAdapter(adapter);
-                    spinnerPlan.setOnClickListener(v -> spinnerPlan.showDropDown());
-                    spinnerPlan.setOnFocusChangeListener((v, hasFocus) -> {
-                        if (hasFocus) spinnerPlan.showDropDown();
-                    });
-
-                    spinnerPlan.setOnItemClickListener((parent, view, position, id) -> {
-                        PlanResponse selected = planList.get(position);
-                        planId = selected.getPlanId();
-
-                        String selectedPlanName = selected.getPlanName() != null && !selected.getPlanName().trim().isEmpty()
-                                ? selected.getPlanName().trim()
-                                : "Plan #" + selected.getPlanId();
-
-                        spinnerPlan.setText(selectedPlanName, false);
-                        autoPopulateDatesFromPlanAndStartDate();
-                    });
-
-                    if (selectedIndex >= 0) {
-                        spinnerPlan.setText(labels.get(selectedIndex), false);
-                    }
-
-                    autoPopulateDatesFromPlanAndStartDate();
-                } else {
-                    Toast.makeText(CustomBundleActivity.this, "Failed to load plans", Toast.LENGTH_SHORT).show();
+                    plans = filterPlans(response.body());
+                    renderPlans();
                 }
             }
 
             @Override
-            public void onFailure(Call<List<PlanResponse>> call, Throwable t) {
-                Toast.makeText(CustomBundleActivity.this, "Failed to load plans", Toast.LENGTH_SHORT).show();
-            }
+            public void onFailure(Call<List<PlanResponse>> call, Throwable t) {}
         });
-    }
 
-    private void loadAllAddOns() {
-        ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
-
-        apiService.getAddOns().enqueue(new Callback<List<AddOnResponse>>() {
+        api.getAddOns().enqueue(new Callback<List<AddOnResponse>>() {
             @Override
             public void onResponse(Call<List<AddOnResponse>> call, Response<List<AddOnResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    allAddOns.clear();
-                    allAddOns.addAll(response.body());
+                    addons = filterAddons(response.body());
+                    renderAddons();
                 }
             }
 
             @Override
-            public void onFailure(Call<List<AddOnResponse>> call, Throwable t) {
-            }
+            public void onFailure(Call<List<AddOnResponse>> call, Throwable t) {}
         });
     }
 
-    private String getCustomerDisplayName(CustomerResponse customer) {
-        if (customer == null) return "";
+    // =========================
+    // CUSTOMER SPINNER
+    // =========================
+    private void setupCustomerSpinner() {
 
-        String customerType = customer.getCustomerType() != null ? customer.getCustomerType().trim() : "";
+        List<String> names = new ArrayList<>();
 
-        if ("Business".equalsIgnoreCase(customerType)) {
-            String businessName = customer.getBusinessName() != null ? customer.getBusinessName().trim() : "";
-            if (!businessName.isEmpty()) return businessName;
+        for (CustomerResponse c : customers) {
+            names.add(c.getFirstName() + " " + c.getLastName());
         }
 
-        String firstName = customer.getFirstName() != null ? customer.getFirstName().trim() : "";
-        String lastName = customer.getLastName() != null ? customer.getLastName().trim() : "";
-        String fullName = (firstName + " " + lastName).trim();
-
-        if (!fullName.isEmpty()) return fullName;
-
-        return customer.getCustomerId() != null ? "Customer #" + customer.getCustomerId() : "Customer";
-    }
-
-    private void loadSubscription(int id) {
-        ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
-
-        apiService.getSubscriptionById(id).enqueue(new Callback<SubscriptionRequest>() {
-            @Override
-            public void onResponse(Call<SubscriptionRequest> call, Response<SubscriptionRequest> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    SubscriptionRequest item = response.body();
-
-                    customerId = item.getCustomerId();
-                    planId = item.getPlanId();
-
-                    etStartDate.setText(item.getStartDate() != null ? item.getStartDate() : "");
-                    etEndDate.setText(item.getEndDate() != null ? item.getEndDate() : "");
-                    etBillingCycleDay.setText(item.getBillingCycleDay() != null ? String.valueOf(item.getBillingCycleDay()) : "");
-                    etNotes.setText(item.getNotes() != null ? item.getNotes() : "");
-
-                    String status = item.getStatus() != null ? item.getStatus().trim() : "";
-                    if (!status.isEmpty()) {
-                        spinnerStatus.setText(status, false);
-                    }
-
-                    autoPopulateDatesFromPlanAndStartDate();
-                } else {
-                    Toast.makeText(CustomBundleActivity.this, "Failed to load subscription", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<SubscriptionRequest> call, Throwable t) {
-                Toast.makeText(CustomBundleActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
-            }
-        });
-    }
-
-    private void loadSubscriptionAddOns(int id) {
-        ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
-
-        apiService.getSubscriptionAddOns(id).enqueue(new Callback<List<SubscriptionAddOnResponse>>() {
-            @Override
-            public void onResponse(Call<List<SubscriptionAddOnResponse>> call, Response<List<SubscriptionAddOnResponse>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    currentSubscriptionAddOns.clear();
-                    currentSubscriptionAddOns.addAll(response.body());
-                    renderSubscriptionAddOns();
-                } else {
-                    tvSubscriptionAddOns.setText("No add-ons");
-                }
-            }
-
-            @Override
-            public void onFailure(Call<List<SubscriptionAddOnResponse>> call, Throwable t) {
-                tvSubscriptionAddOns.setText("No add-ons");
-            }
-        });
-    }
-
-    private void renderSubscriptionAddOns() {
-        if (currentSubscriptionAddOns.isEmpty()) {
-            tvSubscriptionAddOns.setText("No add-ons");
-            return;
-        }
-
-        StringBuilder sb = new StringBuilder();
-        for (SubscriptionAddOnResponse item : currentSubscriptionAddOns) {
-            String name = item.getAddOnName() != null && !item.getAddOnName().trim().isEmpty()
-                    ? item.getAddOnName().trim()
-                    : "Add-on #" + item.getAddOnId();
-            sb.append("• ").append(name).append("\n");
-        }
-        tvSubscriptionAddOns.setText(sb.toString().trim());
-    }
-
-    private void showManageAddOnsDialog() {
-        if (subscriptionId == null) return;
-
-        if (allAddOns.isEmpty()) {
-            Toast.makeText(this, "Add-on list is still loading", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        List<AddOnResponse> available = new ArrayList<>();
-        for (AddOnResponse addOn : allAddOns) {
-            if (addOn != null && Boolean.TRUE.equals(addOn.getIsActive())) {
-                available.add(addOn);
-            }
-        }
-
-        String[] names = new String[available.size()];
-        boolean[] checked = new boolean[available.size()];
-
-        for (int i = 0; i < available.size(); i++) {
-            AddOnResponse addOn = available.get(i);
-            String name = addOn.getAddOnName() != null ? addOn.getAddOnName() : "Add-on";
-
-            String priceText = "";
-            if (addOn.getMonthlyPrice() != null) {
-                priceText = String.format(Locale.getDefault(), " ($%.2f/mo)", addOn.getMonthlyPrice());
-            }
-
-            names[i] = name + priceText;
-
-            boolean isAttached = false;
-            for (SubscriptionAddOnResponse attached : currentSubscriptionAddOns) {
-                if (attached.getAddOnId() != null
-                        && addOn.getAddOnId() != null
-                        && attached.getAddOnId().intValue() == addOn.getAddOnId().intValue()) {
-                    isAttached = true;
-                    break;
-                }
-            }
-            checked[i] = isAttached;
-        }
-
-        boolean[] workingChecked = checked.clone();
-
-        new AlertDialog.Builder(this)
-                .setTitle("Manage Subscription Add-ons")
-                .setMultiChoiceItems(names, workingChecked, (dialog, which, isChecked) -> workingChecked[which] = isChecked)
-                .setPositiveButton("Save", (dialog, which) -> applySubscriptionAddOnChanges(available, checked, workingChecked))
-                .setNegativeButton("Cancel", null)
-                .show();
-    }
-
-    private void applySubscriptionAddOnChanges(List<AddOnResponse> available, boolean[] original, boolean[] updated) {
-        if (subscriptionId == null) return;
-
-        ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
-
-        boolean hasChanges = false;
-
-        for (int i = 0; i < available.size(); i++) {
-            AddOnResponse addOn = available.get(i);
-            Integer addOnId = addOn.getAddOnId();
-            if (addOnId == null) continue;
-
-            boolean wasAttached = original[i];
-            boolean shouldBeAttached = updated[i];
-
-            if (!wasAttached && shouldBeAttached) {
-                hasChanges = true;
-                apiService.attachAddOnToSubscription(subscriptionId, addOnId).enqueue(new Callback<Void>() {
-                    @Override public void onResponse(Call<Void> call, Response<Void> response) {}
-                    @Override public void onFailure(Call<Void> call, Throwable t) {}
-                });
-            } else if (wasAttached && !shouldBeAttached) {
-                hasChanges = true;
-                apiService.removeAddOnFromSubscription(subscriptionId, addOnId).enqueue(new Callback<Void>() {
-                    @Override public void onResponse(Call<Void> call, Response<Void> response) {}
-                    @Override public void onFailure(Call<Void> call, Throwable t) {}
-                });
-            }
-        }
-
-        if (hasChanges) {
-            loadSubscriptionAddOns(subscriptionId);
-        }
-    }
-
-    private void autoPopulateDatesFromPlanAndStartDate() {
-        if (planId == null) return;
-
-        String startDateText = etStartDate.getText() != null ? etStartDate.getText().toString().trim() : "";
-        if (startDateText.isEmpty()) return;
-
-        PlanResponse selectedPlan = getSelectedPlanById(planId);
-        if (selectedPlan == null) return;
-
-        Integer contractTermMonths = selectedPlan.getContractTermMonths();
-        if (contractTermMonths == null || contractTermMonths <= 0) return;
-
-        try {
-            String[] parts = startDateText.split("-");
-            if (parts.length != 3) throw new Exception();
-
-            int year = Integer.parseInt(parts[0]);
-            int month = Integer.parseInt(parts[1]) - 1;
-            int day = Integer.parseInt(parts[2]);
-
-            Calendar calendar = Calendar.getInstance();
-            calendar.set(year, month, day);
-
-            calendar.add(Calendar.MONTH, contractTermMonths);
-            calendar.add(Calendar.DAY_OF_MONTH, -1);
-
-            int endYear = calendar.get(Calendar.YEAR);
-            int endMonth = calendar.get(Calendar.MONTH) + 1;
-            int endDay = calendar.get(Calendar.DAY_OF_MONTH);
-
-            String endDate = String.format(Locale.getDefault(), "%04d-%02d-%02d", endYear, endMonth, endDay);
-
-            etEndDate.setText(endDate);
-            etBillingCycleDay.setText(String.valueOf(day));
-
-        } catch (Exception e) {
-            etStartDate.setError("Invalid date format. Use yyyy-MM-dd");
-        }
-    }
-
-    private PlanResponse getSelectedPlanById(Integer selectedPlanId) {
-        if (selectedPlanId == null) return null;
-
-        for (PlanResponse plan : planList) {
-            if (plan != null && plan.getPlanId() != null
-                    && selectedPlanId.intValue() == plan.getPlanId().intValue()) {
-                return plan;
-            }
-        }
-        return null;
-    }
-
-    private void saveSubscription() {
-        String startDate = etStartDate.getText() != null ? etStartDate.getText().toString().trim() : "";
-        String endDate = etEndDate.getText() != null ? etEndDate.getText().toString().trim() : "";
-        String status = spinnerStatus.getText() != null ? spinnerStatus.getText().toString().trim() : "";
-        String billingCycleDayText = etBillingCycleDay.getText() != null ? etBillingCycleDay.getText().toString().trim() : "";
-        String notes = etNotes.getText() != null ? etNotes.getText().toString().trim() : "";
-
-        if (customerId == null) {
-            Toast.makeText(this, "Customer is required", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (planId == null) {
-            Toast.makeText(this, "Plan is required", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (startDate.isEmpty()) {
-            etStartDate.setError("Start date is required");
-            etStartDate.requestFocus();
-            return;
-        }
-
-        if (endDate.isEmpty()) {
-            etEndDate.setError("End date is required");
-            etEndDate.requestFocus();
-            return;
-        }
-
-        if (status.isEmpty()) {
-            spinnerStatus.setError("Status is required");
-            spinnerStatus.requestFocus();
-            return;
-        }
-
-        Integer billingCycleDay = null;
-        try {
-            if (!billingCycleDayText.isEmpty()) {
-                billingCycleDay = Integer.parseInt(billingCycleDayText);
-            }
-        } catch (Exception e) {
-            etBillingCycleDay.setError("Invalid number");
-            return;
-        }
-
-        SubscriptionRequest request = new SubscriptionRequest(
-                subscriptionId,
-                customerId,
-                planId,
-                startDate,
-                endDate,
-                status,
-                billingCycleDay,
-                notes.isEmpty() ? null : notes
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_dropdown_item,
+                names
         );
 
-        ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
+        spinnerCustomer.setAdapter(adapter);
 
-        if (subscriptionId == null) {
-            apiService.createSubscription(request).enqueue(new Callback<SubscriptionRequest>() {
-                @Override
-                public void onResponse(Call<SubscriptionRequest> call, Response<SubscriptionRequest> response) {
-                    if (response.isSuccessful() && response.body() != null) {
-                        SubscriptionRequest created = response.body();
+        spinnerCustomer.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                selectedCustomerId = customers.get(position).getCustomerId();
+            }
 
-                        Toast.makeText(
-                                CustomBundleActivity.this,
-                                "Created. Now manage add-ons",
-                                Toast.LENGTH_SHORT
-                        ).show();
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+    }
 
-                        Intent intent = new Intent(CustomBundleActivity.this, CustomBundleActivity.class);
-                        intent.putExtra("subscriptionId", created.getSubscriptionId());
-                        intent.putExtra("customerId", created.getCustomerId());
-                        intent.putExtra("planId", created.getPlanId());
-                        intent.putExtra("customerName", spinnerCustomer.getText() != null ? spinnerCustomer.getText().toString() : "");
-                        intent.putExtra("planName", spinnerPlan.getText() != null ? spinnerPlan.getText().toString() : "");
+    // =========================
+    // FILTER
+    // =========================
+//    private List<PlanResponse> filterPlans(List<PlanResponse> list) {
+//        List<PlanResponse> res = new ArrayList<>();
+//        for (PlanResponse p : list) {
+//            if (selectedServiceType.equalsIgnoreCase(p.getServiceType())) {
+//                res.add(p);
+//            }
+//        }
+//        return res;
+//    }
+    private List<PlanResponse> filterPlans(List<PlanResponse> list) {
+        return list;
+    }
 
-                        startActivity(intent);
-                        finish();
-                    } else {
-                        Toast.makeText(CustomBundleActivity.this, "Create failed", Toast.LENGTH_SHORT).show();
-                    }
+//    private List<AddOnResponse> filterAddons(List<AddOnResponse> list) {
+//        List<AddOnResponse> res = new ArrayList<>();
+//        for (AddOnResponse a : list) {
+//            if (selectedServiceType.equalsIgnoreCase(a.getServiceTypeName())) {
+//                res.add(a);
+//            }
+//        }
+//        return res;
+//    }
+    private List<AddOnResponse> filterAddons(List<AddOnResponse> list) {
+        return list;
+    }
+
+    // =========================
+    // RENDER PLANS
+    // =========================
+    private void renderPlans() {
+        planContainer.removeAllViews();
+
+        for (PlanResponse p : plans) {
+
+            CheckBox cb = new CheckBox(this);
+            cb.setText(p.getPlanName() + " - $" + p.getMonthlyPrice());
+
+            cb.setOnCheckedChangeListener((buttonView, isChecked) -> {
+
+                if (isChecked) {
+                    selectedPlanId = p.getPlanId();
+                } else {
+                    selectedPlanId = null;
                 }
 
-                @Override
-                public void onFailure(Call<SubscriptionRequest> call, Throwable t) {
-                    Toast.makeText(CustomBundleActivity.this, t.getMessage(), Toast.LENGTH_LONG).show();
-                }
+                recalc();
             });
 
-        } else {
-            apiService.updateSubscription(subscriptionId, request).enqueue(new Callback<SubscriptionRequest>() {
-                @Override
-                public void onResponse(Call<SubscriptionRequest> call, Response<SubscriptionRequest> response) {
-                    if (response.isSuccessful()) {
-                        Toast.makeText(CustomBundleActivity.this, "Updated", Toast.LENGTH_SHORT).show();
-                        finish();
-                    } else {
-                        Toast.makeText(CustomBundleActivity.this, "Update failed", Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<SubscriptionRequest> call, Throwable t) {
-                    Toast.makeText(CustomBundleActivity.this, t.getMessage(), Toast.LENGTH_LONG).show();
-                }
-            });
+            planContainer.addView(cb);
         }
     }
-}
 
+    // =========================
+    // RENDER ADDONS
+    // =========================
+    private void renderAddons() {
+
+        addonContainer.removeAllViews();
+
+        for (AddOnResponse a : addons) {
+
+            CheckBox cb = new CheckBox(this);
+            cb.setText(a.getAddOnName() + " - $" + a.getMonthlyPrice());
+
+            cb.setOnCheckedChangeListener((buttonView, isChecked) -> {
+
+                if (isChecked) {
+                    selectedAddonIds.add(a.getAddOnId());
+                } else {
+                    selectedAddonIds.remove(Integer.valueOf(a.getAddOnId()));
+                }
+
+                recalc();
+            });
+
+            addonContainer.addView(cb);
+        }
+    }
+
+    // =========================
+    // REMOVE ITEM
+    // =========================
+//    private void removeItem(Item item) {
+//        selectedItems.removeIf(x ->
+//                x.id.equals(item.id) && x.type.equals(item.type)
+//        );
+//    }
+
+    // =========================
+    // RECALC TOTAL
+    // =========================
+    private void recalc() {
+
+        total = 0;
+
+        for (PlanResponse p : plans) {
+            if (selectedPlanId != null && p.getPlanId().equals(selectedPlanId)) {
+                total += p.getMonthlyPrice();
+            }
+        }
+
+        for (AddOnResponse a : addons) {
+            if (selectedAddonIds.contains(a.getAddOnId())) {
+                total += a.getMonthlyPrice();
+            }
+        }
+
+        tvTotal.setText("Total: $" + total);
+    }
+
+    // =========================
+    // CREATE QUOTE (IMPORTANT)
+    // =========================
+    private void createQuote() {
+
+        if (selectedCustomerId == null) {
+            Toast.makeText(this, "Select customer", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        ApiService api = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
+
+        QuoteRequest request = new QuoteRequest(
+                selectedCustomerId,
+                selectedPlanId,
+                selectedAddonIds,
+                total,
+                "PENDING"
+        );
+
+        api.createQuote(request).enqueue(new Callback<QuoteResponse>() {
+            @Override
+            public void onResponse(Call<QuoteResponse> call, Response<QuoteResponse> response) {
+
+                if (response.isSuccessful()) {
+                    Toast.makeText(CustomBundleActivity.this,
+                            "Quote created",
+                            Toast.LENGTH_SHORT).show();
+
+                    finish();
+                } else {
+                    Toast.makeText(CustomBundleActivity.this,
+                            "Failed",
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<QuoteResponse> call, Throwable t) {
+                Toast.makeText(CustomBundleActivity.this,
+                        t.getMessage(),
+                        Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    // =========================
+    // SIMPLE CALLBACK
+    // =========================
+//    static class SimpleCallback<T> implements Callback<List<T>> {
+//
+//        interface Handler<T> {
+//            void handle(List<T> data);
+//        }
+//
+//        private final Handler<T> handler;
+//
+//        SimpleCallback(Handler<T> handler) {
+//            this.handler = handler;
+//        }
+//
+//        @Override
+//        public void onResponse(Call<List<T>> call, Response<List<T>> response) {
+//            if (response.isSuccessful() && response.body() != null) {
+//                handler.handle(response.body());
+//            }
+//        }
+//
+//        @Override
+//        public void onFailure(Call<List<T>> call, Throwable t) {}
+//    }
+
+}

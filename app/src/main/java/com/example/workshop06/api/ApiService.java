@@ -388,4 +388,11 @@ Call<List<EmployeeSalesResponse>> getEmployeeSales();
 
     @GET("/api/quotes")
     Call<List<QuoteResponse>> getQuotes();
+    @POST("/api/quotes")
+    Call<QuoteResponse> createQuote(@Body QuoteRequest request);
+    @GET("/api/plans")
+    Call<List<PlanResponse>> getPlans();
+
+//    @GET("/api/addons")
+//    Call<List<AddOnResponse>> getAddOns();
 }

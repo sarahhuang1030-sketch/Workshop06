@@ -18,6 +18,7 @@ import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.CustomerResponse;
 import com.example.workshop06.model.EmployeeResponse;
+import com.example.workshop06.model.MeResponse;
 import com.example.workshop06.model.ServiceRequestCreateUpdateRequest;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 
@@ -34,7 +35,7 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
     private static final String TAG = "ServiceRequestForm";
 
     private MaterialAutoCompleteTextView etCustomerName;
-    private MaterialAutoCompleteTextView etCreatedByName;
+    private EditText etCreatedByName;
     private MaterialAutoCompleteTextView etAssignedTechnicianName;
 
     private EditText etCustomerId;
@@ -54,9 +55,7 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
     private String mode = "add";
     private int requestId = -1;
 
-
     private final List<CustomerResponse> customerList = new ArrayList<>();
-    private final List<EmployeeResponse> createdByList = new ArrayList<>();
     private final List<EmployeeResponse> technicianList = new ArrayList<>();
 
     private ApiService apiService;
@@ -67,9 +66,7 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
         setContentView(R.layout.activity_service_request_form);
 
         apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
-        btnBack = findViewById(R.id.btnBack);
 
-        btnBack.setOnClickListener(v -> finish());
         initViews();
         setupDropdowns();
         loadIntentData();
@@ -77,9 +74,11 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
 
         if (isEditMode()) {
             lockLookupFields();
+            loadEmployees();
         } else {
             loadCustomers();
             loadEmployees();
+            loadCurrentUser();
         }
     }
 
@@ -91,7 +90,6 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
         etCustomerId = findViewById(R.id.etCustomerId);
         etCreatedByUserId = findViewById(R.id.etCreatedByUserId);
         etAssignedTechnicianUserId = findViewById(R.id.etAssignedTechnicianUserId);
-
 
         etDescription = findViewById(R.id.etDescription);
         etRequestType = findViewById(R.id.etRequestType);
@@ -115,7 +113,7 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
         ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_dropdown_item_1line,
-                new String[]{"Open", "In Progress", "Pending", "Closed"}
+                new String[]{"Open", "Assigned", "In Progress", "Completed", "Cancelled"}
         );
         spinnerStatus.setAdapter(statusAdapter);
     }
@@ -136,11 +134,19 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
 
         if (customerId != null) etCustomerId.setText(String.valueOf(customerId));
         if (createdByUserId != null) etCreatedByUserId.setText(String.valueOf(createdByUserId));
-        if (assignedTechnicianUserId != null) etAssignedTechnicianUserId.setText(String.valueOf(assignedTechnicianUserId));
+        if (assignedTechnicianUserId != null) {
+            etAssignedTechnicianUserId.setText(String.valueOf(assignedTechnicianUserId));
+        }
 
-        if (!TextUtils.isEmpty(customerName)) etCustomerName.setText(customerName, false);
-        if (!TextUtils.isEmpty(createdByName)) etCreatedByName.setText(createdByName, false);
-        if (!TextUtils.isEmpty(technicianName)) etAssignedTechnicianName.setText(technicianName, false);
+        if (!TextUtils.isEmpty(customerName)) {
+            etCustomerName.setText(customerName, false);
+        }
+        if (!TextUtils.isEmpty(createdByName)) {
+            etCreatedByName.setText(createdByName);
+        }
+        if (!TextUtils.isEmpty(technicianName)) {
+            etAssignedTechnicianName.setText(technicianName, false);
+        }
 
         if (isEditMode()) {
             requestId = getIntent().getIntExtra("requestId", -1);
@@ -149,13 +155,19 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
             String priority = getIntent().getStringExtra("priority");
             String status = getIntent().getStringExtra("status");
             String description = getIntent().getStringExtra("description");
-            Integer parentRequestId = getNullableIntExtra("parentRequestId");
 
-            if (!TextUtils.isEmpty(requestType)) etRequestType.setText(requestType);
-            if (!TextUtils.isEmpty(description)) etDescription.setText(description);
-
-            if (!TextUtils.isEmpty(priority)) spinnerPriority.setText(priority, false);
-            if (!TextUtils.isEmpty(status)) spinnerStatus.setText(status, false);
+            if (!TextUtils.isEmpty(requestType)) {
+                etRequestType.setText(requestType);
+            }
+            if (!TextUtils.isEmpty(description)) {
+                etDescription.setText(description);
+            }
+            if (!TextUtils.isEmpty(priority)) {
+                spinnerPriority.setText(priority, false);
+            }
+            if (!TextUtils.isEmpty(status)) {
+                spinnerStatus.setText(status, false);
+            }
         }
     }
 
@@ -226,7 +238,6 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
                     return;
                 }
 
-                createdByList.clear();
                 technicianList.clear();
 
                 for (EmployeeResponse employee : response.body()) {
@@ -243,21 +254,49 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
 
                     if (technician) {
                         technicianList.add(employee);
-                    } else {
-                        createdByList.add(employee);
                     }
                 }
 
-                bindCreatedByDropdown();
                 bindTechnicianDropdown();
-
-                Log.d(TAG, "createdByList size=" + createdByList.size());
                 Log.d(TAG, "technicianList size=" + technicianList.size());
             }
 
             @Override
             public void onFailure(Call<List<EmployeeResponse>> call, Throwable t) {
                 Toast.makeText(ServiceRequestFormActivity.this, "Unable to load employees", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void loadCurrentUser() {
+        String token = "Bearer " + getSharedPreferences("teleconnect_prefs", MODE_PRIVATE)
+                .getString("jwt_token", "");
+
+        apiService.getMe(token).enqueue(new Callback<MeResponse>() {
+            @Override
+            public void onResponse(Call<MeResponse> call, Response<MeResponse> response) {
+                if (!response.isSuccessful() || response.body() == null) {
+                    Toast.makeText(ServiceRequestFormActivity.this,
+                            "Unable to load current user",
+                            Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                MeResponse me = response.body();
+
+                String fullName = me.getFirstName() + " " + me.getLastName();
+
+                etCreatedByName.setText(fullName);
+                etCreatedByUserId.setText(String.valueOf(me.getEmployeeId()));
+
+                lockEditText(etCreatedByName);
+            }
+
+            @Override
+            public void onFailure(Call<MeResponse> call, Throwable t) {
+                Toast.makeText(ServiceRequestFormActivity.this,
+                        "Unable to load current user",
+                        Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -280,28 +319,6 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
                 || roleName.equals("tech")
                 || positionTitle.contains("technician")
                 || positionTitle.equals("tech");
-    }
-
-    private void bindCreatedByDropdown() {
-        List<String> displayNames = new ArrayList<>();
-        for (EmployeeResponse employee : createdByList) {
-            displayNames.add(getEmployeeDisplayName(employee));
-        }
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_dropdown_item_1line,
-                displayNames
-        );
-
-        etCreatedByName.setAdapter(adapter);
-        etCreatedByName.setThreshold(1);
-
-        etCreatedByName.setOnItemClickListener((parent, view, position, id) -> {
-            EmployeeResponse selected = createdByList.get(position);
-            etCreatedByUserId.setText(String.valueOf(selected.getEmployeeId()));
-            etCreatedByName.setError(null);
-        });
     }
 
     private void bindTechnicianDropdown() {
@@ -336,11 +353,20 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
 
     private void lockLookupFields() {
         lockField(etCustomerName);
-        lockField(etCreatedByName);
+        lockEditText(etCreatedByName);
         lockField(etAssignedTechnicianName);
     }
 
     private void lockField(MaterialAutoCompleteTextView field) {
+        field.setEnabled(false);
+        field.setFocusable(false);
+        field.setFocusableInTouchMode(false);
+        field.setCursorVisible(false);
+        field.setKeyListener(null);
+        field.setAlpha(0.85f);
+    }
+
+    private void lockEditText(EditText field) {
         field.setEnabled(false);
         field.setFocusable(false);
         field.setFocusableInTouchMode(false);
@@ -365,7 +391,7 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
         }
 
         if (TextUtils.isEmpty(createdByUserIdText)) {
-            etCreatedByName.setError("Select created by");
+            etCreatedByName.setError("Created by is missing");
             etCreatedByName.requestFocus();
             return;
         }
@@ -394,7 +420,6 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
                 ? null
                 : Integer.parseInt(assignedTechnicianUserIdText);
 
-
         ServiceRequestCreateUpdateRequest request = new ServiceRequestCreateUpdateRequest(
                 customerId,
                 createdByUserId,
@@ -418,18 +443,22 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
                         setResult(RESULT_OK);
                         finish();
                     } else {
-                        Toast.makeText(ServiceRequestFormActivity.this,
+                        Toast.makeText(
+                                ServiceRequestFormActivity.this,
                                 "Update failed. Code: " + response.code(),
-                                Toast.LENGTH_LONG).show();
+                                Toast.LENGTH_LONG
+                        ).show();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<Void> call, Throwable t) {
                     showLoading(false);
-                    Toast.makeText(ServiceRequestFormActivity.this,
+                    Toast.makeText(
+                            ServiceRequestFormActivity.this,
                             "Unable to update service request",
-                            Toast.LENGTH_LONG).show();
+                            Toast.LENGTH_LONG
+                    ).show();
                 }
             });
         } else {
@@ -443,18 +472,22 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
                         setResult(RESULT_OK);
                         finish();
                     } else {
-                        Toast.makeText(ServiceRequestFormActivity.this,
+                        Toast.makeText(
+                                ServiceRequestFormActivity.this,
                                 "Create failed. Code: " + response.code(),
-                                Toast.LENGTH_LONG).show();
+                                Toast.LENGTH_LONG
+                        ).show();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<Void> call, Throwable t) {
                     showLoading(false);
-                    Toast.makeText(ServiceRequestFormActivity.this,
+                    Toast.makeText(
+                            ServiceRequestFormActivity.this,
                             "Unable to create service request",
-                            Toast.LENGTH_LONG).show();
+                            Toast.LENGTH_LONG
+                    ).show();
                 }
             });
         }

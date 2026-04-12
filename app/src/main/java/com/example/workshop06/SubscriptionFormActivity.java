@@ -22,6 +22,7 @@ import com.example.workshop06.model.CustomerResponse;
 import com.example.workshop06.model.PlanResponse;
 import com.example.workshop06.model.SubscriptionAddOnResponse;
 import com.example.workshop06.model.SubscriptionRequest;
+import com.example.workshop06.model.SubscriptionStatusResponse;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.android.material.textfield.TextInputLayout;
 
@@ -58,6 +59,9 @@ public class SubscriptionFormActivity extends AppCompatActivity {
     private final List<AddOnResponse> allAddOns = new ArrayList<>();
     private final List<SubscriptionAddOnResponse> currentSubscriptionAddOns = new ArrayList<>();
 
+    private final List<SubscriptionStatusResponse> statusList = new ArrayList<>();
+    private final List<String> statusLabels = new ArrayList<>();
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,7 +83,7 @@ public class SubscriptionFormActivity extends AppCompatActivity {
         tvSubscriptionAddOns = findViewById(R.id.tvSubscriptionAddOns);
         btnManageSubscriptionAddOns = findViewById(R.id.btnManageSubscriptionAddOns);
 
-        setupStatusDropdown();
+        loadStatuses();
         setupDatePickers();
         readIntentData();
         loadCustomers();
@@ -131,16 +135,74 @@ public class SubscriptionFormActivity extends AppCompatActivity {
         }
     }
 
-    private void setupStatusDropdown() {
-        ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_dropdown_item_1line,
-                new String[]{"Active", "Inactive"}
-        );
-        spinnerStatus.setAdapter(statusAdapter);
-        spinnerStatus.setOnClickListener(v -> spinnerStatus.showDropDown());
-        spinnerStatus.setOnFocusChangeListener((v, hasFocus) -> {
-            if (hasFocus) spinnerStatus.showDropDown();
+    private void loadStatuses() {
+        ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
+
+        apiService.getSubscriptionStatuses().enqueue(new Callback<List<SubscriptionStatusResponse>>() {
+            @Override
+            public void onResponse(Call<List<SubscriptionStatusResponse>> call,
+                                   Response<List<SubscriptionStatusResponse>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    statusList.clear();
+                    statusLabels.clear();
+
+                    List<SubscriptionStatusResponse> fetched = new ArrayList<>(response.body());
+                    fetched.sort((a, b) -> {
+                        int aOrder = a.getSortOrder() != null ? a.getSortOrder() : 999;
+                        int bOrder = b.getSortOrder() != null ? b.getSortOrder() : 999;
+                        return Integer.compare(aOrder, bOrder);
+                    });
+
+                    for (SubscriptionStatusResponse status : fetched) {
+                        if (status == null) continue;
+
+                        Boolean isActive = status.getIsActive();
+                        if (Boolean.TRUE.equals(isActive)) {
+                            statusList.add(status);
+                            statusLabels.add(
+                                    status.getDisplayName() != null
+                                            ? status.getDisplayName().trim()
+                                            : ""
+                            );
+                        }
+                    }
+
+                    ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(
+                            SubscriptionFormActivity.this,
+                            android.R.layout.simple_dropdown_item_1line,
+                            statusLabels
+                    );
+
+                    spinnerStatus.setAdapter(statusAdapter);
+                    spinnerStatus.setOnClickListener(v -> spinnerStatus.showDropDown());
+                    spinnerStatus.setOnFocusChangeListener((v, hasFocus) -> {
+                        if (hasFocus) spinnerStatus.showDropDown();
+                    });
+
+                    spinnerStatus.setOnItemClickListener((parent, view, position, id) -> {
+                        if (position >= 0 && position < statusLabels.size()) {
+                            spinnerStatus.setText(statusLabels.get(position), false);
+                        }
+                    });
+
+                    String currentStatus = spinnerStatus.getText() != null
+                            ? spinnerStatus.getText().toString().trim()
+                            : "";
+
+                    if (!currentStatus.isEmpty()) {
+                        spinnerStatus.setText(currentStatus, false);
+                    } else if (!statusLabels.isEmpty()) {
+                        spinnerStatus.setText(statusLabels.get(0), false);
+                    }
+                } else {
+                    Toast.makeText(SubscriptionFormActivity.this, "Failed to load statuses", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<SubscriptionStatusResponse>> call, Throwable t) {
+                Toast.makeText(SubscriptionFormActivity.this, "Failed to load statuses", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 

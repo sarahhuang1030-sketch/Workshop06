@@ -4,69 +4,78 @@ import com.google.gson.annotations.SerializedName;
 
 public class ManagerSummaryResponse {
 
+    // ✅ Match backend field names exactly
+    @SerializedName("customers")
+    private Integer customers;
 
+    @SerializedName("activeSubs")
+    private Integer activeSubs;
+
+    @SerializedName("monthlyRevenue")
+    private Double monthlyRevenue;
+
+    @SerializedName("pastDue")
+    private Integer pastDue;
+
+    @SerializedName("addOns")
+    private Long addOns;
+
+    @SerializedName("planFeatures")
+    private Long planFeatures;
+
+    @SerializedName("location")
+    private Long location;
+
+    @SerializedName("serviceRequests")
+    private Long serviceRequests;
+
+    @SerializedName("serviceAppointments")
+    private Long serviceAppointments;
+
+    // ❗ KEEP THIS (as you requested)
     @SerializedName("totalEmployees")
     private Long totalEmployees;
 
-    @SerializedName("totalLocations")
-    private Long totalLocations;
+    // ================= GETTERS =================
 
-    @SerializedName("activeSubscriptions")
-    private Long activeSubscriptions;
-
-    @SerializedName("suspendedSubscriptions")
-    private Long suspendedSubscriptions;
-
-    @SerializedName("openInvoices")
-    private Long openInvoices;
-
-    @SerializedName("estimatedMonthlyRevenue")
-    private Double estimatedMonthlyRevenue;
-
-    @SerializedName("totalAddons")
-    private Long totalAddons;
-
-    @SerializedName("activeAddons")
-    private Long activeAddons;
-
-    @SerializedName("totalPlanFeatures")
-    private Long totalPlanFeatures;
-
-    public long getTotalLocations() {
-        return totalLocations != null ? totalLocations : 0L;
+    public int getCustomers() {
+        return customers != null ? customers : 0;
     }
 
-    public long getTotalEmployees() {
-        return totalEmployees != null ? totalEmployees : 0L;
-    }
-
-
-
-    public long getActiveSubscriptions() {
-        return activeSubscriptions != null ? activeSubscriptions : 0L;
-    }
-
-    public long getSuspendedSubscriptions() {
-        return suspendedSubscriptions != null ? suspendedSubscriptions : 0L;
-    }
-
-    public long getOpenInvoices() {
-        return openInvoices != null ? openInvoices : 0L;
+    public int getActiveSubscriptions() {
+        return activeSubs != null ? activeSubs : 0;
     }
 
     public double getEstimatedMonthlyRevenue() {
-        return estimatedMonthlyRevenue != null ? estimatedMonthlyRevenue : 0.0;
+        return monthlyRevenue != null ? monthlyRevenue : 0.0;
+    }
+
+    public int getPastDue() {
+        return pastDue != null ? pastDue : 0;
     }
 
     public long getTotalAddons() {
-        return totalAddons != null ? totalAddons : 0L;
-    }
-
-    public long getActiveAddons() {
-        return activeAddons != null ? activeAddons : 0L;
+        return addOns != null ? addOns : 0L;
     }
 
     public long getTotalPlanFeatures() {
-        return totalPlanFeatures != null ? totalPlanFeatures : 0L;
+        return planFeatures != null ? planFeatures : 0L;
+    }
+
+    public long getTotalLocations() {
+        return location != null ? location : 0L;
+    }
+
+    public long getServiceRequests() {
+        return serviceRequests != null ? serviceRequests : 0L;
+    }
+
+    public long getServiceAppointments() {
+        return serviceAppointments != null ? serviceAppointments : 0L;
+    }
+
+    // ❗ KEEP EXACTLY
+    public long getTotalEmployees() {
+        return totalEmployees != null ? totalEmployees : 0L;
     }
 }

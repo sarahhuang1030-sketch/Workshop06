@@ -76,8 +76,9 @@ public interface ApiService {
     @GET("/api/employee/dashboard")
     Call<EmployeeDashboardResponse> getEmployeeDashboard();
 
+
     //summary for the counts
-    @GET("/api/manager/reports/summary")
+    @GET("api/manager/summary")
     Call<ManagerSummaryResponse> getManagerSummary();
 
     //endpoints for location
@@ -154,6 +155,9 @@ public interface ApiService {
             @Path("subscriptionId") int subscriptionId,
             @Path("addOnId") int addOnId
     );
+
+    @GET("/api/manager/subscriptions/statuses")
+    Call<List<SubscriptionStatusResponse>> getSubscriptionStatuses();
 
 
     // INVOICES

@@ -40,7 +40,7 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
     private EditText etCustomerId;
     private EditText etCreatedByUserId;
     private EditText etAssignedTechnicianUserId;
-    private EditText etParentRequestId;
+
     private EditText etDescription;
     private EditText etRequestType;
 
@@ -92,7 +92,7 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
         etCreatedByUserId = findViewById(R.id.etCreatedByUserId);
         etAssignedTechnicianUserId = findViewById(R.id.etAssignedTechnicianUserId);
 
-        etParentRequestId = findViewById(R.id.etParentRequestId);
+
         etDescription = findViewById(R.id.etDescription);
         etRequestType = findViewById(R.id.etRequestType);
 
@@ -153,7 +153,6 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
 
             if (!TextUtils.isEmpty(requestType)) etRequestType.setText(requestType);
             if (!TextUtils.isEmpty(description)) etDescription.setText(description);
-            if (parentRequestId != null) etParentRequestId.setText(String.valueOf(parentRequestId));
 
             if (!TextUtils.isEmpty(priority)) spinnerPriority.setText(priority, false);
             if (!TextUtils.isEmpty(status)) spinnerStatus.setText(status, false);
@@ -354,7 +353,6 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
         String customerIdText = etCustomerId.getText().toString().trim();
         String createdByUserIdText = etCreatedByUserId.getText().toString().trim();
         String assignedTechnicianUserIdText = etAssignedTechnicianUserId.getText().toString().trim();
-        String parentRequestIdText = etParentRequestId.getText().toString().trim();
         String requestType = etRequestType.getText().toString().trim();
         String description = etDescription.getText().toString().trim();
         String priority = spinnerPriority.getText().toString().trim();
@@ -395,15 +393,12 @@ public class ServiceRequestFormActivity extends AppCompatActivity {
         Integer assignedTechnicianUserId = TextUtils.isEmpty(assignedTechnicianUserIdText)
                 ? null
                 : Integer.parseInt(assignedTechnicianUserIdText);
-        Integer parentRequestId = TextUtils.isEmpty(parentRequestIdText)
-                ? null
-                : Integer.parseInt(parentRequestIdText);
+
 
         ServiceRequestCreateUpdateRequest request = new ServiceRequestCreateUpdateRequest(
                 customerId,
                 createdByUserId,
                 assignedTechnicianUserId,
-                parentRequestId,
                 requestType,
                 priority,
                 status,

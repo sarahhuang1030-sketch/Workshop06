@@ -13,7 +13,6 @@ public class ServiceRequestCreateUpdateRequest {
     public ServiceRequestCreateUpdateRequest(Integer customerId,
                                              Integer createdByUserId,
                                              Integer assignedTechnicianUserId,
-                                             Integer parentRequestId,
                                              String requestType,
                                              String priority,
                                              String status,
@@ -21,7 +20,6 @@ public class ServiceRequestCreateUpdateRequest {
         this.customerId = customerId;
         this.createdByUserId = createdByUserId;
         this.assignedTechnicianUserId = assignedTechnicianUserId;
-        this.parentRequestId = parentRequestId;
         this.requestType = requestType;
         this.priority = priority;
         this.status = status;

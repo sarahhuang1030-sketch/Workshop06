@@ -214,6 +214,10 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     ManagerSummaryResponse data = response.body();
 
+                    android.util.Log.d("ManagerSummary", "pastDue = " + data.getPastDue());
+                    android.util.Log.d("ManagerSummary", "activeSubs = " + data.getActiveSubscriptions());
+                    android.util.Log.d("ManagerSummary", "locations = " + data.getTotalLocations());
+
                     items.add(new DashboardMenuItem(
                             "👥",
                             "Customers",
@@ -293,7 +297,7 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
                     DashboardMenuItem pastDueItem = new DashboardMenuItem(
                             "⚠️",
                             "Past Due",
-                            data.getOpenInvoices() + " past due",
+                            data.getPastDue() + " past due",
                             R.drawable.bg_card_top_accent_red,
                             R.drawable.bg_icon_red,
                             InvoiceListActivity.class

@@ -8,6 +8,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.workshop06.R;
 import com.example.workshop06.model.QuoteResponse;
 
 import java.util.ArrayList;
@@ -20,7 +21,6 @@ public class QuoteCustomerAdapter extends RecyclerView.Adapter<QuoteCustomerAdap
     private final List<QuoteResponse> allQuotes = new ArrayList<>();
     private final List<Integer> uniqueCustomerIds = new ArrayList<>();
     private final List<String> uniqueCustomerNames = new ArrayList<>();
-
     private final List<Integer> displayedCustomerIds = new ArrayList<>();
     private final List<String> displayedCustomerNames = new ArrayList<>();
 
@@ -46,7 +46,9 @@ public class QuoteCustomerAdapter extends RecyclerView.Adapter<QuoteCustomerAdap
                 if (q.getCustomerId() != null && !seenIds.contains(q.getCustomerId())) {
                     seenIds.add(q.getCustomerId());
                     uniqueCustomerIds.add(q.getCustomerId());
-                    uniqueCustomerNames.add(q.getCustomerName() != null ? q.getCustomerName() : "Unknown");
+                    uniqueCustomerNames.add(
+                            q.getCustomerName() != null ? q.getCustomerName() : "Unknown"
+                    );
                 }
             }
         }
@@ -59,7 +61,8 @@ public class QuoteCustomerAdapter extends RecyclerView.Adapter<QuoteCustomerAdap
 
         String lowerQuery = query.toLowerCase().trim();
         for (int i = 0; i < uniqueCustomerIds.size(); i++) {
-            if (lowerQuery.isEmpty() || uniqueCustomerNames.get(i).toLowerCase().contains(lowerQuery)) {
+            if (lowerQuery.isEmpty() ||
+                    uniqueCustomerNames.get(i).toLowerCase().contains(lowerQuery)) {
                 displayedCustomerIds.add(uniqueCustomerIds.get(i));
                 displayedCustomerNames.add(uniqueCustomerNames.get(i));
             }
@@ -71,7 +74,7 @@ public class QuoteCustomerAdapter extends RecyclerView.Adapter<QuoteCustomerAdap
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(android.R.layout.simple_list_item_1, parent, false);
+                .inflate(R.layout.item_quote_customer, parent, false);
         return new ViewHolder(view);
     }
 
@@ -79,7 +82,13 @@ public class QuoteCustomerAdapter extends RecyclerView.Adapter<QuoteCustomerAdap
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         String name = displayedCustomerNames.get(position);
         int id = displayedCustomerIds.get(position);
-        holder.text1.setText(name);
+
+        holder.tvCustomerName.setText(name);
+
+        // Generate initials (e.g. "John Doe" → "JD")
+        String initials = getInitials(name);
+        holder.tvInitials.setText(initials);
+
         holder.itemView.setOnClickListener(v -> listener.onCustomerClick(id, name));
     }
 
@@ -88,11 +97,21 @@ public class QuoteCustomerAdapter extends RecyclerView.Adapter<QuoteCustomerAdap
         return displayedCustomerIds.size();
     }
 
+    // Extract up to 2 initials from name
+    private String getInitials(String name) {
+        if (name == null || name.trim().isEmpty()) return "?";
+        String[] parts = name.trim().split("\\s+");
+        if (parts.length == 1) return parts[0].substring(0, 1).toUpperCase();
+        return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+    }
+
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView text1;
+        TextView tvInitials, tvCustomerName;
+
         ViewHolder(View itemView) {
             super(itemView);
-            text1 = itemView.findViewById(android.R.id.text1);
+            tvInitials     = itemView.findViewById(R.id.tvInitials);
+            tvCustomerName = itemView.findViewById(R.id.tvCustomerName);
         }
     }
 }

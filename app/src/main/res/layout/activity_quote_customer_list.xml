@@ -79,8 +79,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_search_border"
-                android:queryHint="Search customer name"
-                android:iconifiedByDefault="false" />
+                app:queryHint="Search customer name"
+                app:iconifiedByDefault="false" />
         </LinearLayout>
     </LinearLayout>
 

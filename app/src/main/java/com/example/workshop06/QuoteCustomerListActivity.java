@@ -82,16 +82,20 @@ public class QuoteCustomerListActivity extends AppCompatActivity {
     }
 
     private void setupSearch() {
+        searchView.setIconifiedByDefault(false);
+        searchView.setSubmitButtonEnabled(false);
+        searchView.clearFocus();
+
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                adapter.filter(query);
+                adapter.filter(query == null ? "" : query);
                 return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                adapter.filter(newText);
+                adapter.filter(newText == null ? "" : newText);
                 return true;
             }
         });

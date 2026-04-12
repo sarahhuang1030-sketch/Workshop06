@@ -214,10 +214,6 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     ManagerSummaryResponse data = response.body();
 
-                    android.util.Log.d("ManagerSummary", "pastDue = " + data.getPastDue());
-                    android.util.Log.d("ManagerSummary", "activeSubs = " + data.getActiveSubscriptions());
-                    android.util.Log.d("ManagerSummary", "locations = " + data.getTotalLocations());
-
                     items.add(new DashboardMenuItem(
                             "👥",
                             "Customers",
@@ -242,9 +238,8 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
                             "View customer quotes",
                             R.drawable.bg_card_top_accent_purple,
                             R.drawable.bg_icon_lavender,
-                            QuotesListActivity.class
+                            QuoteCustomerListActivity.class
                     );
-                    quotesItem.setExtra("statusFilter", "Pending");
                     items.add(quotesItem);
 
                     DashboardMenuItem revenueItem = new DashboardMenuItem(

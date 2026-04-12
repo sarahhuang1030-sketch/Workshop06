@@ -1,59 +1,36 @@
 package com.example.workshop06.model;
 
+import com.google.gson.annotations.SerializedName;
+import java.util.List;
+
 public class QuoteResponse {
 
+    @SerializedName("id")
     private Integer quoteId;
+
+    @SerializedName("customerId")
     private Integer customerId;
+
+    @SerializedName("customerName")
     private String customerName;
-    private String planName;
-    private String status;
+
+    @SerializedName("planId")
+    private Integer planId;
+
+    @SerializedName("addonIds")
+    private List<Integer> addonIds;
+
+    @SerializedName("amount")
     private Double totalAmount;
 
-    public Integer getQuoteId() {
-        return quoteId;
-    }
+    @SerializedName("status")
+    private String status;
 
-    public void setQuoteId(Integer quoteId) {
-        this.quoteId = quoteId;
-    }
-
-    public Integer getCustomerId() {
-        return customerId;
-    }
-
-    public void setCustomerId(Integer customerId) {
-        this.customerId = customerId;
-    }
-
-    public String getCustomerName() {
-        return customerName;
-    }
-
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
-    }
-
-    public String getPlanName() {
-        return planName;
-    }
-
-    public void setPlanName(String planName) {
-        this.planName = planName;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public Double getTotalAmount() {
-        return totalAmount;
-    }
-
-    public void setTotalAmount(Double totalAmount) {
-        this.totalAmount = totalAmount;
-    }
+    public Integer getQuoteId() { return quoteId; }
+    public Integer getCustomerId() { return customerId; }
+    public String getCustomerName() { return customerName; }
+    public Integer getPlanId() { return planId; }
+    public List<Integer> getAddonIds() { return addonIds; }
+    public Double getTotalAmount() { return totalAmount; }
+    public String getStatus() { return status; }
 }

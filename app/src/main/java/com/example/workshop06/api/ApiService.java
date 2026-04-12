@@ -34,6 +34,7 @@ import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 public interface ApiService {
     @POST("api/auth/login")
@@ -394,9 +395,17 @@ Call<List<EmployeeSalesResponse>> getEmployeeSales();
     Call<List<QuoteResponse>> getQuotes();
     @POST("/api/quotes")
     Call<QuoteResponse> createQuote(@Body QuoteRequest request);
-    @GET("/api/plans")
-    Call<List<PlanResponse>> getPlans();
 
+//    @GET("/api/plans")
+//    Call<List<PlanResponse>> getPlans();
+    @GET("/api/plans")
+    Call<List<PlanResponse>> getPlans(@Query("type") String type);
+
+    @PUT("/api/quotes/{id}")
+    Call<QuoteResponse> updateQuote(@Path("id") int id, @Body QuoteRequest body);
+
+    @PATCH("/api/quotes/{id}/cancel")
+    Call<QuoteResponse> cancelQuote(@Path("id") int id);
 //    @GET("/api/addons")
 //    Call<List<AddOnResponse>> getAddOns();
 }

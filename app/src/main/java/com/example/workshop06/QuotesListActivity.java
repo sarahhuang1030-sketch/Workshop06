@@ -1,11 +1,14 @@
 package com.example.workshop06;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -20,6 +23,7 @@ import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.QuoteResponse;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
@@ -36,6 +40,16 @@ public class QuotesListActivity extends AppCompatActivity {
     private MaterialAutoCompleteTextView spinnerStatusFilter;
     private String currentQuery = "";
     private String currentStatus = "All";
+    private int filterCustomerId = -1;
+
+    private final Handler refreshHandler = new Handler(Looper.getMainLooper());
+    private final Runnable refreshRunnable = new Runnable() {
+        @Override
+        public void run() {
+            loadQuotes();
+            refreshHandler.postDelayed(this, 30000);
+        }
+    };
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -44,6 +58,16 @@ public class QuotesListActivity extends AppCompatActivity {
 
         btnBack = findViewById(R.id.btnBack);
         btnBack.setOnClickListener(v -> finish());
+
+        filterCustomerId = getIntent().getIntExtra("customerId", -1);
+        String customerName = getIntent().getStringExtra("customerName");
+
+        if (customerName != null) {
+            TextView tvHeaderTitle = findViewById(R.id.tvHeaderTitle);
+            if (tvHeaderTitle != null) {
+                tvHeaderTitle.setText("Quotes for " + customerName);
+            }
+        }
 
         recyclerView = findViewById(R.id.recyclerSubscriptions);
         progressBar = findViewById(R.id.progressBar);
@@ -54,11 +78,25 @@ public class QuotesListActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         adapter = new QuoteAdapter();
+        adapter.setOnQuoteChangedListener(() -> loadQuotes());
         recyclerView.setAdapter(adapter);
 
         setupSearch();
         setupStatusFilter();
         loadQuotes();
+        BottomNavHelper.setup(this, 0);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshHandler.postDelayed(refreshRunnable, 30000);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        refreshHandler.removeCallbacks(refreshRunnable);
     }
 
     private void setupStatusFilter() {
@@ -104,7 +142,9 @@ public class QuotesListActivity extends AppCompatActivity {
     }
 
     private void loadQuotes() {
-        progressBar.setVisibility(View.VISIBLE);
+        if (progressBar.getVisibility() != View.VISIBLE && (adapter == null || adapter.getItemCount() == 0)) {
+            progressBar.setVisibility(View.VISIBLE);
+        }
 
         ApiService apiService = RetrofitClient.getRetrofitInstance(this)
                 .create(ApiService.class);
@@ -119,6 +159,16 @@ public class QuotesListActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
 
                     List<QuoteResponse> data = response.body();
+
+                    if (filterCustomerId != -1) {
+                        List<QuoteResponse> filtered = new ArrayList<>();
+                        for (QuoteResponse q : data) {
+                            if (q.getCustomerId() != null && q.getCustomerId() == filterCustomerId) {
+                                filtered.add(q);
+                            }
+                        }
+                        data = filtered;
+                    }
 
                     adapter.updateData(data);
 

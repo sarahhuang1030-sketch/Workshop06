@@ -1,6 +1,7 @@
 package com.example.workshop06;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
@@ -33,6 +34,7 @@ public class CustomBundleActivity extends AppCompatActivity {
     private List<CustomerResponse> customers = new ArrayList<>();
     private List<PlanResponse> plans = new ArrayList<>();
     private List<AddOnResponse> addons = new ArrayList<>();
+    private List<ServiceTypeResponse> serviceTypes = new ArrayList<>();
     private Integer selectedPlanId;
     private List<Integer> selectedAddonIds = new ArrayList<>();
     private double total = 0;
@@ -64,6 +66,7 @@ public class CustomBundleActivity extends AppCompatActivity {
         tvSummary = findViewById(R.id.tvSummary);
 
         btnSubmit = findViewById(R.id.btnSubmit);
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
         // service type
         rgServiceType.setOnCheckedChangeListener((group, checkedId) -> {
@@ -97,11 +100,34 @@ public class CustomBundleActivity extends AppCompatActivity {
             public void onFailure(Call<List<CustomerResponse>> call, Throwable t) {}
         });
 
-        api.getPlans().enqueue(new Callback<List<PlanResponse>>() {
+        api.getServiceTypes().enqueue(new Callback<List<ServiceTypeResponse>>() {
+            @Override
+            public void onResponse(Call<List<ServiceTypeResponse>> call, Response<List<ServiceTypeResponse>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    serviceTypes = response.body();
+                    loadPlansAndAddons();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<ServiceTypeResponse>> call, Throwable t) {}
+        });
+    }
+
+    private void loadPlansAndAddons() {
+        ApiService api = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
+
+        Log.d("DEBUG", "serviceTypes size: " + serviceTypes.size());
+        for (ServiceTypeResponse st : serviceTypes) {
+            Log.d("DEBUG", "ServiceType: id=" + st.getServiceTypeId() + " name=" + st.getName());
+        }
+        Log.d("DEBUG", "selectedServiceType: " + selectedServiceType);
+
+        api.getPlans(selectedServiceType).enqueue(new Callback<List<PlanResponse>>() {
             @Override
             public void onResponse(Call<List<PlanResponse>> call, Response<List<PlanResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    plans = filterPlans(response.body());
+                    plans = response.body();
                     renderPlans();
                 }
             }
@@ -166,21 +192,27 @@ public class CustomBundleActivity extends AppCompatActivity {
 //        }
 //        return res;
 //    }
-    private List<PlanResponse> filterPlans(List<PlanResponse> list) {
-        return list;
+
+    private List<AddOnResponse> filterAddons(List<AddOnResponse> list) {
+        Integer typeId = getServiceTypeId(selectedServiceType);
+        if (typeId == null) return list;
+
+        List<AddOnResponse> res = new ArrayList<>();
+        for (AddOnResponse a : list) {
+            if (typeId.equals(a.getServiceTypeId())) {
+                res.add(a);
+            }
+        }
+        return res;
     }
 
-//    private List<AddOnResponse> filterAddons(List<AddOnResponse> list) {
-//        List<AddOnResponse> res = new ArrayList<>();
-//        for (AddOnResponse a : list) {
-//            if (selectedServiceType.equalsIgnoreCase(a.getServiceTypeName())) {
-//                res.add(a);
-//            }
-//        }
-//        return res;
-//    }
-    private List<AddOnResponse> filterAddons(List<AddOnResponse> list) {
-        return list;
+    private Integer getServiceTypeId(String name) {
+        for (ServiceTypeResponse st : serviceTypes) {
+            if (st.getName() != null && st.getName().equalsIgnoreCase(name)) {
+                return st.getServiceTypeId();
+            }
+        }
+        return null;
     }
 
     // =========================

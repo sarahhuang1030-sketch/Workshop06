@@ -2,6 +2,8 @@ package com.example.workshop06;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
@@ -36,6 +38,15 @@ import retrofit2.Response;
 
 public class InvoiceListActivity extends AppCompatActivity {
 
+    private final Handler refreshHandler = new Handler(Looper.getMainLooper());
+    private final Runnable refreshRunnable = new Runnable() {
+        @Override
+        public void run() {
+            loadInvoices();
+            refreshHandler.postDelayed(this, 30000);
+        }
+    };
+
     private TextView tvHeaderTitle;
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
@@ -62,6 +73,18 @@ public class InvoiceListActivity extends AppCompatActivity {
                     loadInvoices();
                 }
             });
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshHandler.postDelayed(refreshRunnable, 30000);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        refreshHandler.removeCallbacks(refreshRunnable);
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -152,7 +175,7 @@ public class InvoiceListActivity extends AppCompatActivity {
         ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_dropdown_item_1line,
-                new String[]{"All", "Active", "Inactive"}
+                new String[]{"All", "Paid", "Unpaid", "Approved"}
         );
         spinnerStatusFilter.setAdapter(statusAdapter);
         spinnerStatusFilter.setText("All", false);
@@ -185,7 +208,9 @@ public class InvoiceListActivity extends AppCompatActivity {
     }
 
     private void loadInvoices() {
-        progressBar.setVisibility(View.VISIBLE);
+        if (progressBar.getVisibility() != View.VISIBLE && allInvoices.isEmpty()) {
+            progressBar.setVisibility(View.VISIBLE);
+        }
 
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
         apiService.getAllInvoicesAdmin().enqueue(new Callback<List<InvoiceResponse>>() {
@@ -269,32 +294,22 @@ public class InvoiceListActivity extends AppCompatActivity {
                             || invoiceNumber.toLowerCase().contains(query)
                             || customerName.toLowerCase().contains(query);
 
-            boolean matchesStatus =
-                    selectedStatus.isEmpty()
-                            || selectedStatus.equalsIgnoreCase("All")
-                            || status.equalsIgnoreCase(selectedStatus);
+            boolean matchesStatus = false;
+            if (selectedStatus.equalsIgnoreCase("All") || selectedStatus.isEmpty()) {
+                matchesStatus = true;
+            } else if (selectedStatus.equalsIgnoreCase("Unpaid")) {
+                matchesStatus = !status.equalsIgnoreCase("Paid") && !status.equalsIgnoreCase("Success");
+            } else {
+                matchesStatus = status.equalsIgnoreCase(selectedStatus);
+            }
 
             boolean matchesAmount = matchesAmountRange(total, selectedAmount);
 
             boolean matchesPastDue = true;
             if (pastDueMode) {
-                matchesPastDue = false;
-                String issueDate = item.getIssueDate();
                 String itemStatus = safe(item.getStatus());
                 boolean isUnpaid = !itemStatus.equalsIgnoreCase("Paid") && !itemStatus.equalsIgnoreCase("Success");
-
-                if (issueDate != null && isUnpaid) {
-                    try {
-                        java.util.Date date = sdf.parse(issueDate);
-                        cal.setTime(date);
-                        int itemYear = cal.get(java.util.Calendar.YEAR);
-                        int itemMonth = cal.get(java.util.Calendar.MONTH);
-
-                        if (itemYear < currentYear || (itemYear == currentYear && itemMonth < currentMonth)) {
-                            matchesPastDue = true;
-                        }
-                    } catch (Exception ignored) {}
-                }
+                matchesPastDue = isUnpaid;
             }
 
             if (matchesSearch && matchesStatus && matchesAmount && matchesPastDue) {

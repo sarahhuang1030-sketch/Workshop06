@@ -74,8 +74,8 @@ public class ManagerSummaryResponse {
         return serviceAppointments != null ? serviceAppointments : 0L;
     }
 
-    // ❗ KEEP EXACTLY
     public long getTotalEmployees() {
         return totalEmployees != null ? totalEmployees : 0L;
     }
+
 }

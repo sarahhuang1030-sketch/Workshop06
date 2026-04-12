@@ -1,5 +1,7 @@
 package com.example.workshop06.model;
 
+import com.google.gson.annotations.SerializedName;
+
 public class AddOnResponse {
     private Integer addOnId;
     private Integer serviceTypeId;
@@ -9,6 +11,8 @@ public class AddOnResponse {
     private Boolean isActive;
     private String iconKey;
     private String themeKey;
+    @SerializedName("serviceTypeName")
+    private String serviceTypeName;
 
     public Integer getAddOnId() { return addOnId; }
     public void setAddOnId(Integer addOnId) { this.addOnId = addOnId; }
@@ -27,7 +31,7 @@ public class AddOnResponse {
 
     public Boolean getIsActive() { return isActive; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
-
+    public String getServiceTypeName() { return serviceTypeName; }
     public String getIconKey() { return iconKey; }
     public void setIconKey(String iconKey) { this.iconKey = iconKey; }
 

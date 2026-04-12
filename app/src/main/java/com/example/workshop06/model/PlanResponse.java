@@ -1,5 +1,7 @@
 package com.example.workshop06.model;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.List;
 
 public class PlanResponse {
@@ -17,6 +19,11 @@ public class PlanResponse {
     private String dataLabel;
 
     private String addOnNames;
+
+    @SerializedName("serviceType")
+    private String serviceType;
+
+    public String getServiceType() { return serviceType; }
 
     public Integer getPlanId() { return planId; }
     public Integer getServiceTypeId() { return serviceTypeId; }

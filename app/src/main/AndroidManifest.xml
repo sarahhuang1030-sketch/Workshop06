@@ -48,6 +48,7 @@
         <activity android:name=".SubscriptionFormActivity" />
         <activity android:name=".AddOnListActivity" />
         <activity android:name=".AddOnFormActivity" />
+        <activity android:name=".QuoteCustomerListActivity" />
         <activity android:name=".QuotesListActivity" />
         <activity android:name=".CustomBundleActivity" />
         <activity android:name=".InvoiceListActivity" />

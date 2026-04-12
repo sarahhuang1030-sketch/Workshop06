@@ -4,6 +4,8 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -38,6 +40,15 @@ import retrofit2.Response;
 
 public class CustomerListActivity extends AppCompatActivity {
 
+    private final Handler refreshHandler = new Handler(Looper.getMainLooper());
+    private final Runnable refreshRunnable = new Runnable() {
+        @Override
+        public void run() {
+            loadCustomers();
+            refreshHandler.postDelayed(this, 30000);
+        }
+    };
+
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private TextView tvEmpty;
@@ -58,6 +69,18 @@ public class CustomerListActivity extends AppCompatActivity {
 
     private final ActivityResultLauncher<Intent> formLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> loadCustomers());
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshHandler.postDelayed(refreshRunnable, 30000);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        refreshHandler.removeCallbacks(refreshRunnable);
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -262,8 +285,10 @@ public class CustomerListActivity extends AppCompatActivity {
     }
 
     private void loadCustomers() {
-        showLoading(true);
-        showEmpty(false);
+        if (progressBar.getVisibility() != View.VISIBLE && (adapter == null || adapter.getItemCount() == 0)) {
+            showLoading(true);
+            showEmpty(false);
+        }
 
         SharedPreferences prefs = getSharedPreferences("teleconnect_prefs", MODE_PRIVATE);
         String role = prefs.getString("user_role", "");

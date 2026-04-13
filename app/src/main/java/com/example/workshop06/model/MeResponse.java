@@ -1,6 +1,7 @@
 package com.example.workshop06.model;
 
 public class MeResponse {
+    private Integer userId;
     private Integer employeeId;
     private Integer customerId;
 
@@ -22,7 +23,7 @@ public class MeResponse {
     private String hireDate;
     private Integer managerId;
 
-
+    public Integer getUserId() { return userId; }
     public Integer getEmployeeId() { return employeeId; }
     public Integer getCustomerId() { return customerId; }
 

@@ -1,6 +1,7 @@
 package com.example.workshop06.model;
 
 public class EmployeeResponse {
+    private Integer userId;
     private Integer employeeId;
     private Integer primaryLocationId;
     private Integer reportsToEmployeeId;
@@ -15,10 +16,13 @@ public class EmployeeResponse {
     private Integer managerId;
     private Integer roleId;
 
-    // keep compatibility with older / different backend responses
     private String role;
     private String roleName;
     private String positionTitle;
+
+    public Integer getUserId() {
+        return userId;
+    }
 
     public Integer getEmployeeId() {
         return employeeId;

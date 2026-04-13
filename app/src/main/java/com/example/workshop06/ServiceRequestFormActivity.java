@@ -21,6 +21,7 @@ import com.example.workshop06.model.EmployeeResponse;
 import com.example.workshop06.model.MeResponse;
 import com.example.workshop06.model.ServiceRequestCreateUpdateRequest;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
+import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,10 +46,10 @@ public class ServiceRequestFormActivity extends BaseActivity {
     private EditText etAssignedTechnicianUserId;
 
     private EditText etDescription;
-    private EditText etRequestType;
 
     private MaterialAutoCompleteTextView spinnerPriority;
     private MaterialAutoCompleteTextView spinnerStatus;
+    private MaterialAutoCompleteTextView spinnerRequestType;
 
     private Button btnSave;
     private ImageButton btnBack;
@@ -61,6 +62,7 @@ public class ServiceRequestFormActivity extends BaseActivity {
     private final List<EmployeeResponse> technicianList = new ArrayList<>();
 
     private ApiService apiService;
+    private TextInputLayout layoutCreatedByName;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -91,10 +93,11 @@ public class ServiceRequestFormActivity extends BaseActivity {
 
         etCustomerId = findViewById(R.id.etCustomerId);
         etCreatedByUserId = findViewById(R.id.etCreatedByUserId);
+        layoutCreatedByName = findViewById(R.id.layoutCreatedByName);
         etAssignedTechnicianUserId = findViewById(R.id.etAssignedTechnicianUserId);
 
         etDescription = findViewById(R.id.etDescription);
-        etRequestType = findViewById(R.id.etRequestType);
+        spinnerRequestType = findViewById(R.id.spinnerRequestType);
 
         spinnerPriority = findViewById(R.id.spinnerPriority);
         spinnerStatus = findViewById(R.id.spinnerStatus);
@@ -118,6 +121,20 @@ public class ServiceRequestFormActivity extends BaseActivity {
                 new String[]{"Open", "Assigned", "In Progress", "Completed", "Cancelled"}
         );
         spinnerStatus.setAdapter(statusAdapter);
+
+        ArrayAdapter<String> requestTypeAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_dropdown_item_1line,
+                new String[]{"Billing Inquiry", "Installation", "Repair", "Technical Support", "Upgrade", "Other"}
+        );
+        spinnerRequestType.setAdapter(requestTypeAdapter);
+        spinnerRequestType.setKeyListener(null);
+        spinnerRequestType.setOnClickListener(v -> spinnerRequestType.showDropDown());
+        spinnerRequestType.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                spinnerRequestType.showDropDown();
+            }
+        });
     }
 
     private void loadIntentData() {
@@ -159,7 +176,7 @@ public class ServiceRequestFormActivity extends BaseActivity {
             String description = getIntent().getStringExtra("description");
 
             if (!TextUtils.isEmpty(requestType)) {
-                etRequestType.setText(requestType);
+                spinnerRequestType.setText(requestType, false);
             }
             if (!TextUtils.isEmpty(description)) {
                 etDescription.setText(description);
@@ -252,9 +269,10 @@ public class ServiceRequestFormActivity extends BaseActivity {
                                     + " role=" + employee.getRole()
                                     + " roleName=" + employee.getRoleName()
                                     + " positionTitle=" + employee.getPositionTitle()
-                                    + " technician=" + technician);
+                                    + " technician=" + technician
+                                    + " userId=" + employee.getUserId());
 
-                    if (technician) {
+                    if (technician && employee.getUserId() != null) {
                         technicianList.add(employee);
                     }
                 }
@@ -271,8 +289,15 @@ public class ServiceRequestFormActivity extends BaseActivity {
     }
 
     private void loadCurrentUser() {
-        String token = "Bearer " + getSharedPreferences("teleconnect_prefs", MODE_PRIVATE)
+        String jwt = getSharedPreferences("teleconnect_prefs", MODE_PRIVATE)
                 .getString("jwt_token", "");
+
+        if (TextUtils.isEmpty(jwt)) {
+            Toast.makeText(this, "Missing login token", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String token = "Bearer " + jwt;
 
         apiService.getMe(token).enqueue(new Callback<MeResponse>() {
             @Override
@@ -286,10 +311,12 @@ public class ServiceRequestFormActivity extends BaseActivity {
 
                 MeResponse me = response.body();
 
-                String fullName = me.getFirstName() + " " + me.getLastName();
+                String firstName = me.getFirstName() == null ? "" : me.getFirstName().trim();
+                String lastName = me.getLastName() == null ? "" : me.getLastName().trim();
+                String fullName = (firstName + " " + lastName).trim();
 
                 etCreatedByName.setText(fullName);
-                etCreatedByUserId.setText(String.valueOf(me.getEmployeeId()));
+                etCreatedByUserId.setText(me.getUserId() == null ? "" : String.valueOf(me.getUserId()));
 
                 lockEditText(etCreatedByName);
             }
@@ -340,14 +367,14 @@ public class ServiceRequestFormActivity extends BaseActivity {
 
         etAssignedTechnicianName.setOnItemClickListener((parent, view, position, id) -> {
             EmployeeResponse selected = technicianList.get(position);
-            etAssignedTechnicianUserId.setText(String.valueOf(selected.getEmployeeId()));
+            etAssignedTechnicianUserId.setText(String.valueOf(selected.getUserId()));
             etAssignedTechnicianName.setError(null);
         });
 
         if (technicianList.isEmpty()) {
             etAssignedTechnicianName.setEnabled(false);
-            etAssignedTechnicianName.setHint("No technicians found");
-            Log.e(TAG, "No technicians found from employee API response");
+            etAssignedTechnicianName.setHint("No technicians with user accounts found");
+            Log.e(TAG, "No technicians with user accounts found from employee API response");
         } else {
             etAssignedTechnicianName.setEnabled(true);
         }
@@ -381,7 +408,7 @@ public class ServiceRequestFormActivity extends BaseActivity {
         String customerIdText = etCustomerId.getText().toString().trim();
         String createdByUserIdText = etCreatedByUserId.getText().toString().trim();
         String assignedTechnicianUserIdText = etAssignedTechnicianUserId.getText().toString().trim();
-        String requestType = etRequestType.getText().toString().trim();
+        String requestType = spinnerRequestType.getText().toString().trim();
         String description = etDescription.getText().toString().trim();
         String priority = spinnerPriority.getText().toString().trim();
         String status = spinnerStatus.getText().toString().trim();
@@ -393,14 +420,14 @@ public class ServiceRequestFormActivity extends BaseActivity {
         }
 
         if (TextUtils.isEmpty(createdByUserIdText)) {
-            etCreatedByName.setError("Created by is missing");
+            layoutCreatedByName.setError("Created by is missing");
             etCreatedByName.requestFocus();
             return;
         }
 
         if (TextUtils.isEmpty(requestType)) {
-            etRequestType.setError("Request type is required");
-            etRequestType.requestFocus();
+            spinnerRequestType.setError("Select Request Type");
+            spinnerRequestType.requestFocus();
             return;
         }
 

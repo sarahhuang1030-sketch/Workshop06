@@ -21,6 +21,7 @@ public class ServiceAppointmentAdapter extends RecyclerView.Adapter<ServiceAppoi
     public interface OnAppointmentActionListener {
         void onEdit(ServiceAppointmentResponse item);
         void onDelete(ServiceAppointmentResponse item);
+        void onOpenMap(ServiceAppointmentResponse item);
     }
 
     private final List<ServiceAppointmentResponse> fullList = new ArrayList<>();
@@ -129,6 +130,13 @@ public class ServiceAppointmentAdapter extends RecyclerView.Adapter<ServiceAppoi
 
         holder.btnDelete.setOnClickListener(v -> {
             if (!readOnlyMode && listener != null) listener.onDelete(item);
+        });
+
+        //make the address clickable
+        holder.tvAddress.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onOpenMap(item);
+            }
         });
     }
 

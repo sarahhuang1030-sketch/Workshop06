@@ -161,6 +161,22 @@ public interface ApiService {
     Call<List<SubscriptionStatusResponse>> getSubscriptionStatuses();
 
 
+    // service requests - technician
+    @GET("/api/service/service-requests")
+    Call<List<ServiceRequestResponse>> getServiceRequestsForTechnician();
+
+    @GET("/api/service/service-requests/{id}")
+    Call<ServiceRequestResponse> getServiceRequestByIdForTechnician(@Path("id") int id);
+
+    // service appointments - technician
+    @GET("/api/service/work-orders")
+    Call<List<ServiceWorkOrderDTO>> getMyWorkOrders();
+
+    @GET("/api/service/tickets")
+    Call<List<ServiceTicketDTO>> getMyTickets();
+
+
+
     // INVOICES
     @GET("/api/invoices/admin/all")
     Call<List<InvoiceResponse>> getAllInvoicesAdmin();

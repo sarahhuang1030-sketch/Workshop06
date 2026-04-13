@@ -17,7 +17,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import android.content.SharedPreferences;
 
+import com.example.workshop06.model.ServiceTicketDTO;
 import com.example.workshop06.adapter.ServiceRequestAdapter;
 import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
@@ -39,7 +41,7 @@ public class ServiceRequestListActivity extends BaseActivity {
 
     @Override
     protected void onRefresh() { loadServiceRequests(); }
-
+    private boolean isTechnician = false;
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private TextView tvEmpty;
@@ -65,6 +67,13 @@ public class ServiceRequestListActivity extends BaseActivity {
         btnBack = findViewById(R.id.btnBack);
 
         btnBack.setOnClickListener(v -> finish());
+
+        SharedPreferences prefs = getSharedPreferences("teleconnect_prefs", MODE_PRIVATE);
+        String role = prefs.getString("user_role", "");
+        isTechnician =
+                "Service Technician".equalsIgnoreCase(role)
+                        || "SERVICE_TECHNICIAN".equalsIgnoreCase(role)
+                        || "Technician".equalsIgnoreCase(role);
         initViews();
         setupRecyclerView();
         setupSearch();
@@ -249,29 +258,71 @@ public class ServiceRequestListActivity extends BaseActivity {
         showEmpty(false);
 
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
-        apiService.getServiceRequests().enqueue(new Callback<List<ServiceRequestResponse>>() {
-            @Override
-            public void onResponse(Call<List<ServiceRequestResponse>> call, Response<List<ServiceRequestResponse>> response) {
-                showLoading(false);
 
-                if (!response.isSuccessful()) {
-                    adapter.setData(null);
-                    showError("Failed to load service requests. Code: " + response.code());
-                    return;
+        if (isTechnician) {
+            apiService.getMyTickets().enqueue(new Callback<List<ServiceTicketDTO>>() {
+                @Override
+                public void onResponse(Call<List<ServiceTicketDTO>> call, Response<List<ServiceTicketDTO>> response) {
+                    showLoading(false);
+
+                    if (!response.isSuccessful() || response.body() == null) {
+                        adapter.setData(null);
+                        showError("Failed to load tickets. Code: " + response.code());
+                        return;
+                    }
+
+                    List<ServiceRequestResponse> converted = new ArrayList<>();
+
+                    for (ServiceTicketDTO t : response.body()) {
+                        ServiceRequestResponse r = new ServiceRequestResponse();
+                        r.setRequestId(t.getRequestId());
+                        r.setCustomerId(t.getCustomerId());
+                        r.setCustomerName(t.getCustomerName());
+                        r.setRequestType(t.getRequestType());
+                        r.setPriority(t.getPriority());
+                        r.setStatus(t.getStatus());
+                        r.setDescription(t.getDescription());
+                        r.setAssignedTechnicianUserId(t.getTechnicianUserId());
+                        r.setTechnicianName(t.getTechnicianName());
+                        converted.add(r);
+                    }
+
+                    adapter.setData(converted);
+                    applyFilters();
                 }
 
-                List<ServiceRequestResponse> data = response.body();
-                adapter.setData(data);
-                applyFilters();
-            }
+                @Override
+                public void onFailure(Call<List<ServiceTicketDTO>> call, Throwable t) {
+                    showLoading(false);
+                    adapter.setData(null);
+                    showError("Unable to load tickets");
+                }
+            });
+        } else {
+            apiService.getServiceRequests().enqueue(new Callback<List<ServiceRequestResponse>>() {
+                @Override
+                public void onResponse(Call<List<ServiceRequestResponse>> call, Response<List<ServiceRequestResponse>> response) {
+                    showLoading(false);
 
-            @Override
-            public void onFailure(Call<List<ServiceRequestResponse>> call, Throwable t) {
-                showLoading(false);
-                adapter.setData(null);
-                showError("Unable to load service requests");
-            }
-        });
+                    if (!response.isSuccessful()) {
+                        adapter.setData(null);
+                        showError("Failed to load service requests. Code: " + response.code());
+                        return;
+                    }
+
+                    List<ServiceRequestResponse> data = response.body();
+                    adapter.setData(data);
+                    applyFilters();
+                }
+
+                @Override
+                public void onFailure(Call<List<ServiceRequestResponse>> call, Throwable t) {
+                    showLoading(false);
+                    adapter.setData(null);
+                    showError("Unable to load service requests");
+                }
+            });
+        }
     }
 
     private void applyFilters() {

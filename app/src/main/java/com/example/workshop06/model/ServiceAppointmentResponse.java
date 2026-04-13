@@ -26,4 +26,36 @@ public class ServiceAppointmentResponse {
     public String getNotes() { return notes; }
     public String getTechnicianName() { return technicianName; }
     public String getAddressText() { return addressText; }
+
+    public void setAppointmentId(Integer appointmentId) {
+        this.appointmentId = appointmentId;
+    }
+
+    public void setRequestId(Integer requestId) {
+        this.requestId = requestId;
+    }
+
+    public void setTechnicianUserId(Integer technicianUserId) {
+        this.technicianUserId = technicianUserId;
+    }
+
+    public void setTechnicianName(String technicianName) {
+        this.technicianName = technicianName;
+    }
+
+    public void setScheduledStart(String scheduledStart) {
+        this.scheduledStart = scheduledStart;
+    }
+
+    public void setScheduledEnd(String scheduledEnd) {
+        this.scheduledEnd = scheduledEnd;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public void setAddressText(String addressText) {
+        this.addressText = addressText;
+    }
 }

@@ -26,6 +26,7 @@ import com.example.workshop06.model.EmployeeResponse;
 import com.example.workshop06.model.ServiceAppointmentResponse;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
+import com.example.workshop06.model.ServiceWorkOrderDTO;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,7 +73,10 @@ public class ServiceAppointmentListActivity extends BaseActivity {
 
         SharedPreferences prefs = getSharedPreferences("teleconnect_prefs", MODE_PRIVATE);
         String role = prefs.getString("user_role", "");
-        isTechnician = "Service Technician".equalsIgnoreCase(role);
+        isTechnician =
+                "Service Technician".equalsIgnoreCase(role)
+                        || "SERVICE_TECHNICIAN".equalsIgnoreCase(role)
+                        || "Technician".equalsIgnoreCase(role);
 
         requestId = getIntent().getIntExtra("requestId", -1);
         btnBack = findViewById(R.id.btnBack);
@@ -148,6 +152,23 @@ public class ServiceAppointmentListActivity extends BaseActivity {
                         .setNegativeButton("Cancel", null)
                         .show();
             }
+
+            @Override
+            public void onOpenMap(ServiceAppointmentResponse item) {
+                String address = item.getAddressText();
+
+                if (address == null || address.trim().isEmpty() || "—".equals(address.trim())) {
+                    Toast.makeText(ServiceAppointmentListActivity.this,
+                            "No address available for this appointment",
+                            Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                Intent intent = new Intent(ServiceAppointmentListActivity.this, NavMapActivity.class);
+                intent.putExtra("address_line", address);
+                intent.putExtra("job_title", "Appointment #" + item.getAppointmentId());
+                startActivity(intent);
+            }
         });
 
         adapter.setReadOnlyMode(isTechnician);
@@ -198,28 +219,74 @@ public class ServiceAppointmentListActivity extends BaseActivity {
         showLoading(true);
 
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
-        apiService.getServiceAppointments(requestId).enqueue(new Callback<List<ServiceAppointmentResponse>>() {
-            @Override
-            public void onResponse(Call<List<ServiceAppointmentResponse>> call, Response<List<ServiceAppointmentResponse>> response) {
-                showLoading(false);
 
-                if (!response.isSuccessful()) {
-                    showError("Failed to load appointments. Code: " + response.code());
-                    return;
+        if (isTechnician) {
+            apiService.getMyWorkOrders().enqueue(new Callback<List<ServiceWorkOrderDTO>>() {
+                @Override
+                public void onResponse(Call<List<ServiceWorkOrderDTO>> call, Response<List<ServiceWorkOrderDTO>> response) {
+                    showLoading(false);
+
+                    if (!response.isSuccessful() || response.body() == null) {
+                        adapter.setData(null);
+                        showError("Failed to load work orders. Code: " + response.code());
+                        return;
+                    }
+
+                    List<ServiceAppointmentResponse> converted = new ArrayList<>();
+
+                    for (ServiceWorkOrderDTO w : response.body()) {
+                        if (w.getRequestId() == null || !w.getRequestId().equals(requestId)) {
+                            continue;
+                        }
+
+                        ServiceAppointmentResponse a = new ServiceAppointmentResponse();
+                        a.setAppointmentId(w.getAppointmentId());
+                        a.setRequestId(w.getRequestId());
+                        a.setTechnicianUserId(w.getTechnicianUserId());
+                        a.setTechnicianName(w.getTechnicianName());
+                        a.setScheduledStart(w.getScheduledStart());
+                        a.setScheduledEnd(w.getScheduledEnd());
+                        a.setStatus(w.getStatus());
+                        a.setAddressText(w.getAddressText());
+
+                        converted.add(a);
+                    }
+
+                    adapter.setData(converted);
+                    applyFilters();
                 }
 
-                List<ServiceAppointmentResponse> data = response.body();
-                adapter.setData(data);
-                applyFilters();
-            }
+                @Override
+                public void onFailure(Call<List<ServiceWorkOrderDTO>> call, Throwable t) {
+                    showLoading(false);
+                    adapter.setData(null);
+                    showError("Unable to load work orders");
+                }
+            });
+        } else {
+            apiService.getServiceAppointments(requestId).enqueue(new Callback<List<ServiceAppointmentResponse>>() {
+                @Override
+                public void onResponse(Call<List<ServiceAppointmentResponse>> call, Response<List<ServiceAppointmentResponse>> response) {
+                    showLoading(false);
 
-            @Override
-            public void onFailure(Call<List<ServiceAppointmentResponse>> call, Throwable t) {
-                showLoading(false);
-                adapter.setData(null);
-                showError("Unable to load appointments");
-            }
-        });
+                    if (!response.isSuccessful()) {
+                        showError("Failed to load appointments. Code: " + response.code());
+                        return;
+                    }
+
+                    List<ServiceAppointmentResponse> data = response.body();
+                    adapter.setData(data);
+                    applyFilters();
+                }
+
+                @Override
+                public void onFailure(Call<List<ServiceAppointmentResponse>> call, Throwable t) {
+                    showLoading(false);
+                    adapter.setData(null);
+                    showError("Unable to load appointments");
+                }
+            });
+        }
     }
 
     private void deleteAppointment(int appointmentId) {
@@ -295,6 +362,7 @@ public class ServiceAppointmentListActivity extends BaseActivity {
         });
     }
 
+
     private void setupTechnicianFilter() {
         if (spinnerTechnicianFilter == null) return;
 
@@ -362,4 +430,6 @@ public class ServiceAppointmentListActivity extends BaseActivity {
         adapter.applyFilters(currentSearch, selectedStatus, selectedLocationType, selectedTechnician);
         showEmpty(adapter.getItemCount() == 0);
     }
+
+
 }

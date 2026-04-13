@@ -71,4 +71,42 @@ public class ServiceRequestResponse {
     public String getAddressText() {
         return addressText;
     }
+
+    public void setRequestId(Integer requestId) {
+        this.requestId = requestId;
+    }
+
+    public void setCustomerId(Integer customerId) {
+        this.customerId = customerId;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
+
+    public void setRequestType(String requestType) {
+        this.requestType = requestType;
+    }
+
+    public void setPriority(String priority) {
+        this.priority = priority;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setAssignedTechnicianUserId(Integer assignedTechnicianUserId) {
+        this.assignedTechnicianUserId = assignedTechnicianUserId;
+    }
+
+    public void setTechnicianName(String technicianName) {
+        this.technicianName = technicianName;
+    }
+
+
 }

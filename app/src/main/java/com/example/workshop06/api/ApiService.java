@@ -175,7 +175,11 @@ public interface ApiService {
     @GET("/api/service/tickets")
     Call<List<ServiceTicketDTO>> getMyTickets();
 
-
+    @PUT("/api/service/work-orders/{appointmentId}")
+    Call<Void> updateWorkOrder(
+            @Path("appointmentId") int appointmentId,
+            @Body TechnicianWorkOrderUpdateRequest request
+    );
 
     // INVOICES
 //    @GET("/api/invoices/admin/all")

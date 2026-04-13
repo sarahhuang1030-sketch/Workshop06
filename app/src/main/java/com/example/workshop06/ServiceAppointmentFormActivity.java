@@ -10,6 +10,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+import com.example.workshop06.model.TechnicianWorkOrderUpdateRequest;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -580,30 +581,67 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
 
         if ("edit".equalsIgnoreCase(mode) && appointmentId > 0) {
-            apiService.updateServiceAppointment(requestId, appointmentId, request)
-                    .enqueue(new Callback<ServiceAppointmentResponse>() {
-                        @Override
-                        public void onResponse(Call<ServiceAppointmentResponse> call, Response<ServiceAppointmentResponse> response) {
-                            showLoading(false);
-                            if (response.isSuccessful()) {
-                                Toast.makeText(ServiceAppointmentFormActivity.this, "Updated successfully", Toast.LENGTH_SHORT).show();
-                                setResult(RESULT_OK);
-                                finish();
-                            } else {
+
+            if (technicianLimitedEdit) {
+                TechnicianWorkOrderUpdateRequest techRequest =
+                        new TechnicianWorkOrderUpdateRequest(
+                                status,
+                                endText,
+                                notes
+                        );
+
+                apiService.updateWorkOrder(appointmentId, techRequest)
+                        .enqueue(new Callback<Void>() {
+                            @Override
+                            public void onResponse(Call<Void> call, Response<Void> response) {
+                                showLoading(false);
+                                if (response.isSuccessful()) {
+                                    Toast.makeText(ServiceAppointmentFormActivity.this, "Updated successfully", Toast.LENGTH_SHORT).show();
+                                    setResult(RESULT_OK);
+                                    finish();
+                                } else {
+                                    Toast.makeText(ServiceAppointmentFormActivity.this,
+                                            "Update failed. Code: " + response.code(),
+                                            Toast.LENGTH_LONG).show();
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(Call<Void> call, Throwable t) {
+                                showLoading(false);
                                 Toast.makeText(ServiceAppointmentFormActivity.this,
-                                        "Update failed. Code: " + response.code(),
+                                        "Unable to update appointment",
                                         Toast.LENGTH_LONG).show();
                             }
-                        }
+                        });
 
-                        @Override
-                        public void onFailure(Call<ServiceAppointmentResponse> call, Throwable t) {
-                            showLoading(false);
-                            Toast.makeText(ServiceAppointmentFormActivity.this,
-                                    "Unable to update appointment",
-                                    Toast.LENGTH_LONG).show();
-                        }
-                    });
+            } else {
+                apiService.updateServiceAppointment(requestId, appointmentId, request)
+                        .enqueue(new Callback<ServiceAppointmentResponse>() {
+                            @Override
+                            public void onResponse(Call<ServiceAppointmentResponse> call, Response<ServiceAppointmentResponse> response) {
+                                showLoading(false);
+                                if (response.isSuccessful()) {
+                                    Toast.makeText(ServiceAppointmentFormActivity.this, "Updated successfully", Toast.LENGTH_SHORT).show();
+                                    setResult(RESULT_OK);
+                                    finish();
+                                } else {
+                                    Toast.makeText(ServiceAppointmentFormActivity.this,
+                                            "Update failed. Code: " + response.code(),
+                                            Toast.LENGTH_LONG).show();
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(Call<ServiceAppointmentResponse> call, Throwable t) {
+                                showLoading(false);
+                                Toast.makeText(ServiceAppointmentFormActivity.this,
+                                        "Unable to update appointment",
+                                        Toast.LENGTH_LONG).show();
+                            }
+                        });
+            }
+
         } else {
             apiService.createServiceAppointment(requestId, request)
                     .enqueue(new Callback<ServiceAppointmentResponse>() {

@@ -162,7 +162,10 @@ public interface ApiService {
 
 
     // INVOICES
-    @GET("/api/invoices/admin/all")
+//    @GET("/api/invoices/admin/all")
+//    Call<List<InvoiceResponse>> getAllInvoicesAdmin();
+
+    @GET("/api/invoices/all")
     Call<List<InvoiceResponse>> getAllInvoicesAdmin();
 
     @GET("/api/invoices/{invoiceNumber}")

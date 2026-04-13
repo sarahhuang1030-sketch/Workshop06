@@ -200,9 +200,13 @@ public class EmployeeDashboardActivity extends BaseActivity {
                             R.drawable.bg_card_top_accent_magenta, R.drawable.bg_icon_lavender,
                             ServiceRequestListActivity.class));
 
-                    DashboardMenuItem pastDueItem = new DashboardMenuItem("⚠️", "Past Due",
+                    DashboardMenuItem pastDueItem = new DashboardMenuItem(
+                            "⚠️", "Past Due",
                             data.getPastDue() + " past due",
-                            R.drawable.bg_card_top_accent_red, R.drawable.bg_icon_red, InvoiceListActivity.class);
+                            R.drawable.bg_card_top_accent_red,
+                            R.drawable.bg_icon_red,
+                            PastDueActivity.class
+                    );
                     pastDueItem.setExtra("pastDueFilter", "true");
                     items.add(pastDueItem);
 

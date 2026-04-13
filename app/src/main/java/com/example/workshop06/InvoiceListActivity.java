@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
@@ -224,10 +225,20 @@ public class InvoiceListActivity extends BaseActivity {
                 progressBar.setVisibility(View.GONE);
 
                 if (response.isSuccessful() && response.body() != null) {
+                    Log.d("INVOICE", "Total from API: " + response.body().size());
+                    for (InvoiceResponse item : response.body()) {
+                        Log.d("INVOICE", "Invoice: " + item.getInvoiceNumber()
+                                + " status=" + item.getStatus()
+                                + " total=" + item.getTotal()
+                                + " customer=" + item.getCustomerName());
+                    }
+
                     allInvoices.clear();
                     allInvoices.addAll(response.body());
+                    Log.d("INVOICE", "pastDueMode=" + pastDueMode);
                     applyFilters();
                 } else {
+                    Log.e("INVOICE", "Response failed: " + response.code());
                     Toast.makeText(InvoiceListActivity.this, "Failed to load invoices", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -235,6 +246,7 @@ public class InvoiceListActivity extends BaseActivity {
             @Override
             public void onFailure(Call<List<InvoiceResponse>> call, Throwable t) {
                 progressBar.setVisibility(View.GONE);
+                Log.e("INVOICE", "Request failed: " + t.getMessage());
                 Toast.makeText(InvoiceListActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });

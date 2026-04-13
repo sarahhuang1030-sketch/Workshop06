@@ -81,7 +81,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="Created By">
+                android:hint="Assigned By">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etCreatedByName"
@@ -123,12 +123,13 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:hint="Request Type"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etRequestType"
+                <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                    android:id="@+id/spinnerRequestType"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
 

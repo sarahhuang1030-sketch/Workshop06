@@ -72,7 +72,6 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
         } else {
             showAddMode();
             loadServiceRequests();
-            loadTechnicians();
         }
     }
 
@@ -166,6 +165,12 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
 
         etTechnicianName.setText(!TextUtils.isEmpty(technicianName) ? technicianName : "—");
         etAddressText.setText(!TextUtils.isEmpty(addressText) ? addressText : "—");
+
+        if (!TextUtils.isEmpty(technicianName)) {
+            spinnerTechnician.setText(technicianName, false);
+        } else {
+            spinnerTechnician.setText("", false);
+        }
     }
 
     private void showAddMode() {
@@ -175,8 +180,20 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
 
         etTechnicianName.setVisibility(View.GONE);
         etAddressText.setVisibility(View.GONE);
+
+        lockDropdown(spinnerTechnician);
     }
 
+    private void lockDropdown(MaterialAutoCompleteTextView field) {
+        field.setEnabled(false);
+        field.setFocusable(false);
+        field.setFocusableInTouchMode(false);
+        field.setCursorVisible(false);
+        field.setKeyListener(null);
+        field.setClickable(false);
+        field.setLongClickable(false);
+        field.setAlpha(0.85f);
+    }
     private void showEditMode() {
         layoutRequestSpinner.setVisibility(View.GONE);
         layoutTechnicianSpinner.setVisibility(View.GONE);
@@ -184,6 +201,17 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
 
         etTechnicianName.setVisibility(View.VISIBLE);
         etAddressText.setVisibility(View.VISIBLE);
+
+        lockEditText(etTechnicianName);
+    }
+
+    private void lockEditText(EditText field) {
+        field.setEnabled(false);
+        field.setFocusable(false);
+        field.setFocusableInTouchMode(false);
+        field.setCursorVisible(false);
+        field.setKeyListener(null);
+        field.setAlpha(0.85f);
     }
 
     private void setDropdownValue(MaterialAutoCompleteTextView dropdown, String value) {
@@ -265,6 +293,12 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
                     for (int i = 0; i < requestOptions.size(); i++) {
                         if (requestOptions.get(i).requestId == requestId) {
                             spinnerRequest.setText(requestOptions.get(i).label, false);
+
+                            // 🔒 lock the request (read-only)
+                            spinnerRequest.setEnabled(false);
+                            spinnerRequest.setFocusable(false);
+                            spinnerRequest.setClickable(false);
+
                             loadAddressesForCustomer(requestOptions.get(i).customerId);
                             break;
                         }

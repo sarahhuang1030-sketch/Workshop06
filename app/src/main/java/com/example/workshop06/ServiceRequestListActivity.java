@@ -127,6 +127,11 @@ public class ServiceRequestListActivity extends BaseActivity {
                 intent.putExtra("customerName", item.getCustomerName());
                 intent.putExtra("requestType", item.getRequestType());
                 intent.putExtra("status", item.getStatus());
+
+                // 🔥 THIS IS THE MISSING PART
+                intent.putExtra("assignedTechnicianUserId", item.getAssignedTechnicianUserId());
+                intent.putExtra("technicianName", item.getTechnicianName());
+
                 startActivity(intent);
             }
         });

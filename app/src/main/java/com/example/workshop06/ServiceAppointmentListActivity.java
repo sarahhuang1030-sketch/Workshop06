@@ -185,6 +185,10 @@ public class ServiceAppointmentListActivity extends BaseActivity {
                 Intent intent = new Intent(ServiceAppointmentListActivity.this, ServiceAppointmentFormActivity.class);
                 intent.putExtra("mode", "add");
                 intent.putExtra("requestId", requestId);
+
+                intent.putExtra("technicianUserId", getIntent().getIntExtra("assignedTechnicianUserId", Integer.MIN_VALUE));
+                intent.putExtra("technicianName", getIntent().getStringExtra("technicianName"));
+
                 formLauncher.launch(intent);
             });
         }

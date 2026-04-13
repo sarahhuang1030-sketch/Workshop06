@@ -65,6 +65,10 @@ public class ServiceAppointmentListActivity extends BaseActivity {
 
     private ImageButton btnBack;
 
+    private String parentCustomerName;
+    private String parentRequestType;
+    private String parentRequestDescription;
+
     private final ActivityResultLauncher<Intent> formLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> loadAppointments());
 
@@ -112,15 +116,18 @@ public class ServiceAppointmentListActivity extends BaseActivity {
             setupTechnicianFilter();
         }
 
-        String customerName = getIntent().getStringExtra("customerName");
-        String requestType = getIntent().getStringExtra("requestType");
+        parentCustomerName = getIntent().getStringExtra("customerName");
+        parentRequestType = getIntent().getStringExtra("requestType");
+        parentRequestDescription = getIntent().getStringExtra("description");
 
         if (tvSubtitle != null) {
             if (dashboardMode && isTechnician) {
                 tvSubtitle.setText("My Assigned Appointments");
             } else {
-                tvSubtitle.setText((customerName != null ? customerName : "Service Request")
-                        + (requestType != null ? " • " + requestType : ""));
+                tvSubtitle.setText(
+                        (parentCustomerName != null && !parentCustomerName.trim().isEmpty() ? parentCustomerName : "Service Request")
+                                + (parentRequestType != null && !parentRequestType.trim().isEmpty() ? " • " + parentRequestType : "")
+                );
             }
         }
 
@@ -191,8 +198,47 @@ public class ServiceAppointmentListActivity extends BaseActivity {
                 }
 
                 Intent intent = new Intent(ServiceAppointmentListActivity.this, NavMapActivity.class);
+
+                // map / appointment info
                 intent.putExtra("address_line", address);
                 intent.putExtra("job_title", "Appointment #" + item.getAppointmentId());
+                intent.putExtra("appointmentId", item.getAppointmentId() != null ? item.getAppointmentId() : -1);
+                intent.putExtra("requestId", item.getRequestId() != null ? item.getRequestId() : requestId);
+                intent.putExtra("technicianUserId", item.getTechnicianUserId() != null ? item.getTechnicianUserId() : Integer.MIN_VALUE);
+                intent.putExtra("addressId", item.getAddressId() != null ? item.getAddressId() : Integer.MIN_VALUE);
+                intent.putExtra("locationId", item.getLocationId() != null ? item.getLocationId() : Integer.MIN_VALUE);
+                intent.putExtra("technicianName", item.getTechnicianName());
+                intent.putExtra("locationType", item.getLocationType());
+                intent.putExtra("scheduledStart", item.getScheduledStart());
+                intent.putExtra("scheduledEnd", item.getScheduledEnd());
+                intent.putExtra("status", item.getStatus());
+                intent.putExtra("notes", item.getNotes());
+
+                // related service request info
+                intent.putExtra(
+                        "customerName",
+                        item.getCustomerName() != null && !item.getCustomerName().trim().isEmpty()
+                                ? item.getCustomerName()
+                                : parentCustomerName
+                );
+
+                intent.putExtra(
+                        "requestType",
+                        item.getRequestType() != null && !item.getRequestType().trim().isEmpty()
+                                ? item.getRequestType()
+                                : parentRequestType
+                );
+
+                intent.putExtra(
+                        "requestDescription",
+                        item.getRequestDescription() != null && !item.getRequestDescription().trim().isEmpty()
+                                ? item.getRequestDescription()
+                                : parentRequestDescription
+                );
+
+                // permission
+                intent.putExtra("technicianLimitedEdit", isTechnician);
+
                 startActivity(intent);
             }
         });
@@ -284,6 +330,11 @@ public class ServiceAppointmentListActivity extends BaseActivity {
                         a.setAddressText(w.getAddressText());
                         a.setLocationType(w.getLocationType());
                         a.setNotes(w.getNotes());
+
+                        // add these 3 lines
+                        a.setCustomerName(w.getCustomerName());
+                        a.setRequestType(w.getRequestType());
+                        a.setRequestDescription(w.getRequestDescription());
 
                         converted.add(a);
                     }

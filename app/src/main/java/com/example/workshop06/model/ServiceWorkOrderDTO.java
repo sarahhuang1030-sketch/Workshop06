@@ -28,14 +28,23 @@ public class ServiceWorkOrderDTO {
     @SerializedName("addressText")
     private String addressText;
 
-    // ✅ NEW FIELDS
     @SerializedName("locationType")
     private String locationType;
 
     @SerializedName("notes")
     private String notes;
 
-    // ===== GETTERS =====
+    @SerializedName("customerName")
+    private String customerName;
+
+    @SerializedName("requestType")
+    private String requestType;
+
+    @SerializedName("requestDescription")
+    private String requestDescription;
+
+    @SerializedName("priority")
+    private String priority;
 
     public Integer getAppointmentId() {
         return appointmentId;
@@ -69,13 +78,27 @@ public class ServiceWorkOrderDTO {
         return addressText;
     }
 
-    // ✅ NEW GETTERS
-
     public String getLocationType() {
         return locationType;
     }
 
     public String getNotes() {
         return notes;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public String getRequestType() {
+        return requestType;
+    }
+
+    public String getRequestDescription() {
+        return requestDescription;
+    }
+
+    public String getPriority() {
+        return priority;
     }
 }

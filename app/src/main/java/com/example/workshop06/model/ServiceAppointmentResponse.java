@@ -14,6 +14,10 @@ public class ServiceAppointmentResponse {
     private String technicianName;
     private String addressText;
 
+    private String customerName;
+    private String requestType;
+    private String requestDescription;
+
     public Integer getAppointmentId() {
         return appointmentId;
     }
@@ -108,5 +112,29 @@ public class ServiceAppointmentResponse {
 
     public void setAddressText(String addressText) {
         this.addressText = addressText;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
+
+    public String getRequestType() {
+        return requestType;
+    }
+
+    public void setRequestType(String requestType) {
+        this.requestType = requestType;
+    }
+
+    public String getRequestDescription() {
+        return requestDescription;
+    }
+
+    public void setRequestDescription(String requestDescription) {
+        this.requestDescription = requestDescription;
     }
 }

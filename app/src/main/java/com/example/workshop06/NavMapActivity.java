@@ -8,7 +8,9 @@ import android.location.Geocoder;
 import android.os.Bundle;
 import android.os.Looper;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -29,6 +31,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.JointType;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
@@ -36,7 +39,6 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.gms.maps.model.LatLngBounds;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -68,6 +70,18 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
     private BottomNavigationView bottomNavigation;
     private ProgressBar progressBar;
 
+    private TextView tvOverlayAppointmentTitle;
+    private TextView tvOverlayTechnician;
+    private TextView tvOverlayLocationType;
+    private TextView tvOverlayAddress;
+    private TextView tvOverlayScheduledStart;
+    private TextView tvOverlayScheduledEnd;
+    private TextView tvOverlayStatus;
+    private TextView tvOverlayRequestType;
+    private TextView tvOverlayRequestDescription;
+    private TextView tvOverlayNotes;
+    private ImageButton btnEditOverlayAppointment;
+
     private GoogleMap googleMap;
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
@@ -77,22 +91,45 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
     private Marker carMarker;
     private Polyline routePolyline;
 
+    private TextView tvOverlayCustomerName;
+    private String customerName;
+
     private LatLng currentLatLng;
     private LatLng destinationLatLng;
 
     private String addressLine;
     private String markerTitle;
 
-//    private boolean routeDrawn = false;
+    private int appointmentId = -1;
+    private int requestId = -1;
+    private int technicianUserId = Integer.MIN_VALUE;
+    private int addressId = Integer.MIN_VALUE;
+    private int locationId = Integer.MIN_VALUE;
+
+    private String technicianName;
+    private String locationType;
+    private String scheduledStart;
+    private String scheduledEnd;
+    private String appointmentStatus;
+    private String appointmentNotes;
+    private String requestType;
+    private String requestDescription;
+
+    private boolean technicianLimitedEdit = false;
 
     private boolean firstCameraFitDone = false;
     private boolean destinationReady = false;
     private boolean currentReady = false;
 
-    // Keep this in one place. Safer long-term: store in local.properties / BuildConfig.
-    private static final String MAPS_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY";
-
     private final OkHttpClient httpClient = new OkHttpClient();
+
+    private final ActivityResultLauncher<Intent> editAppointmentLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == RESULT_OK) {
+                    setResult(RESULT_OK);
+                    finish();
+                }
+            });
 
     private final ActivityResultLauncher<String> locationPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
@@ -115,13 +152,23 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
         progressBar = findViewById(R.id.progressBar);
         bottomNavigation = findViewById(R.id.bottomNavigation);
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        tvOverlayAppointmentTitle = findViewById(R.id.tvOverlayAppointmentTitle);
+        tvOverlayTechnician = findViewById(R.id.tvOverlayTechnician);
+        tvOverlayLocationType = findViewById(R.id.tvOverlayLocationType);
+        tvOverlayAddress = findViewById(R.id.tvOverlayAddress);
+        tvOverlayScheduledStart = findViewById(R.id.tvOverlayScheduledStart);
+        tvOverlayScheduledEnd = findViewById(R.id.tvOverlayScheduledEnd);
+        tvOverlayStatus = findViewById(R.id.tvOverlayStatus);
+        tvOverlayRequestType = findViewById(R.id.tvOverlayRequestType);
+        tvOverlayRequestDescription = findViewById(R.id.tvOverlayRequestDescription);
+        tvOverlayNotes = findViewById(R.id.tvOverlayNotes);
+        btnEditOverlayAppointment = findViewById(R.id.btnEditOverlayAppointment);
+        btnCloseOverlay = findViewById(R.id.btnCloseOverlay);
 
-        addressLine = getIntent().getStringExtra("address_line");
-        markerTitle = getIntent().getStringExtra("job_title");
-        if (markerTitle == null || markerTitle.trim().isEmpty()) {
-            markerTitle = "Job Location";
-        }
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        tvOverlayCustomerName = findViewById(R.id.tvOverlayCustomerName);
+        readIntentData();
+        bindOverlayData();
 
         buildLocationRequest();
         buildLocationCallback();
@@ -130,6 +177,87 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
         setupBottomNavigation();
         setupActions();
         setupMap();
+    }
+
+    private void readIntentData() {
+        Intent intent = getIntent();
+        customerName = intent.getStringExtra("customerName");
+        requestType = intent.getStringExtra("requestType");
+        requestDescription = intent.getStringExtra("requestDescription");
+        addressLine = intent.getStringExtra("address_line");
+        markerTitle = intent.getStringExtra("job_title");
+        if (markerTitle == null || markerTitle.trim().isEmpty()) {
+            markerTitle = "Job Location";
+        }
+
+        appointmentId = intent.getIntExtra("appointmentId", -1);
+        requestId = intent.getIntExtra("requestId", -1);
+        technicianUserId = intent.getIntExtra("technicianUserId", Integer.MIN_VALUE);
+        addressId = intent.getIntExtra("addressId", Integer.MIN_VALUE);
+        locationId = intent.getIntExtra("locationId", Integer.MIN_VALUE);
+
+        technicianName = intent.getStringExtra("technicianName");
+        locationType = intent.getStringExtra("locationType");
+        scheduledStart = intent.getStringExtra("scheduledStart");
+        scheduledEnd = intent.getStringExtra("scheduledEnd");
+        appointmentStatus = intent.getStringExtra("status");
+        appointmentNotes = intent.getStringExtra("notes");
+        requestType = intent.getStringExtra("requestType");
+        requestDescription = intent.getStringExtra("requestDescription");
+
+        technicianLimitedEdit = intent.getBooleanExtra("technicianLimitedEdit", false);
+    }
+
+    private void bindOverlayData() {
+        if (tvOverlayAppointmentTitle != null) {
+            tvOverlayAppointmentTitle.setText(
+                    appointmentId > 0 ? "Appointment #" + appointmentId : "Appointment"
+            );
+        }
+
+        if (tvOverlayTechnician != null) {
+            tvOverlayTechnician.setText(valueOrDash(technicianName));
+        }
+
+        if (tvOverlayLocationType != null) {
+            tvOverlayLocationType.setText(valueOrDash(locationType));
+        }
+
+        if (tvOverlayAddress != null) {
+            tvOverlayAddress.setText(valueOrDash(addressLine));
+        }
+
+        if (tvOverlayScheduledStart != null) {
+            tvOverlayScheduledStart.setText(valueOrDash(scheduledStart));
+        }
+
+        if (tvOverlayScheduledEnd != null) {
+            tvOverlayScheduledEnd.setText(valueOrDash(scheduledEnd));
+        }
+
+        if (tvOverlayStatus != null) {
+            tvOverlayStatus.setText(valueOrDash(appointmentStatus));
+        }
+
+        if (tvOverlayRequestType != null) {
+            tvOverlayRequestType.setText(valueOrDash(requestType));
+        }
+
+        if (tvOverlayRequestDescription != null) {
+            tvOverlayRequestDescription.setText(valueOrDash(requestDescription));
+        }
+
+        if (tvOverlayNotes != null) {
+            tvOverlayNotes.setText(valueOrDash(appointmentNotes));
+        }
+
+        if (tvOverlayCustomerName != null) {
+            tvOverlayCustomerName.setText(valueOrDash(customerName));
+        }
+    }
+
+    private String valueOrDash(String value) {
+        return value == null || value.trim().isEmpty() ? "—" : value;
     }
 
     private void setupMap() {
@@ -223,7 +351,6 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
         };
     }
 
-
     private void fitMapToBothLocations() {
         if (googleMap == null) return;
 
@@ -233,9 +360,7 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
                     .include(destinationLatLng)
                     .build();
 
-            googleMap.animateCamera(
-                    CameraUpdateFactory.newLatLngBounds(bounds, 180)
-            );
+            googleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 180));
             firstCameraFitDone = true;
             return;
         }
@@ -251,6 +376,7 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
             firstCameraFitDone = true;
         }
     }
+
     private void updateCarMarker(LatLng position) {
         if (googleMap == null) return;
 
@@ -463,6 +589,45 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
                 }
             });
         }
+
+        View overlayCard = findViewById(R.id.tvOverlayAppointmentTitle);
+        if (overlayCard != null) {
+            View parent = (View) overlayCard.getParent().getParent();
+            if (parent != null) {
+                parent.setOnClickListener(v -> {
+                    // prevent closing when tapping inside the card
+                });
+            }
+        }
+
+        if (btnEditOverlayAppointment != null) {
+            btnEditOverlayAppointment.setOnClickListener(v -> openEditAppointment());
+        }
+    }
+
+    private void openEditAppointment() {
+        if (appointmentId <= 0 || requestId <= 0) {
+            Toast.makeText(this, "Appointment information is incomplete", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Intent intent = new Intent(this, ServiceAppointmentFormActivity.class);
+        intent.putExtra("mode", "edit");
+        intent.putExtra("requestId", requestId);
+        intent.putExtra("appointmentId", appointmentId);
+        intent.putExtra("technicianUserId", technicianUserId);
+        intent.putExtra("addressId", addressId);
+        intent.putExtra("locationId", locationId);
+        intent.putExtra("locationType", locationType);
+        intent.putExtra("scheduledStart", scheduledStart);
+        intent.putExtra("scheduledEnd", scheduledEnd);
+        intent.putExtra("status", appointmentStatus);
+        intent.putExtra("notes", appointmentNotes);
+        intent.putExtra("technicianName", technicianName);
+        intent.putExtra("addressText", addressLine);
+        intent.putExtra("technicianLimitedEdit", technicianLimitedEdit);
+
+        editAppointmentLauncher.launch(intent);
     }
 
     private void setupBottomNavigation() {

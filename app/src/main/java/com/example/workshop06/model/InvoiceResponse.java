@@ -1,19 +1,34 @@
 package com.example.workshop06.model;
 
 import java.util.List;
+import com.google.gson.annotations.SerializedName;
 
 public class InvoiceResponse {
-    public Integer customerId;
-    public String invoiceNumber;
+
+    @SerializedName("status")
     public String status;
+
+    @SerializedName("invoiceNumber")
+    public String invoiceNumber;
+
+    @SerializedName("customerName")
+    public String customerName;
+
+    @SerializedName("issueDate")
     public String issueDate;
+
+    @SerializedName("dueDate")
     public String dueDate;
+
+    @SerializedName("total")
+    public Double total;
+
+    @SerializedName("customerId")
+    public Integer customerId;
     public Double subtotal;
     public Double taxTotal;
-    public Double total;
     public PaidAccountResponse paidByAccount;
     public List<InvoiceItemResponse> items;
-    private String customerName;
 
     public Integer getCustomerId() { return customerId; }
     public String getInvoiceNumber() { return invoiceNumber; }

@@ -54,6 +54,7 @@
         <activity android:name=".InvoiceListActivity" />
         <activity android:name=".InvoiceDetailActivity" />
         <activity android:name=".InvoiceFormActivity" />
+        <activity android:name=".PastDueActivity" />
         <activity android:name=".ManagerEmployeeSalesActivity" />
         <activity android:name=".ServiceRequestFormActivity" />
         <activity android:name=".ServiceRequestListActivity" />

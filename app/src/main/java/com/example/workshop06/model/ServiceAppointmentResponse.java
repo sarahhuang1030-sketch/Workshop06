@@ -14,18 +14,53 @@ public class ServiceAppointmentResponse {
     private String technicianName;
     private String addressText;
 
-    public Integer getAppointmentId() { return appointmentId; }
-    public Integer getRequestId() { return requestId; }
-    public Integer getTechnicianUserId() { return technicianUserId; }
-    public Integer getAddressId() { return addressId; }
-    public Integer getLocationId() { return locationId; }
-    public String getLocationType() { return locationType; }
-    public String getScheduledStart() { return scheduledStart; }
-    public String getScheduledEnd() { return scheduledEnd; }
-    public String getStatus() { return status; }
-    public String getNotes() { return notes; }
-    public String getTechnicianName() { return technicianName; }
-    public String getAddressText() { return addressText; }
+    public Integer getAppointmentId() {
+        return appointmentId;
+    }
+
+    public Integer getRequestId() {
+        return requestId;
+    }
+
+    public Integer getTechnicianUserId() {
+        return technicianUserId;
+    }
+
+    public Integer getAddressId() {
+        return addressId;
+    }
+
+    public Integer getLocationId() {
+        return locationId;
+    }
+
+    public String getLocationType() {
+        return locationType;
+    }
+
+    public String getScheduledStart() {
+        return scheduledStart;
+    }
+
+    public String getScheduledEnd() {
+        return scheduledEnd;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public String getTechnicianName() {
+        return technicianName;
+    }
+
+    public String getAddressText() {
+        return addressText;
+    }
 
     public void setAppointmentId(Integer appointmentId) {
         this.appointmentId = appointmentId;
@@ -39,8 +74,16 @@ public class ServiceAppointmentResponse {
         this.technicianUserId = technicianUserId;
     }
 
-    public void setTechnicianName(String technicianName) {
-        this.technicianName = technicianName;
+    public void setAddressId(Integer addressId) {
+        this.addressId = addressId;
+    }
+
+    public void setLocationId(Integer locationId) {
+        this.locationId = locationId;
+    }
+
+    public void setLocationType(String locationType) {
+        this.locationType = locationType;
     }
 
     public void setScheduledStart(String scheduledStart) {
@@ -53,6 +96,14 @@ public class ServiceAppointmentResponse {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+
+    public void setTechnicianName(String technicianName) {
+        this.technicianName = technicianName;
     }
 
     public void setAddressText(String addressText) {

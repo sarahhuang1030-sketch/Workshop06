@@ -137,9 +137,9 @@ public class EmployeeDashboardActivity extends BaseActivity {
                                 R.drawable.bg_card_top_accent_magenta, R.drawable.bg_icon_lavender,
                                 ServiceRequestListActivity.class));
                         items.add(new DashboardMenuItem("🛠️", "Assigned",
-                                data.getAssignedRequests() + " assigned",
+                                data.getAssignedAppointments() + " assigned",
                                 R.drawable.bg_card_top_accent_purple, R.drawable.bg_icon_lavender,
-                                ServiceRequestListActivity.class));
+                                ServiceAppointmentListActivity.class));
                         items.add(new DashboardMenuItem("✅", "Completed",
                                 data.getCompletedRequests() + " done",
                                 R.drawable.bg_card_top_accent_pink, R.drawable.bg_icon_pink,

@@ -36,6 +36,7 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.gms.maps.model.LatLngBounds;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -82,7 +83,11 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
     private String addressLine;
     private String markerTitle;
 
-    private boolean routeDrawn = false;
+//    private boolean routeDrawn = false;
+
+    private boolean firstCameraFitDone = false;
+    private boolean destinationReady = false;
+    private boolean currentReady = false;
 
     // Keep this in one place. Safer long-term: store in local.properties / BuildConfig.
     private static final String MAPS_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY";
@@ -155,6 +160,7 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
         }
 
         enableMyLocation();
+        fetchLastKnownLocation();
         startLiveLocationUpdates();
     }
 
@@ -169,6 +175,7 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
             if (results != null && !results.isEmpty()) {
                 Address result = results.get(0);
                 destinationLatLng = new LatLng(result.getLatitude(), result.getLongitude());
+                destinationReady = true;
 
                 if (destinationMarker != null) destinationMarker.remove();
 
@@ -178,7 +185,7 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
                         .snippet(fullAddress)
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)));
 
-                googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(destinationLatLng, 15f));
+                fitMapToBothLocations();
                 maybeDrawRoute();
             } else {
                 googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LOCATION, 10f));
@@ -207,15 +214,43 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
                         locationResult.getLastLocation().getLatitude(),
                         locationResult.getLastLocation().getLongitude()
                 );
+                currentReady = true;
 
                 updateCarMarker(currentLatLng);
-
-                // draw route once destination is ready
+                fitMapToBothLocations();
                 maybeDrawRoute();
             }
         };
     }
 
+
+    private void fitMapToBothLocations() {
+        if (googleMap == null) return;
+
+        if (currentLatLng != null && destinationLatLng != null) {
+            LatLngBounds bounds = new LatLngBounds.Builder()
+                    .include(currentLatLng)
+                    .include(destinationLatLng)
+                    .build();
+
+            googleMap.animateCamera(
+                    CameraUpdateFactory.newLatLngBounds(bounds, 180)
+            );
+            firstCameraFitDone = true;
+            return;
+        }
+
+        if (!firstCameraFitDone && currentLatLng != null) {
+            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f));
+            firstCameraFitDone = true;
+            return;
+        }
+
+        if (!firstCameraFitDone && destinationLatLng != null) {
+            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(destinationLatLng, 15f));
+            firstCameraFitDone = true;
+        }
+    }
     private void updateCarMarker(LatLng position) {
         if (googleMap == null) return;
 
@@ -231,9 +266,6 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
 
     private void maybeDrawRoute() {
         if (currentLatLng == null || destinationLatLng == null) return;
-        if (routeDrawn) return;
-
-        routeDrawn = true;
         requestRoute(currentLatLng, destinationLatLng);
     }
 
@@ -334,9 +366,7 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
                 .geodesic(true)
                 .jointType(JointType.ROUND));
 
-        if (currentLatLng != null) {
-            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 14f));
-        }
+        fitMapToBothLocations();
     }
 
     private List<LatLng> decodePolyline(String encoded) {
@@ -444,7 +474,7 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
             int id = item.getItemId();
 
             if (id == R.id.nav_home) {
-                startActivity(new Intent(this, ServiceAppointmentListActivity.class));
+                startActivity(new Intent(this, EmployeeDashboardActivity.class));
                 finish();
                 return true;
             } else if (id == R.id.nav_maps) {
@@ -480,5 +510,23 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
         if (progressBar != null) {
             progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
         }
+    }
+
+    private void fetchLastKnownLocation() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
+            if (location == null) return;
+
+            currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+            currentReady = true;
+
+            updateCarMarker(currentLatLng);
+            fitMapToBothLocations();
+            maybeDrawRoute();
+        });
     }
 }

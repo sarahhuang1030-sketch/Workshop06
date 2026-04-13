@@ -49,6 +49,7 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
     private Button btnSave;
     private ProgressBar progressBar;
 
+    private boolean technicianLimitedEdit = false;
     private String mode = "add";
     private int requestId = -1;
     private int appointmentId = -1;
@@ -69,6 +70,10 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
 
         if ("edit".equalsIgnoreCase(mode)) {
             showEditMode();
+
+            if (technicianLimitedEdit) {
+                showTechnicianLimitedEditMode();
+            }
         } else {
             showAddMode();
             loadServiceRequests();
@@ -130,7 +135,7 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
     private void loadIntentData() {
         mode = getIntent().getStringExtra("mode");
         if (mode == null) mode = "add";
-
+        technicianLimitedEdit = getIntent().getBooleanExtra("technicianLimitedEdit", false);
         requestId = getIntent().getIntExtra("requestId", -1);
         appointmentId = getIntent().getIntExtra("appointmentId", -1);
 
@@ -662,5 +667,44 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
             this.addressId = addressId;
             this.label = label;
         }
+    }
+
+    private void showTechnicianLimitedEditMode() {
+        layoutRequestSpinner.setVisibility(View.GONE);
+        layoutTechnicianSpinner.setVisibility(View.GONE);
+        layoutAddressSpinner.setVisibility(View.GONE);
+
+        etTechnicianName.setVisibility(View.VISIBLE);
+        etAddressText.setVisibility(View.VISIBLE);
+
+        lockEditText(etTechnicianName);
+        lockEditText(etAddressText);
+        lockEditText(etTechnicianUserId);
+        lockEditText(etAddressId);
+        lockEditText(etLocationId);
+        lockDropdown(spinnerLocationType);
+        lockEditText(etScheduledStart);
+
+        // keep these editable for technician
+        spinnerStatus.setEnabled(true);
+        spinnerStatus.setFocusable(false);
+        spinnerStatus.setFocusableInTouchMode(false);
+        spinnerStatus.setClickable(true);
+        spinnerStatus.setLongClickable(false);
+        spinnerStatus.setCursorVisible(false);
+        spinnerStatus.setAlpha(1f);
+        spinnerStatus.setOnClickListener(v -> spinnerStatus.showDropDown());
+
+        etScheduledEnd.setEnabled(true);
+        etScheduledEnd.setFocusable(false);
+        etScheduledEnd.setFocusableInTouchMode(false);
+        etScheduledEnd.setClickable(true);
+        etScheduledEnd.setCursorVisible(false);
+        etScheduledEnd.setAlpha(1f);
+
+        etNotes.setEnabled(true);
+        etNotes.setFocusableInTouchMode(true);
+        etNotes.setCursorVisible(true);
+        etNotes.setAlpha(1f);
     }
 }

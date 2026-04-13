@@ -5,6 +5,9 @@ public class ServiceDashboardSummaryResponse {
     private long openRequests;
     private long todayAppointments;
     private long completedRequests;
+    private long assignedAppointments;
+
+
 
     public long getAssignedRequests() {
         return assignedRequests;
@@ -20,5 +23,9 @@ public class ServiceDashboardSummaryResponse {
 
     public long getCompletedRequests() {
         return completedRequests;
+    }
+
+    public long getAssignedAppointments() {
+        return assignedAppointments;
     }
 }

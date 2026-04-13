@@ -28,14 +28,16 @@ public class ServiceAppointmentAdapter extends RecyclerView.Adapter<ServiceAppoi
     private final List<ServiceAppointmentResponse> filteredList = new ArrayList<>();
     private final OnAppointmentActionListener listener;
 
-    private boolean readOnlyMode = false;
+    private boolean canEdit = true;
+    private boolean canDelete = true;
 
     public ServiceAppointmentAdapter(OnAppointmentActionListener listener) {
         this.listener = listener;
     }
 
-    public void setReadOnlyMode(boolean readOnlyMode) {
-        this.readOnlyMode = readOnlyMode;
+    public void setPermissions(boolean canEdit, boolean canDelete) {
+        this.canEdit = canEdit;
+        this.canDelete = canDelete;
         notifyDataSetChanged();
     }
 
@@ -58,36 +60,17 @@ public class ServiceAppointmentAdapter extends RecyclerView.Adapter<ServiceAppoi
         String technician = technicianFilter == null ? "All" : technicianFilter.trim();
 
         for (ServiceAppointmentResponse item : fullList) {
-            String techName = item.getTechnicianName() != null
-                    ? item.getTechnicianName().trim()
-                    : "";
-
+            String techName = item.getTechnicianName() != null ? item.getTechnicianName().trim() : "";
             String techNameLower = techName.toLowerCase(Locale.US);
 
-            String itemStatus = item.getStatus() != null
-                    ? item.getStatus().trim()
-                    : "";
+            String itemStatus = item.getStatus() != null ? item.getStatus().trim() : "";
+            String itemLocationType = item.getLocationType() != null ? item.getLocationType().trim() : "";
+            String address = item.getAddressText() != null ? item.getAddressText().toLowerCase(Locale.US).trim() : "";
 
-            String itemLocationType = item.getLocationType() != null
-                    ? item.getLocationType().trim()
-                    : "";
-
-            String address = item.getAddressText() != null
-                    ? item.getAddressText().toLowerCase(Locale.US).trim()
-                    : "";
-
-            boolean matchesSearch = q.isEmpty()
-                    || techNameLower.contains(q)
-                    || address.contains(q);
-
-            boolean matchesStatus = status.equalsIgnoreCase("All")
-                    || itemStatus.equalsIgnoreCase(status);
-
-            boolean matchesLocationType = locationType.equalsIgnoreCase("All")
-                    || itemLocationType.equalsIgnoreCase(locationType);
-
-            boolean matchesTechnician = technician.equalsIgnoreCase("All")
-                    || techName.equalsIgnoreCase(technician);
+            boolean matchesSearch = q.isEmpty() || techNameLower.contains(q) || address.contains(q);
+            boolean matchesStatus = status.equalsIgnoreCase("All") || itemStatus.equalsIgnoreCase(status);
+            boolean matchesLocationType = locationType.equalsIgnoreCase("All") || itemLocationType.equalsIgnoreCase(locationType);
+            boolean matchesTechnician = technician.equalsIgnoreCase("All") || techName.equalsIgnoreCase(technician);
 
             if (matchesSearch && matchesStatus && matchesLocationType && matchesTechnician) {
                 filteredList.add(item);
@@ -121,22 +104,19 @@ public class ServiceAppointmentAdapter extends RecyclerView.Adapter<ServiceAppoi
         holder.tvStatus.setText(item.getStatus() != null ? item.getStatus() : "—");
         holder.tvNotes.setText(item.getNotes() != null ? item.getNotes() : "—");
 
-        holder.btnEdit.setVisibility(readOnlyMode ? View.GONE : View.VISIBLE);
-        holder.btnDelete.setVisibility(readOnlyMode ? View.GONE : View.VISIBLE);
+        holder.btnEdit.setVisibility(canEdit ? View.VISIBLE : View.GONE);
+        holder.btnDelete.setVisibility(canDelete ? View.VISIBLE : View.GONE);
 
         holder.btnEdit.setOnClickListener(v -> {
-            if (!readOnlyMode && listener != null) listener.onEdit(item);
+            if (canEdit && listener != null) listener.onEdit(item);
         });
 
         holder.btnDelete.setOnClickListener(v -> {
-            if (!readOnlyMode && listener != null) listener.onDelete(item);
+            if (canDelete && listener != null) listener.onDelete(item);
         });
 
-        //make the address clickable
         holder.tvAddress.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onOpenMap(item);
-            }
+            if (listener != null) listener.onOpenMap(item);
         });
     }
 

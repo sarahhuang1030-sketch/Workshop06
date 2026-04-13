@@ -14,7 +14,6 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -24,9 +23,9 @@ import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.EmployeeResponse;
 import com.example.workshop06.model.ServiceAppointmentResponse;
+import com.example.workshop06.model.ServiceWorkOrderDTO;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
-import com.example.workshop06.model.ServiceWorkOrderDTO;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +37,9 @@ import retrofit2.Response;
 public class ServiceAppointmentListActivity extends BaseActivity {
 
     @Override
-    protected void onRefresh() { loadAppointments(); }
+    protected void onRefresh() {
+        loadAppointments();
+    }
 
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
@@ -60,6 +61,7 @@ public class ServiceAppointmentListActivity extends BaseActivity {
     private String selectedTechnician = "All";
 
     private boolean isTechnician = false;
+    private boolean dashboardMode = false;
 
     private ImageButton btnBack;
 
@@ -79,25 +81,50 @@ public class ServiceAppointmentListActivity extends BaseActivity {
                         || "Technician".equalsIgnoreCase(role);
 
         requestId = getIntent().getIntExtra("requestId", -1);
-        btnBack = findViewById(R.id.btnBack);
+        dashboardMode = getIntent().getBooleanExtra("dashboardMode", false);
 
+        // Fallback for technician dashboard entry:
+        // if no requestId was passed, treat it as dashboard mode
+        if (isTechnician && requestId <= 0) {
+            dashboardMode = true;
+        }
+
+        btnBack = findViewById(R.id.btnBack);
         btnBack.setOnClickListener(v -> finish());
+
         initViews();
         setupRecyclerView();
         setupSearch();
         setupButtons();
-        BottomNavHelper.setup(this,0);
+        BottomNavHelper.setup(this, 0);
         setupStaticFilters();
-        setupTechnicianFilter();
+
+        if (isTechnician) {
+            if (spinnerTechnicianFilter != null) {
+                View parent = (View) spinnerTechnicianFilter.getParent();
+                if (parent != null) {
+                    parent.setVisibility(View.GONE);   // hides the whole TextInputLayout container
+                } else {
+                    spinnerTechnicianFilter.setVisibility(View.GONE);
+                }
+            }
+        } else {
+            setupTechnicianFilter();
+        }
 
         String customerName = getIntent().getStringExtra("customerName");
         String requestType = getIntent().getStringExtra("requestType");
+
         if (tvSubtitle != null) {
-            tvSubtitle.setText((customerName != null ? customerName : "Service Request")
-                    + (requestType != null ? " • " + requestType : ""));
+            if (dashboardMode && isTechnician) {
+                tvSubtitle.setText("My Assigned Appointments");
+            } else {
+                tvSubtitle.setText((customerName != null ? customerName : "Service Request")
+                        + (requestType != null ? " • " + requestType : ""));
+            }
         }
 
-        if (requestId <= 0) {
+        if (!dashboardMode && requestId <= 0) {
             Toast.makeText(this, "Invalid request ID", Toast.LENGTH_LONG).show();
             finish();
             return;
@@ -122,11 +149,9 @@ public class ServiceAppointmentListActivity extends BaseActivity {
         adapter = new ServiceAppointmentAdapter(new ServiceAppointmentAdapter.OnAppointmentActionListener() {
             @Override
             public void onEdit(ServiceAppointmentResponse item) {
-                if (isTechnician) return;
-
                 Intent intent = new Intent(ServiceAppointmentListActivity.this, ServiceAppointmentFormActivity.class);
                 intent.putExtra("mode", "edit");
-                intent.putExtra("requestId", requestId);
+                intent.putExtra("requestId", item.getRequestId() != null ? item.getRequestId() : requestId);
                 intent.putExtra("appointmentId", item.getAppointmentId());
                 intent.putExtra("technicianUserId", item.getTechnicianUserId());
                 intent.putExtra("addressId", item.getAddressId());
@@ -138,6 +163,7 @@ public class ServiceAppointmentListActivity extends BaseActivity {
                 intent.putExtra("notes", item.getNotes());
                 intent.putExtra("technicianName", item.getTechnicianName());
                 intent.putExtra("addressText", item.getAddressText());
+                intent.putExtra("technicianLimitedEdit", isTechnician);
                 formLauncher.launch(intent);
             }
 
@@ -171,7 +197,11 @@ public class ServiceAppointmentListActivity extends BaseActivity {
             }
         });
 
-        adapter.setReadOnlyMode(isTechnician);
+        if (isTechnician) {
+            adapter.setPermissions(true, false);   // technician: can edit, cannot delete
+        } else {
+            adapter.setPermissions(true, true);    // manager/agent: can edit and delete
+        }
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setHasFixedSize(true);
@@ -201,7 +231,9 @@ public class ServiceAppointmentListActivity extends BaseActivity {
 
     private void setupButtons() {
         if (fabAdd != null) {
-            fabAdd.setVisibility(isTechnician ? View.GONE : View.VISIBLE);
+            boolean hideFab = isTechnician || dashboardMode;
+            fabAdd.setVisibility(hideFab ? View.GONE : View.VISIBLE);
+
             fabAdd.setOnClickListener(v -> {
                 Intent intent = new Intent(ServiceAppointmentListActivity.this, ServiceAppointmentFormActivity.class);
                 intent.putExtra("mode", "add");
@@ -235,8 +267,10 @@ public class ServiceAppointmentListActivity extends BaseActivity {
                     List<ServiceAppointmentResponse> converted = new ArrayList<>();
 
                     for (ServiceWorkOrderDTO w : response.body()) {
-                        if (w.getRequestId() == null || !w.getRequestId().equals(requestId)) {
-                            continue;
+                        if (!dashboardMode) {
+                            if (w.getRequestId() == null || !w.getRequestId().equals(requestId)) {
+                                continue;
+                            }
                         }
 
                         ServiceAppointmentResponse a = new ServiceAppointmentResponse();
@@ -248,6 +282,8 @@ public class ServiceAppointmentListActivity extends BaseActivity {
                         a.setScheduledEnd(w.getScheduledEnd());
                         a.setStatus(w.getStatus());
                         a.setAddressText(w.getAddressText());
+                        a.setLocationType(w.getLocationType());
+                        a.setNotes(w.getNotes());
 
                         converted.add(a);
                     }
@@ -362,7 +398,6 @@ public class ServiceAppointmentListActivity extends BaseActivity {
         });
     }
 
-
     private void setupTechnicianFilter() {
         if (spinnerTechnicianFilter == null) return;
 
@@ -430,6 +465,4 @@ public class ServiceAppointmentListActivity extends BaseActivity {
         adapter.applyFilters(currentSearch, selectedStatus, selectedLocationType, selectedTechnician);
         showEmpty(adapter.getItemCount() == 0);
     }
-
-
 }

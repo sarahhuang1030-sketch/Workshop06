@@ -19,8 +19,6 @@ public class InvoiceAdapter extends RecyclerView.Adapter<InvoiceAdapter.InvoiceV
 
     public interface InvoiceActionListener {
         void onView(InvoiceResponse item);
-        void onEdit(InvoiceResponse item);
-        void onDelete(InvoiceResponse item);
     }
 
     private final List<InvoiceResponse> items;
@@ -33,9 +31,7 @@ public class InvoiceAdapter extends RecyclerView.Adapter<InvoiceAdapter.InvoiceV
 
     public void setData(List<InvoiceResponse> newItems) {
         items.clear();
-        if (newItems != null) {
-            items.addAll(newItems);
-        }
+        if (newItems != null) items.addAll(newItems);
         notifyDataSetChanged();
     }
 
@@ -51,19 +47,16 @@ public class InvoiceAdapter extends RecyclerView.Adapter<InvoiceAdapter.InvoiceV
     public void onBindViewHolder(@NonNull InvoiceViewHolder holder, int position) {
         InvoiceResponse item = items.get(position);
 
-        holder.tvInvoiceNumber.setText(item.getInvoiceNumber() != null ? item.getInvoiceNumber() : "—");
-        holder.tvCustomer.setText(item.getCustomerName() != null ? item.getCustomerName() : "—");
-        holder.tvStatus.setText(item.getStatus() != null ? item.getStatus() : "—");
-
-        if (item.getTotal() != null) {
-            holder.tvTotal.setText(String.format(Locale.US, "$%.2f", item.getTotal()));
-        } else {
-            holder.tvTotal.setText("$0.00");
-        }
+        holder.tvInvoiceNumber.setText(
+                item.getInvoiceNumber() != null ? item.getInvoiceNumber() : "—");
+        holder.tvCustomer.setText(
+                item.getCustomerName() != null ? item.getCustomerName() : "—");
+        holder.tvStatus.setText(
+                item.getStatus() != null ? item.getStatus() : "—");
+        holder.tvTotal.setText(item.getTotal() != null
+                ? String.format(Locale.US, "$%.2f", item.getTotal()) : "$0.00");
 
         holder.btnView.setOnClickListener(v -> listener.onView(item));
-        holder.btnEdit.setOnClickListener(v -> listener.onEdit(item));
-        holder.btnDelete.setOnClickListener(v -> listener.onDelete(item));
     }
 
     @Override
@@ -73,18 +66,15 @@ public class InvoiceAdapter extends RecyclerView.Adapter<InvoiceAdapter.InvoiceV
 
     static class InvoiceViewHolder extends RecyclerView.ViewHolder {
         TextView tvInvoiceNumber, tvCustomer, tvStatus, tvTotal;
-        ImageButton btnView, btnEdit, btnDelete;
+        ImageButton btnView;
 
         public InvoiceViewHolder(@NonNull View itemView) {
             super(itemView);
             tvInvoiceNumber = itemView.findViewById(R.id.tvInvoiceNumber);
-            tvCustomer = itemView.findViewById(R.id.tvInvoiceCustomer);
-            tvStatus = itemView.findViewById(R.id.tvInvoiceStatus);
-            tvTotal = itemView.findViewById(R.id.tvInvoiceTotal);
-
-            btnView = itemView.findViewById(R.id.btnViewInvoice);
-            btnEdit = itemView.findViewById(R.id.btnEditInvoice);
-            btnDelete = itemView.findViewById(R.id.btnDeleteInvoice);
+            tvCustomer      = itemView.findViewById(R.id.tvInvoiceCustomer);
+            tvStatus        = itemView.findViewById(R.id.tvInvoiceStatus);
+            tvTotal         = itemView.findViewById(R.id.tvInvoiceTotal);
+            btnView         = itemView.findViewById(R.id.btnViewInvoice);
         }
     }
 }

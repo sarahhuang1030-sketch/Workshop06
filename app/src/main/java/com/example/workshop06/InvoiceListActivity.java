@@ -2,25 +2,24 @@ package com.example.workshop06;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.EditText;
+
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SearchView;
+//import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.workshop06.adapter.InvoiceAdapter;
+import com.example.workshop06.adapter.InvoiceCustomerAdapter;
 import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.InvoiceResponse;
@@ -28,10 +27,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -39,53 +35,34 @@ import retrofit2.Response;
 
 public class InvoiceListActivity extends BaseActivity {
 
-//    private final Handler refreshHandler = new Handler(Looper.getMainLooper());
-//    private final Runnable refreshRunnable = new Runnable() {
-//        @Override
-//        public void run() {
-//            loadInvoices();
-//            refreshHandler.postDelayed(this, 30000);
-//        }
-//    };
-
-    private TextView tvHeaderTitle;
+    // ── Views ──────────────────────────────────────────────────────────────
+    private TextView tvHeaderTitle, tvHeaderSubtitle, tvEmpty;
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private FloatingActionButton fabAddInvoice;
 
-    private TextView tvEmpty;
-    private SearchView searchViewInvoice;
-    private MaterialAutoCompleteTextView spinnerStatusFilter;
-    private MaterialAutoCompleteTextView spinnerAmountFilter;
+//    private SearchView searchViewInvoice;
+    private android.widget.EditText searchViewInvoice;
 
-    private InvoiceAdapter adapter;
-    private final List<InvoiceResponse> allInvoices = new ArrayList<>();
-    private boolean filtersReady = false;
-    private boolean pastDueMode = false;
-    private boolean monthlyRevenueMode = false;
-
+    private MaterialAutoCompleteTextView spinnerStatusFilter, spinnerAmountFilter;
     private ImageButton btnBack;
 
-    private final ActivityResultLauncher<Intent> formLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-                if (result.getResultCode() == RESULT_OK) {
-                    loadInvoices();
-                } else {
-                    loadInvoices();
-                }
-            });
+    // Filter row wrapper — hide/show this to control both dropdowns at once
+    private View layoutFilterRow;
 
-//    @Override
-//    protected void onResume() {
-//        super.onResume();
-//        refreshHandler.postDelayed(refreshRunnable, 30000);
-//    }
-//
-//    @Override
-//    protected void onPause() {
-//        super.onPause();
-//        refreshHandler.removeCallbacks(refreshRunnable);
-//    }
+    // ── State ──────────────────────────────────────────────────────────────
+    private final List<InvoiceResponse> allInvoices = new ArrayList<>();
+    private boolean filtersReady = false;
+
+    // "customers" = customer list view, "invoices" = filtered invoice view
+    private String mode = "customers";
+    private String selectedCustomerName = null;
+
+    // ── Adapters ───────────────────────────────────────────────────────────
+    private InvoiceCustomerAdapter customerAdapter;
+    private InvoiceAdapter invoiceAdapter;
+
+    // ── Lifecycle ──────────────────────────────────────────────────────────
 
     @Override
     protected void onRefresh() {
@@ -97,292 +74,245 @@ public class InvoiceListActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_invoice_list);
 
-        recyclerView = findViewById(R.id.recyclerInvoices);
-        progressBar = findViewById(R.id.progressBar);
-        fabAddInvoice = findViewById(R.id.fabAddInvoice);
-        tvEmpty = findViewById(R.id.tvEmpty);
-        tvHeaderTitle = findViewById(R.id.tvHeaderTitle);
-        searchViewInvoice = findViewById(R.id.searchViewInvoice);
+        // Bind views
+        tvHeaderTitle       = findViewById(R.id.tvHeaderTitle);
+        tvHeaderSubtitle    = findViewById(R.id.tvHeaderSubtitle);
+        recyclerView        = findViewById(R.id.recyclerInvoices);
+        progressBar         = findViewById(R.id.progressBar);
+        fabAddInvoice       = findViewById(R.id.fabAddInvoice);
+        tvEmpty             = findViewById(R.id.tvEmpty);
+        searchViewInvoice   = findViewById(R.id.searchViewInvoice);
         spinnerStatusFilter = findViewById(R.id.spinnerInvoiceStatusFilter);
         spinnerAmountFilter = findViewById(R.id.spinnerInvoiceAmountFilter);
-        btnBack = findViewById(R.id.btnBack);
+        btnBack             = findViewById(R.id.btnBack);
+        layoutFilterRow     = findViewById(R.id.layoutFilterRow); // filter row wrapper
+
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        btnBack.setOnClickListener(v -> finish());
-        adapter = new InvoiceAdapter(new ArrayList<>(), new InvoiceAdapter.InvoiceActionListener() {
-            @Override
-            public void onView(InvoiceResponse item) {
-                Intent intent = new Intent(InvoiceListActivity.this, InvoiceDetailActivity.class);
-                intent.putExtra("invoiceNumber", item.getInvoiceNumber());
-                startActivity(intent);
-            }
 
-            @Override
-            public void onEdit(InvoiceResponse item) {
-                Intent intent = new Intent(InvoiceListActivity.this, InvoiceFormActivity.class);
-                intent.putExtra("invoiceNumber", item.getInvoiceNumber());
-                formLauncher.launch(intent);
-            }
-
-            @Override
-            public void onDelete(InvoiceResponse item) {
-                deleteInvoice(item.getInvoiceNumber());
+        // Back: go to customer list if in invoice mode, otherwise exit activity
+        btnBack.setOnClickListener(v -> {
+            if (mode.equals("invoices")) {
+                showCustomerMode();
+            } else {
+                finish();
             }
         });
-        recyclerView.setAdapter(adapter);
 
-        fabAddInvoice.setOnClickListener(v -> {
-            Intent intent = new Intent(InvoiceListActivity.this, InvoiceFormActivity.class);
-            formLauncher.launch(intent);
+        // Customer list adapter — clicking a row enters invoice mode for that customer
+        customerAdapter = new InvoiceCustomerAdapter((customerId, customerName) -> {
+            selectedCustomerName = customerName;
+            showInvoiceMode(customerName);
+        });
+
+        // Invoice list adapter
+        invoiceAdapter = new InvoiceAdapter(new ArrayList<>(), item -> {
+            Intent intent = new Intent(InvoiceListActivity.this, InvoiceDetailActivity.class);
+            intent.putExtra("invoiceNumber", item.getInvoiceNumber());
+            startActivity(intent);
         });
 
         setupSearch();
         setupStatusFilter();
         setupAmountFilter();
 
-        if (getIntent().getStringExtra("pastDueFilter") != null) {
-            pastDueMode = true;
-            if (tvHeaderTitle != null) tvHeaderTitle.setText("Past Due Orders");
-            TextView tvSubtitle = findViewById(R.id.tvHeaderSubtitle);
-            if (tvSubtitle != null) tvSubtitle.setText("Orders placed before this month");
-        }
-
-        if (getIntent().getStringExtra("monthlyRevenueMode") != null) {
-            monthlyRevenueMode = true;
-            if (tvHeaderTitle != null) tvHeaderTitle.setText("Monthly Revenue Details");
-            TextView tvSubtitle = findViewById(R.id.tvHeaderSubtitle);
-            if (tvSubtitle != null) tvSubtitle.setText("Revenue details for the current period");
-        }
-
-        // reuse the same bottom nav helper
         BottomNavHelper.setup(this, 0);
 
         loadInvoices();
     }
 
+    // ── Mode switching ─────────────────────────────────────────────────────
+
+    /** Show the customer list — hide filters, reset search */
+    private void showCustomerMode() {
+        mode = "customers";
+        selectedCustomerName = null;
+
+        tvHeaderTitle.setText("Invoices");
+        tvHeaderSubtitle.setText("Select a customer");
+
+        // Hide the entire filter row (TextInputLayout borders disappear with it)
+        layoutFilterRow.setVisibility(View.GONE);
+
+        searchViewInvoice.setText("");
+
+        recyclerView.setAdapter(customerAdapter);
+        customerAdapter.filter("");
+        tvEmpty.setVisibility(customerAdapter.getItemCount() == 0 ? View.VISIBLE : View.GONE);
+    }
+
+    /** Show invoices filtered by the selected customer — show filters */
+    private void showInvoiceMode(String customerName) {
+        mode = "invoices";
+
+        tvHeaderTitle.setText(customerName);
+        tvHeaderSubtitle.setText("Invoices");
+
+        // Show the filter row with proper outlined borders
+        layoutFilterRow.setVisibility(View.VISIBLE);
+
+        recyclerView.setAdapter(invoiceAdapter);
+        applyFilters();
+    }
+
+    // ── Search ─────────────────────────────────────────────────────────────
+
     private void setupSearch() {
         if (searchViewInvoice == null) return;
 
-        searchViewInvoice.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        searchViewInvoice.addTextChangedListener(new android.text.TextWatcher() {
             @Override
-            public boolean onQueryTextSubmit(String query) {
-                applyFilters();
-                return true;
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                handleSearch(s.toString());
             }
 
             @Override
-            public boolean onQueryTextChange(String newText) {
-                applyFilters();
-                return true;
-            }
+            public void afterTextChanged(android.text.Editable s) {}
         });
     }
 
-    private void setupStatusFilter() {
-        ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_dropdown_item_1line,
-                new String[]{"All", "Paid", "Unpaid", "Approved"}
-        );
-        spinnerStatusFilter.setAdapter(statusAdapter);
-        spinnerStatusFilter.setText("All", false);
+    /** Route search input to the correct adapter based on current mode */
+    private void handleSearch(String query) {
+        if (mode.equals("customers")) {
+            customerAdapter.filter(query);
+            tvEmpty.setVisibility(
+                    customerAdapter.getItemCount() == 0 ? View.VISIBLE : View.GONE);
+        } else {
+            applyFilters();
+        }
+    }
 
-        spinnerStatusFilter.setOnItemClickListener((parent, view, position, id) -> {
+    // ── Filters ────────────────────────────────────────────────────────────
+
+    private void setupStatusFilter() {
+        ArrayAdapter<String> a = new ArrayAdapter<>(this,
+                android.R.layout.simple_dropdown_item_1line,
+                new String[]{"All", "Paid", "Unpaid"});
+        spinnerStatusFilter.setAdapter(a);
+        spinnerStatusFilter.setText("All", false);
+        spinnerStatusFilter.setOnItemClickListener((p, v, pos, id) -> {
             if (filtersReady) applyFilters();
         });
     }
 
     private void setupAmountFilter() {
-        ArrayAdapter<String> amountAdapter = new ArrayAdapter<>(
-                this,
+        ArrayAdapter<String> a = new ArrayAdapter<>(this,
                 android.R.layout.simple_dropdown_item_1line,
-                new String[]{
-                        "All",
-                        "Under $100",
-                        "$100 - $499.99",
-                        "$500 - $999.99",
-                        "$1000 and above"
-                }
-        );
-        spinnerAmountFilter.setAdapter(amountAdapter);
+                new String[]{"All", "Under $100", "$100 - $499.99",
+                        "$500 - $999.99", "$1000 and above"});
+        spinnerAmountFilter.setAdapter(a);
         spinnerAmountFilter.setText("All", false);
-
-        spinnerAmountFilter.setOnItemClickListener((parent, view, position, id) -> {
+        spinnerAmountFilter.setOnItemClickListener((p, v, pos, id) -> {
             if (filtersReady) applyFilters();
         });
-
         filtersReady = true;
     }
 
+    // ── Data loading ───────────────────────────────────────────────────────
+
     private void loadInvoices() {
-        if (progressBar.getVisibility() != View.VISIBLE && allInvoices.isEmpty()) {
-            progressBar.setVisibility(View.VISIBLE);
-        }
+        progressBar.setVisibility(View.VISIBLE);
 
-        ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
-        apiService.getAllInvoicesAdmin().enqueue(new Callback<List<InvoiceResponse>>() {
+        ApiService api = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
+        api.getAllInvoicesAdmin().enqueue(new Callback<List<InvoiceResponse>>() {
             @Override
-            public void onResponse(Call<List<InvoiceResponse>> call, Response<List<InvoiceResponse>> response) {
+            public void onResponse(Call<List<InvoiceResponse>> call,
+                                   Response<List<InvoiceResponse>> response) {
                 progressBar.setVisibility(View.GONE);
-
                 if (response.isSuccessful() && response.body() != null) {
-                    Log.d("INVOICE", "Total from API: " + response.body().size());
-                    for (InvoiceResponse item : response.body()) {
-                        Log.d("INVOICE", "Invoice: " + item.getInvoiceNumber()
-                                + " status=" + item.getStatus()
-                                + " total=" + item.getTotal()
-                                + " customer=" + item.getCustomerName());
-                    }
-
                     allInvoices.clear();
                     allInvoices.addAll(response.body());
-                    Log.d("INVOICE", "pastDueMode=" + pastDueMode);
-                    applyFilters();
+                    customerAdapter.updateData(allInvoices);
+
+                    if (mode.equals("invoices")) {
+                        applyFilters();
+                    } else {
+                        showCustomerMode();
+                    }
                 } else {
-                    Log.e("INVOICE", "Response failed: " + response.code());
-                    Toast.makeText(InvoiceListActivity.this, "Failed to load invoices", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(InvoiceListActivity.this,
+                            "Failed to load invoices", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<List<InvoiceResponse>> call, Throwable t) {
                 progressBar.setVisibility(View.GONE);
-                Log.e("INVOICE", "Request failed: " + t.getMessage());
-                Toast.makeText(InvoiceListActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(InvoiceListActivity.this,
+                        "Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
     }
 
-    private void updateStatusDropdown(List<InvoiceResponse> invoices) {
-        Set<String> statuses = new LinkedHashSet<>();
-        statuses.add("All");
+    // ── Filter logic ───────────────────────────────────────────────────────
 
-        for (InvoiceResponse item : invoices) {
-            if (item.getStatus() != null && !item.getStatus().trim().isEmpty()) {
-                statuses.add(item.getStatus().trim());
-            }
-        }
-
-        ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_dropdown_item_1line,
-                new ArrayList<>(statuses)
-        );
-        spinnerStatusFilter.setAdapter(statusAdapter);
-
-        String current = spinnerStatusFilter.getText() != null
-                ? spinnerStatusFilter.getText().toString().trim()
-                : "";
-
-        if (current.isEmpty()) {
-            spinnerStatusFilter.setText("All", false);
-        }
-    }
-
+    /** Apply search query + status + amount filters to the invoice list */
     private void applyFilters() {
-        String query = "";
-        if (searchViewInvoice != null && searchViewInvoice.getQuery() != null) {
-            query = searchViewInvoice.getQuery().toString().trim().toLowerCase();
-        }
+        String query = searchViewInvoice.getText() != null
+                ? searchViewInvoice.getText().toString().trim().toLowerCase() : "";
 
         String selectedStatus = spinnerStatusFilter.getText() != null
-                ? spinnerStatusFilter.getText().toString().trim()
-                : "All";
+                ? spinnerStatusFilter.getText().toString().trim() : "All";
 
         String selectedAmount = spinnerAmountFilter.getText() != null
-                ? spinnerAmountFilter.getText().toString().trim()
-                : "All";
+                ? spinnerAmountFilter.getText().toString().trim() : "All";
 
         List<InvoiceResponse> filtered = new ArrayList<>();
 
-        java.util.Calendar cal = java.util.Calendar.getInstance();
-        int currentYear = cal.get(java.util.Calendar.YEAR);
-        int currentMonth = cal.get(java.util.Calendar.MONTH);
-
-        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US);
-
         for (InvoiceResponse item : allInvoices) {
-            String invoiceNumber = safe(item.getInvoiceNumber());
-            String customerName = safe(item.getCustomerName());
-            String status = safe(item.getStatus());
-            double total = item.getTotal() != null ? item.getTotal() : 0.0;
 
-            boolean matchesSearch =
-                    query.isEmpty()
-                            || invoiceNumber.toLowerCase().contains(query)
-                            || customerName.toLowerCase().contains(query);
+            // Only show invoices belonging to the selected customer
+            if (selectedCustomerName != null
+                    && !selectedCustomerName.equals(item.getCustomerName())) continue;
 
-            boolean matchesStatus = false;
+            String invoiceNum = safe(item.getInvoiceNumber());
+            String status     = safe(item.getStatus());
+            double total      = item.getTotal() != null ? item.getTotal() : 0.0;
+
+
+            // Search matches invoice number or customer name
+            boolean matchSearch = query.isEmpty()
+                    || invoiceNum.toLowerCase().contains(query)
+                    || safe(item.getCustomerName()).toLowerCase().contains(query)
+                    || status.toLowerCase().contains(query);
+
+            // Status filter
+            boolean matchStatus;
             if (selectedStatus.equalsIgnoreCase("All") || selectedStatus.isEmpty()) {
-                matchesStatus = true;
+                matchStatus = true;
             } else if (selectedStatus.equalsIgnoreCase("Unpaid")) {
-                matchesStatus = !status.equalsIgnoreCase("Paid") && !status.equalsIgnoreCase("Success");
+                matchStatus = !status.equalsIgnoreCase("Paid")
+                        && !status.equalsIgnoreCase("Success");
             } else {
-                matchesStatus = status.equalsIgnoreCase(selectedStatus);
+                matchStatus = status.equalsIgnoreCase(selectedStatus);
             }
 
-            boolean matchesAmount = matchesAmountRange(total, selectedAmount);
+            boolean matchAmount = matchesAmountRange(total, selectedAmount);
 
-            boolean matchesPastDue = true;
-            if (pastDueMode) {
-                String itemStatus = safe(item.getStatus());
-                boolean isUnpaid = !itemStatus.equalsIgnoreCase("Paid") && !itemStatus.equalsIgnoreCase("Success");
-                matchesPastDue = isUnpaid;
-            }
-
-            if (matchesSearch && matchesStatus && matchesAmount && matchesPastDue) {
+            if (matchSearch && matchStatus && matchAmount) {
                 filtered.add(item);
             }
         }
 
-        adapter.setData(filtered);
+        invoiceAdapter.setData(filtered);
         tvEmpty.setVisibility(filtered.isEmpty() ? View.VISIBLE : View.GONE);
     }
 
-    private boolean matchesAmountRange(double total, String selectedAmount) {
-        if (selectedAmount == null || selectedAmount.trim().isEmpty() || selectedAmount.equalsIgnoreCase("All")) {
-            return true;
-        }
-
-        switch (selectedAmount) {
-            case "Under $100":
-                return total < 100.0;
-            case "$100 - $499.99":
-                return total >= 100.0 && total < 500.0;
-            case "$500 - $999.99":
-                return total >= 500.0 && total < 1000.0;
-            case "$1000 and above":
-                return total >= 1000.0;
-            default:
-                return true;
+    private boolean matchesAmountRange(double total, String range) {
+        if (range == null || range.equalsIgnoreCase("All")) return true;
+        switch (range) {
+            case "Under $100":      return total < 100;
+            case "$100 - $499.99":  return total >= 100 && total < 500;
+            case "$500 - $999.99":  return total >= 500 && total < 1000;
+            case "$1000 and above": return total >= 1000;
+            default:                return true;
         }
     }
 
-    private String safe(String value) {
-        return value == null ? "" : value.trim();
+    private String safe(String v) {
+        return v == null ? "" : v.trim();
     }
 
-    private void deleteInvoice(String invoiceNumber) {
-        if (invoiceNumber == null || invoiceNumber.trim().isEmpty()) {
-            Toast.makeText(this, "Invalid invoice number", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
-        apiService.deleteInvoice(invoiceNumber).enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.isSuccessful()) {
-                    Toast.makeText(InvoiceListActivity.this, "Invoice deleted", Toast.LENGTH_SHORT).show();
-                    loadInvoices();
-                } else {
-                    Toast.makeText(InvoiceListActivity.this, "Delete failed", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<Void> call, Throwable t) {
-                Toast.makeText(InvoiceListActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
-            }
-        });
-    }
 }

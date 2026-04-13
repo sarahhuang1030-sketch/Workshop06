@@ -4,7 +4,6 @@ import com.google.gson.annotations.SerializedName;
 
 public class ManagerSummaryResponse {
 
-    // ✅ Match backend field names exactly
     @SerializedName("customers")
     private Integer customers;
 
@@ -32,7 +31,6 @@ public class ManagerSummaryResponse {
     @SerializedName("serviceAppointments")
     private Long serviceAppointments;
 
-    // ❗ KEEP THIS (as you requested)
     @SerializedName("totalEmployees")
     private Long totalEmployees;
 

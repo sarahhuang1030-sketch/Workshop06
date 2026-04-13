@@ -77,23 +77,7 @@
                 android:src="@android:drawable/ic_menu_view"
                 android:tint="#000" />
 
-            <ImageButton
-                android:id="@+id/btnEditInvoice"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@android:color/transparent"
-                android:src="@android:drawable/ic_menu_edit"
-                app:tint="#6F56B3" />
-
-            <ImageButton
-                android:id="@+id/btnDeleteInvoice"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@android:color/transparent"
-                android:src="@android:drawable/ic_menu_delete"
-                app:tint="#D94B7D" />
         </LinearLayout>
-
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>

@@ -169,6 +169,11 @@ public class EmployeeDashboardActivity extends BaseActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     ManagerSummaryResponse data = response.body();
 
+                    android.util.Log.d("DASHBOARD", "pastDue=" + data.getPastDue()
+                            + " customers=" + data.getCustomers()
+                            + " activeSubs=" + data.getActiveSubscriptions()
+                            + " revenue=" + data.getEstimatedMonthlyRevenue());
+
                     items.add(new DashboardMenuItem("👥", "Customers", "Manage customer base",
                             R.drawable.bg_card_top_accent_blue, R.drawable.bg_icon_blue, CustomerListActivity.class));
                     items.add(new DashboardMenuItem("💳", "Invoices", "View and manage invoices",
@@ -207,7 +212,7 @@ public class EmployeeDashboardActivity extends BaseActivity {
                             R.drawable.bg_icon_red,
                             PastDueActivity.class
                     );
-                    pastDueItem.setExtra("pastDueFilter", "true");
+//                    pastDueItem.setExtra("pastDueFilter", "true");
                     items.add(pastDueItem);
 
                     DashboardMenuItem bundleItem = new DashboardMenuItem("📦", "Custom Bundle",

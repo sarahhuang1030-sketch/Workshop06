@@ -37,7 +37,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class EmployeeProfileActivity extends AppCompatActivity {
+public class EmployeeProfileActivity extends BaseActivity {
 
     private static final String BASE_URL = "http://10.0.2.2:8080";
     private static final String DEFAULT_AVATAR_PATH = "/uploads/avatars/default.jpg";
@@ -80,6 +80,12 @@ public class EmployeeProfileActivity extends AppCompatActivity {
                     Toast.makeText(this, "Camera cancelled", Toast.LENGTH_SHORT).show();
                 }
             });
+
+
+    @Override
+    protected void onRefresh() {
+        fetchProfileFromBackend();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -434,4 +440,5 @@ public class EmployeeProfileActivity extends AppCompatActivity {
             Toast.makeText(this, "Unable to open camera", Toast.LENGTH_SHORT).show();
         }
     }
+
 }

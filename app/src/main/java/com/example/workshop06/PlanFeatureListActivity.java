@@ -32,7 +32,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class PlanFeatureListActivity extends AppCompatActivity {
+public class PlanFeatureListActivity extends BaseActivity {
+
+    @Override
+    protected void onRefresh() { loadPlanFeatures(); }
 
     private RecyclerView recyclerView;
     private ProgressBar progressBar;

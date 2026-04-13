@@ -34,7 +34,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ServiceAppointmentListActivity extends AppCompatActivity {
+public class ServiceAppointmentListActivity extends BaseActivity {
+
+    @Override
+    protected void onRefresh() { loadAppointments(); }
 
     private RecyclerView recyclerView;
     private ProgressBar progressBar;

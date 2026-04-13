@@ -18,7 +18,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class AddressActivity extends AppCompatActivity {
+public class AddressActivity extends BaseActivity {
 
     private ImageView btnBack;
     private EditText etStreet1, etStreet2, etCity, etProvince, etPostalCode, etCountry;

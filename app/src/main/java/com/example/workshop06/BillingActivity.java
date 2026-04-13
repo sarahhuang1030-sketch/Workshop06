@@ -12,7 +12,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.card.MaterialCardView;
 
-public class BillingActivity extends AppCompatActivity {
+public class BillingActivity extends BaseActivity {
+
+    @Override protected void onRefresh() {}
 
     private ImageView btnBack;
     private BottomNavigationView bottomNavigation;

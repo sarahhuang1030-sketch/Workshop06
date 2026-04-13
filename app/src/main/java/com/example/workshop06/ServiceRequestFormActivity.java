@@ -30,7 +30,9 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ServiceRequestFormActivity extends AppCompatActivity {
+public class ServiceRequestFormActivity extends BaseActivity {
+
+    @Override protected void onRefresh() {}
 
     private static final String TAG = "ServiceRequestForm";
 

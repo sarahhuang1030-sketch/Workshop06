@@ -20,7 +20,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class SettingsActivity extends AppCompatActivity {
+public class SettingsActivity extends BaseActivity {
+
+    @Override
+    protected void onRefresh() { loadProfile(); }
 
     private ImageView btnBack;
     private BottomNavigationView bottomNavigation;

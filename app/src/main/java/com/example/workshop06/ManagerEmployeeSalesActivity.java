@@ -1,8 +1,6 @@
 package com.example.workshop06;
 
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
@@ -10,7 +8,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -21,14 +18,13 @@ import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.EmployeeSalesResponse;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ManagerEmployeeSalesActivity extends AppCompatActivity {
+public class ManagerEmployeeSalesActivity extends BaseActivity {
 
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
@@ -49,13 +45,13 @@ public class ManagerEmployeeSalesActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manager_employee_sales);
 
-        recyclerView = findViewById(R.id.recyclerViewSales);
-        progressBar = findViewById(R.id.progressBar);
-        tvEmpty = findViewById(R.id.tvEmpty);
-        searchView = findViewById(R.id.searchViewEmployee);
-        btnSortSales = findViewById(R.id.btnSortSales);
-        btnSortCount = findViewById(R.id.btnSortCount);
-        btnBack = findViewById(R.id.btnBack);
+        recyclerView  = findViewById(R.id.recyclerViewSales);
+        progressBar   = findViewById(R.id.progressBar);
+        tvEmpty       = findViewById(R.id.tvEmpty);
+        searchView    = findViewById(R.id.searchViewEmployee);
+        btnSortSales  = findViewById(R.id.btnSortSales);
+        btnSortCount  = findViewById(R.id.btnSortCount);
+        btnBack       = findViewById(R.id.btnBack);
 
         adapter = new EmployeeSalesAdapter();
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -74,19 +70,20 @@ public class ManagerEmployeeSalesActivity extends AppCompatActivity {
         });
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                adapter.filter(query);
-                return true;
+            @Override public boolean onQueryTextSubmit(String query) {
+                adapter.filter(query); return true;
             }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                adapter.filter(newText);
-                return true;
+            @Override public boolean onQueryTextChange(String newText) {
+                adapter.filter(newText); return true;
             }
         });
 
+        loadEmployeeSales();
+    }
+
+    // Auto-refresh sales data every 30 seconds
+    @Override
+    protected void onRefresh() {
         loadEmployeeSales();
     }
 
@@ -97,13 +94,12 @@ public class ManagerEmployeeSalesActivity extends AppCompatActivity {
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
         apiService.getEmployeeSales().enqueue(new Callback<List<EmployeeSalesResponse>>() {
             @Override
-            public void onResponse(Call<List<EmployeeSalesResponse>> call, Response<List<EmployeeSalesResponse>> response) {
+            public void onResponse(Call<List<EmployeeSalesResponse>> call,
+                                   Response<List<EmployeeSalesResponse>> response) {
                 progressBar.setVisibility(View.GONE);
-
                 if (response.isSuccessful() && response.body() != null) {
                     salesList.clear();
                     salesList.addAll(response.body());
-
                     if (salesList.isEmpty()) {
                         tvEmpty.setVisibility(View.VISIBLE);
                         adapter.setData(new ArrayList<>());
@@ -113,26 +109,25 @@ public class ManagerEmployeeSalesActivity extends AppCompatActivity {
                     }
                 } else {
                     tvEmpty.setVisibility(View.VISIBLE);
-                    Toast.makeText(ManagerEmployeeSalesActivity.this, "Failed to load employee sales", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ManagerEmployeeSalesActivity.this,
+                            "Failed to load employee sales", Toast.LENGTH_SHORT).show();
                 }
             }
-
             @Override
             public void onFailure(Call<List<EmployeeSalesResponse>> call, Throwable t) {
                 progressBar.setVisibility(View.GONE);
                 tvEmpty.setVisibility(View.VISIBLE);
-                Toast.makeText(ManagerEmployeeSalesActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(ManagerEmployeeSalesActivity.this,
+                        "Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
     }
 
     private void sortByTotalSales() {
         salesList.sort((a, b) -> {
-            double aValue = a.getTotalSales() != null ? a.getTotalSales() : 0.0;
-            double bValue = b.getTotalSales() != null ? b.getTotalSales() : 0.0;
-            return sortSalesDescending
-                    ? Double.compare(bValue, aValue)
-                    : Double.compare(aValue, bValue);
+            double aVal = a.getTotalSales() != null ? a.getTotalSales() : 0.0;
+            double bVal = b.getTotalSales() != null ? b.getTotalSales() : 0.0;
+            return sortSalesDescending ? Double.compare(bVal, aVal) : Double.compare(aVal, bVal);
         });
         adapter.setData(new ArrayList<>(salesList));
         updateSortButtons();
@@ -140,11 +135,9 @@ public class ManagerEmployeeSalesActivity extends AppCompatActivity {
 
     private void sortBySalesCount() {
         salesList.sort((a, b) -> {
-            int aValue = a.getSalesCount() != null ? a.getSalesCount() : 0;
-            int bValue = b.getSalesCount() != null ? b.getSalesCount() : 0;
-            return sortCountDescending
-                    ? Integer.compare(bValue, aValue)
-                    : Integer.compare(aValue, bValue);
+            int aVal = a.getSalesCount() != null ? a.getSalesCount() : 0;
+            int bVal = b.getSalesCount() != null ? b.getSalesCount() : 0;
+            return sortCountDescending ? Integer.compare(bVal, aVal) : Integer.compare(aVal, bVal);
         });
         adapter.setData(new ArrayList<>(salesList));
         updateSortButtons();
@@ -152,10 +145,8 @@ public class ManagerEmployeeSalesActivity extends AppCompatActivity {
 
     private void updateSortButtons() {
         btnSortSales.setContentDescription(
-                sortSalesDescending ? "Sort sales descending" : "Sort sales ascending"
-        );
+                sortSalesDescending ? "Sort sales descending" : "Sort sales ascending");
         btnSortCount.setContentDescription(
-                sortCountDescending ? "Sort count descending" : "Sort count ascending"
-        );
+                sortCountDescending ? "Sort count descending" : "Sort count ascending");
     }
 }

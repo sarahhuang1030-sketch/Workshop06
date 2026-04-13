@@ -24,7 +24,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class EmployeeSalesActivity extends AppCompatActivity {
+public class EmployeeSalesActivity extends BaseActivity {
 
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
@@ -164,5 +164,10 @@ public class EmployeeSalesActivity extends AppCompatActivity {
     private void showError(String message) {
         updateEmptyState();
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    protected void onRefresh() {
+        loadEmployeeSales();
     }
 }

@@ -11,7 +11,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.card.MaterialCardView;
 
-public class SupportActivity extends AppCompatActivity {
+public class SupportActivity extends BaseActivity {
+
+    @Override protected void onRefresh() {}
 
     private ImageView btnBack;
     private BottomNavigationView bottomNavigation;

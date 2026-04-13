@@ -8,7 +8,6 @@ import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
@@ -24,7 +23,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class AddOnFormActivity extends AppCompatActivity {
+public class AddOnFormActivity extends BaseActivity {
 
     private EditText etAddOnName;
     private EditText etMonthlyPrice;
@@ -42,7 +41,7 @@ public class AddOnFormActivity extends AppCompatActivity {
     private int selectedServiceTypePosition = -1;
 
     private ArrayAdapter<String> activeAdapter;
-    private int selectedActivePosition = 0; // 0 = Yes, 1 = No
+    private int selectedActivePosition = 0;
 
     private ImageButton btnBack;
 
@@ -52,19 +51,17 @@ public class AddOnFormActivity extends AppCompatActivity {
         setContentView(R.layout.activity_addon_form);
 
         spinnerServiceType = findViewById(R.id.spinnerServiceType);
-        spinnerActive = findViewById(R.id.spinnerActive);
-        etAddOnName = findViewById(R.id.etAddOnName);
-        etMonthlyPrice = findViewById(R.id.etMonthlyPrice);
-        etDescription = findViewById(R.id.etDescription);
-        btnSaveAddOn = findViewById(R.id.btnSaveAddOn);
-        btnBack = findViewById(R.id.btnBack);
+        spinnerActive      = findViewById(R.id.spinnerActive);
+        etAddOnName        = findViewById(R.id.etAddOnName);
+        etMonthlyPrice     = findViewById(R.id.etMonthlyPrice);
+        etDescription      = findViewById(R.id.etDescription);
+        btnSaveAddOn       = findViewById(R.id.btnSaveAddOn);
+        btnBack            = findViewById(R.id.btnBack);
 
         btnBack.setOnClickListener(v -> finish());
+
         serviceTypeAdapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_dropdown_item_1line,
-                new ArrayList<>()
-        );
+                this, android.R.layout.simple_dropdown_item_1line, new ArrayList<>());
         spinnerServiceType.setAdapter(serviceTypeAdapter);
 
         spinnerServiceType.setOnItemClickListener((parent, view, position, id) -> {
@@ -72,12 +69,8 @@ public class AddOnFormActivity extends AppCompatActivity {
             spinnerServiceType.setError(null);
         });
 
-
         activeAdapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_dropdown_item_1line,
-                new String[]{"Yes", "No"}
-        );
+                this, android.R.layout.simple_dropdown_item_1line, new String[]{"Yes", "No"});
         spinnerActive.setAdapter(activeAdapter);
         spinnerActive.setText("Yes", false);
 
@@ -98,6 +91,10 @@ public class AddOnFormActivity extends AppCompatActivity {
         btnSaveAddOn.setOnClickListener(v -> saveAddOn());
     }
 
+    // Form screen — no periodic refresh needed
+    @Override
+    protected void onRefresh() {}
+
     private void loadAddOn(int id) {
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
         apiService.getAddOnById(id).enqueue(new Callback<AddOnResponse>() {
@@ -105,16 +102,13 @@ public class AddOnFormActivity extends AppCompatActivity {
             public void onResponse(Call<AddOnResponse> call, Response<AddOnResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     loadedAddOn = response.body();
-
                     etAddOnName.setText(loadedAddOn.getAddOnName() != null ? loadedAddOn.getAddOnName() : "");
                     etMonthlyPrice.setText(loadedAddOn.getMonthlyPrice() != null
                             ? String.valueOf(loadedAddOn.getMonthlyPrice()) : "");
                     etDescription.setText(loadedAddOn.getDescription() != null ? loadedAddOn.getDescription() : "");
-
                     boolean isActive = Boolean.TRUE.equals(loadedAddOn.getIsActive());
                     selectedActivePosition = isActive ? 0 : 1;
                     spinnerActive.setText(isActive ? "Yes" : "No", false);
-
                     setServiceTypeSelectionForLoadedAddOn();
                 } else {
                     Toast.makeText(AddOnFormActivity.this, "Failed to load add-on", Toast.LENGTH_SHORT).show();
@@ -132,20 +126,16 @@ public class AddOnFormActivity extends AppCompatActivity {
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
         apiService.getServiceTypes().enqueue(new Callback<List<ServiceTypeResponse>>() {
             @Override
-            public void onResponse(Call<List<ServiceTypeResponse>> call, Response<List<ServiceTypeResponse>> response) {
+            public void onResponse(Call<List<ServiceTypeResponse>> call,
+                                   Response<List<ServiceTypeResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     serviceTypes.clear();
                     serviceTypes.addAll(response.body());
-
                     List<String> names = new ArrayList<>();
-                    for (ServiceTypeResponse item : serviceTypes) {
-                        names.add(item.getName());
-                    }
-
+                    for (ServiceTypeResponse item : serviceTypes) names.add(item.getName());
                     serviceTypeAdapter.clear();
                     serviceTypeAdapter.addAll(names);
                     serviceTypeAdapter.notifyDataSetChanged();
-
                     setServiceTypeSelectionForLoadedAddOn();
                 } else {
                     Toast.makeText(AddOnFormActivity.this, "Failed to load service types", Toast.LENGTH_SHORT).show();
@@ -160,13 +150,9 @@ public class AddOnFormActivity extends AppCompatActivity {
     }
 
     private void setServiceTypeSelectionForLoadedAddOn() {
-        if (loadedAddOn == null || loadedAddOn.getServiceTypeId() == null || serviceTypes.isEmpty()) {
-            return;
-        }
-
+        if (loadedAddOn == null || loadedAddOn.getServiceTypeId() == null || serviceTypes.isEmpty()) return;
         for (int i = 0; i < serviceTypes.size(); i++) {
-            Integer serviceTypeId = serviceTypes.get(i).getServiceTypeId();
-            if (loadedAddOn.getServiceTypeId().equals(serviceTypeId)) {
+            if (loadedAddOn.getServiceTypeId().equals(serviceTypes.get(i).getServiceTypeId())) {
                 selectedServiceTypePosition = i;
                 spinnerServiceType.setText(serviceTypes.get(i).getName(), false);
                 break;
@@ -175,9 +161,9 @@ public class AddOnFormActivity extends AppCompatActivity {
     }
 
     private void saveAddOn() {
-        String name = etAddOnName.getText() != null ? etAddOnName.getText().toString().trim() : "";
+        String name             = etAddOnName.getText() != null ? etAddOnName.getText().toString().trim() : "";
         String monthlyPriceText = etMonthlyPrice.getText() != null ? etMonthlyPrice.getText().toString().trim() : "";
-        String description = etDescription.getText() != null ? etDescription.getText().toString().trim() : "";
+        String description      = etDescription.getText() != null ? etDescription.getText().toString().trim() : "";
 
         if (selectedServiceTypePosition < 0 || selectedServiceTypePosition >= serviceTypes.size()) {
             spinnerServiceType.setError("Please select a service type");
@@ -185,10 +171,7 @@ public class AddOnFormActivity extends AppCompatActivity {
             return;
         }
 
-        String activeText = spinnerActive.getText() != null
-                ? spinnerActive.getText().toString().trim()
-                : "";
-
+        String activeText = spinnerActive.getText() != null ? spinnerActive.getText().toString().trim() : "";
         if (activeText.isEmpty()) {
             spinnerActive.setError("Please select active status");
             spinnerActive.requestFocus();
@@ -216,14 +199,12 @@ public class AddOnFormActivity extends AppCompatActivity {
             return;
         }
 
-// ✅ POSITIVE ONLY
         if (monthlyPrice <= 0) {
             etMonthlyPrice.setError("Price must be greater than 0");
             etMonthlyPrice.requestFocus();
             return;
         }
 
-// ✅ MAX = 100
         if (monthlyPrice > 100) {
             etMonthlyPrice.setError("Add-on price cannot exceed $100");
             etMonthlyPrice.requestFocus();
@@ -233,14 +214,7 @@ public class AddOnFormActivity extends AppCompatActivity {
         Integer serviceTypeId = serviceTypes.get(selectedServiceTypePosition).getServiceTypeId();
         boolean isActive = activeText.equalsIgnoreCase("Yes");
 
-        AddOnRequest request = new AddOnRequest(
-                serviceTypeId,
-                name,
-                monthlyPrice,
-                description,
-                isActive
-        );
-
+        AddOnRequest request = new AddOnRequest(serviceTypeId, name, monthlyPrice, description, isActive);
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
 
         if (addOnId == null) {

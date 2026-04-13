@@ -17,38 +17,62 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="16dp">
+            android:padding="0dp">
 
-            <ImageButton
-                android:id="@+id/btnBack"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_margin="12dp"
-                android:layout_gravity="start|top"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_arrow_back"
-                android:clickable="true"
-                android:focusable="true"
-                android:elevation="16dp"
-                app:tint="@android:color/white"/>
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:background="@drawable/bg_employee_dashboard_header">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Create Bundle"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:textColor="#000000"/>
+                <ImageButton
+                    android:id="@+id/btnBack"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_margin="12dp"
+                    android:layout_gravity="start|top"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_arrow_back"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="16dp"
+                    android:contentDescription="Back"
+                    app:tint="@android:color/white"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center_vertical"
+                    android:paddingStart="18dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Create Bundle"
+                        android:textColor="#fff"
+                        android:textSize="28sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="45dp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Build a custom plan for your customer"
+                        android:textColor="#fff"
+                        android:textSize="14sp"
+                        android:layout_marginTop="4dp"/>
+                </LinearLayout>
+
+            </FrameLayout>
         </LinearLayout>
 
-        <!-- =========================
-             SERVICE TYPE
-        ========================== -->
+        <!-- SERVICE TYPE -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Service Type"
             android:textStyle="bold"
+            android:layout_marginTop="20dp"
             android:layout_marginBottom="8dp"/>
 
         <RadioGroup
@@ -71,9 +95,7 @@
                 android:checked="true"/>
         </RadioGroup>
 
-        <!-- =========================
-             CUSTOMER DROPDOWN
-        ========================== -->
+        <!-- CUSTOMER DROPDOWN -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -88,9 +110,7 @@
             android:layout_height="wrap_content"
             android:background="@android:drawable/btn_dropdown"/>
 
-        <!-- =========================
-             PLANS SECTION
-        ========================== -->
+        <!-- PLANS SECTION -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -107,9 +127,7 @@
             android:padding="8dp"
             android:background="#FFFFFF"/>
 
-        <!-- =========================
-             ADDONS SECTION
-        ========================== -->
+        <!-- ADDONS SECTION -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -126,9 +144,7 @@
             android:padding="8dp"
             android:background="#FFFFFF"/>
 
-        <!-- =========================
-             SUMMARY
-        ========================== -->
+        <!-- SUMMARY -->
         <TextView
             android:id="@+id/tvSummary"
             android:layout_width="match_parent"
@@ -146,9 +162,7 @@
             android:textSize="18sp"
             android:layout_marginTop="8dp"/>
 
-        <!-- =========================
-             SUBMIT BUTTON
-        ========================== -->
+        <!-- SUBMIT BUTTON -->
         <Button
             android:id="@+id/btnSubmit"
             android:layout_width="match_parent"

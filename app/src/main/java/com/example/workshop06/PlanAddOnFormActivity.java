@@ -21,7 +21,9 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class PlanAddOnFormActivity extends AppCompatActivity {
+public class PlanAddOnFormActivity extends BaseActivity {
+
+    @Override protected void onRefresh() {}
 
     private MaterialAutoCompleteTextView spinnerAddOn;
     private Button btnSave;

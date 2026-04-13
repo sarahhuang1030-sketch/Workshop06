@@ -4,8 +4,6 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -18,7 +16,6 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -31,76 +28,55 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 
-
 import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class CustomerListActivity extends AppCompatActivity {
+public class CustomerListActivity extends BaseActivity {
 
-    private final Handler refreshHandler = new Handler(Looper.getMainLooper());
-    private final Runnable refreshRunnable = new Runnable() {
-        @Override
-        public void run() {
-            loadCustomers();
-            refreshHandler.postDelayed(this, 30000);
-        }
-    };
+    // Removed manual Handler/Runnable — handled by BaseActivity
 
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private TextView tvEmpty;
     private SearchView searchViewCustomer;
     private BottomNavigationView bottomNavigation;
-
     private MaterialAutoCompleteTextView spinnerStatusFilter;
     private MaterialAutoCompleteTextView spinnerTypeFilter;
-
     private FloatingActionButton fabAdd;
     private CustomerAdapter adapter;
-
-    private String currentSearchText = "";
-    private String currentStatusFilter = "All Status";
-    private String currentTypeFilter = "All Types";
-
     private ImageButton btnBack;
 
+    private String currentSearchText   = "";
+    private String currentStatusFilter = "All Status";
+    private String currentTypeFilter   = "All Types";
+
     private final ActivityResultLauncher<Intent> formLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> loadCustomers());
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        refreshHandler.postDelayed(refreshRunnable, 30000);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        refreshHandler.removeCallbacks(refreshRunnable);
-    }
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                    result -> loadCustomers());
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_customer_list);
+
         bottomNavigation = findViewById(R.id.bottomNavigation);
-        btnBack = findViewById(R.id.btnBack);
+        btnBack          = findViewById(R.id.btnBack);
 
         initViews();
         setupRecyclerView();
 
-        SharedPreferences prefs = getSharedPreferences("teleconnect_prefs", MODE_PRIVATE);
-        String role = prefs.getString("user_role", "");
-        boolean isTechnician = "Service Technician".equalsIgnoreCase(role);
+        SharedPreferences prefs  = getSharedPreferences("teleconnect_prefs", MODE_PRIVATE);
+        String role               = prefs.getString("user_role", "");
+        boolean isTechnician      = "Service Technician".equalsIgnoreCase(role);
 
         adapter.setReadOnlyMode(isTechnician);
 
-        if (fabAdd != null) {
+        if (fabAdd != null)
             fabAdd.setVisibility(isTechnician ? View.GONE : View.VISIBLE);
-        }
+
         btnBack.setOnClickListener(v -> finish());
         setupFilterDropdowns();
         setupSearch();
@@ -110,14 +86,20 @@ public class CustomerListActivity extends AppCompatActivity {
         BottomNavHelper.setup(this, R.id.nav_customers);
     }
 
+    // Auto-refresh customer list every 30 seconds
+    @Override
+    protected void onRefresh() {
+        loadCustomers();
+    }
+
     private void initViews() {
-        recyclerView = findViewById(R.id.recyclerViewCustomers);
-        progressBar = findViewById(R.id.progressBar);
-        tvEmpty = findViewById(R.id.tvEmpty);
-        searchViewCustomer = findViewById(R.id.searchViewCustomer);
+        recyclerView        = findViewById(R.id.recyclerViewCustomers);
+        progressBar         = findViewById(R.id.progressBar);
+        tvEmpty             = findViewById(R.id.tvEmpty);
+        searchViewCustomer  = findViewById(R.id.searchViewCustomer);
         spinnerStatusFilter = findViewById(R.id.spinnerStatusFilter);
-        spinnerTypeFilter = findViewById(R.id.spinnerTypeFilter);
-        fabAdd = findViewById(R.id.fabAdd);
+        spinnerTypeFilter   = findViewById(R.id.spinnerTypeFilter);
+        fabAdd              = findViewById(R.id.fabAdd);
     }
 
     private void setupRecyclerView() {
@@ -141,7 +123,6 @@ public class CustomerListActivity extends AppCompatActivity {
             @Override
             public void onDelete(CustomerResponse item) {
                 if (item.getCustomerId() == null) return;
-
                 new AlertDialog.Builder(CustomerListActivity.this)
                         .setTitle("Delete Customer")
                         .setMessage("Are you sure you want to delete this customer?")
@@ -154,9 +135,9 @@ public class CustomerListActivity extends AppCompatActivity {
             public void onAddress(CustomerResponse item) {
                 if (item.getCustomerId() == null) return;
 
-                SharedPreferences prefs = getSharedPreferences("teleconnect_prefs", MODE_PRIVATE);
-                String role = prefs.getString("user_role", "");
-                boolean isTechnician = "Service Technician".equalsIgnoreCase(role);
+                SharedPreferences prefs  = getSharedPreferences("teleconnect_prefs", MODE_PRIVATE);
+                String role               = prefs.getString("user_role", "");
+                boolean isTechnician      = "Service Technician".equalsIgnoreCase(role);
 
                 String customerName;
                 if ("Business".equalsIgnoreCase(item.getCustomerType())) {
@@ -171,11 +152,8 @@ public class CustomerListActivity extends AppCompatActivity {
                 intent.putExtra("customerName", customerName);
                 intent.putExtra("readOnly", isTechnician);
 
-                if (isTechnician) {
-                    startActivity(intent);
-                } else {
-                    formLauncher.launch(intent);
-                }
+                if (isTechnician) startActivity(intent);
+                else formLauncher.launch(intent);
             }
         });
 
@@ -186,13 +164,13 @@ public class CustomerListActivity extends AppCompatActivity {
 
     private void setupFilterDropdowns() {
         String[] statusItems = {"All Status", "Active", "Inactive"};
-        ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, statusItems);
-        spinnerStatusFilter.setAdapter(statusAdapter);
+        spinnerStatusFilter.setAdapter(new ArrayAdapter<>(this,
+                android.R.layout.simple_list_item_1, statusItems));
         spinnerStatusFilter.setText("All Status", false);
 
         String[] typeItems = {"All Types", "Individual", "Business"};
-        ArrayAdapter<String> typeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, typeItems);
-        spinnerTypeFilter.setAdapter(typeAdapter);
+        spinnerTypeFilter.setAdapter(new ArrayAdapter<>(this,
+                android.R.layout.simple_list_item_1, typeItems));
         spinnerTypeFilter.setText("All Types", false);
 
         spinnerStatusFilter.setOnClickListener(v -> spinnerStatusFilter.showDropDown());
@@ -231,8 +209,7 @@ public class CustomerListActivity extends AppCompatActivity {
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                     currentStatusFilter = s != null && !s.toString().trim().isEmpty()
-                            ? s.toString().trim()
-                            : "All Status";
+                            ? s.toString().trim() : "All Status";
                     applyCurrentFilters();
                 }
             });
@@ -251,8 +228,7 @@ public class CustomerListActivity extends AppCompatActivity {
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                     currentTypeFilter = s != null && !s.toString().trim().isEmpty()
-                            ? s.toString().trim()
-                            : "All Types";
+                            ? s.toString().trim() : "All Types";
                     applyCurrentFilters();
                 }
             });
@@ -270,46 +246,45 @@ public class CustomerListActivity extends AppCompatActivity {
     }
 
     private void applyCurrentFilters() {
-        currentStatusFilter = spinnerStatusFilter != null && spinnerStatusFilter.getText() != null
+        currentStatusFilter = spinnerStatusFilter != null
+                && spinnerStatusFilter.getText() != null
                 && !spinnerStatusFilter.getText().toString().trim().isEmpty()
-                ? spinnerStatusFilter.getText().toString().trim()
-                : "All Status";
+                ? spinnerStatusFilter.getText().toString().trim() : "All Status";
 
-        currentTypeFilter = spinnerTypeFilter != null && spinnerTypeFilter.getText() != null
+        currentTypeFilter = spinnerTypeFilter != null
+                && spinnerTypeFilter.getText() != null
                 && !spinnerTypeFilter.getText().toString().trim().isEmpty()
-                ? spinnerTypeFilter.getText().toString().trim()
-                : "All Types";
+                ? spinnerTypeFilter.getText().toString().trim() : "All Types";
 
         adapter.applyFilters(currentSearchText, currentStatusFilter, currentTypeFilter);
         updateEmptyState();
     }
 
     private void loadCustomers() {
-        if (progressBar.getVisibility() != View.VISIBLE && (adapter == null || adapter.getItemCount() == 0)) {
+        if (progressBar.getVisibility() != View.VISIBLE
+                && (adapter == null || adapter.getItemCount() == 0)) {
             showLoading(true);
             showEmpty(false);
         }
 
-        SharedPreferences prefs = getSharedPreferences("teleconnect_prefs", MODE_PRIVATE);
-        String role = prefs.getString("user_role", "");
-        boolean isTechnician = "Service Technician".equalsIgnoreCase(role);
+        SharedPreferences prefs  = getSharedPreferences("teleconnect_prefs", MODE_PRIVATE);
+        String role               = prefs.getString("user_role", "");
+        boolean isTechnician      = "Service Technician".equalsIgnoreCase(role);
 
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
-
         Call<List<CustomerResponse>> call = isTechnician
                 ? apiService.getCustomersForTechnician()
                 : apiService.getCustomers();
 
         call.enqueue(new Callback<List<CustomerResponse>>() {
             @Override
-            public void onResponse(Call<List<CustomerResponse>> call, Response<List<CustomerResponse>> response) {
+            public void onResponse(Call<List<CustomerResponse>> call,
+                                   Response<List<CustomerResponse>> response) {
                 showLoading(false);
-
                 if (!response.isSuccessful()) {
                     showError("Failed to load customers. Code: " + response.code());
                     return;
                 }
-
                 List<CustomerResponse> data = response.body();
                 adapter.setData(data);
                 applyCurrentFilters();
@@ -327,13 +302,11 @@ public class CustomerListActivity extends AppCompatActivity {
 
     private void deleteCustomer(int customerId) {
         showLoading(true);
-
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
         apiService.deleteCustomer(customerId).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 showLoading(false);
-
                 if (response.isSuccessful()) {
                     Toast.makeText(CustomerListActivity.this, "Deleted successfully", Toast.LENGTH_SHORT).show();
                     loadCustomers();
@@ -358,9 +331,8 @@ public class CustomerListActivity extends AppCompatActivity {
 
     private void showEmpty(boolean isEmpty) {
         tvEmpty.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
-        if (progressBar.getVisibility() != View.VISIBLE) {
+        if (progressBar.getVisibility() != View.VISIBLE)
             recyclerView.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
-        }
     }
 
     private void updateEmptyState() {

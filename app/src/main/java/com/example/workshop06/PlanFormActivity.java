@@ -33,7 +33,9 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class PlanFormActivity extends AppCompatActivity {
+public class PlanFormActivity extends BaseActivity {
+
+    @Override protected void onRefresh() {}
 
     private TextInputEditText etPlanName;
     private TextInputEditText etMonthlyPrice;

@@ -17,7 +17,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class CustomBundleActivity extends AppCompatActivity {
+public class CustomBundleActivity extends BaseActivity {
 
     // =========================
     // UI

@@ -33,7 +33,9 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ServiceAppointmentFormActivity extends AppCompatActivity {
+public class ServiceAppointmentFormActivity extends BaseActivity {
+
+    @Override protected void onRefresh() {}
 
     private TextInputLayout layoutRequestSpinner, layoutTechnicianSpinner, layoutAddressSpinner;
     private TextInputLayout tilScheduledStart, tilScheduledEnd;

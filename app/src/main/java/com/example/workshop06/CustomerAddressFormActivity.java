@@ -27,7 +27,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class CustomerAddressFormActivity extends AppCompatActivity {
+public class CustomerAddressFormActivity extends BaseActivity {
 
     private static final String TAG = "CustomerAddressForm";
 

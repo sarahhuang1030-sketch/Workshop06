@@ -8,7 +8,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -28,7 +27,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class EmployeeDashboardActivity extends AppCompatActivity {
+public class EmployeeDashboardActivity extends BaseActivity {
 
     private TextView tvAgentName;
     private RecyclerView rvDashboardCards;
@@ -41,16 +40,16 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_employee_dashboard);
 
-        tvAgentName = findViewById(R.id.tvAgentName);
+        tvAgentName      = findViewById(R.id.tvAgentName);
         rvDashboardCards = findViewById(R.id.rvDashboardCards);
         bottomNavigation = findViewById(R.id.bottomNavigation);
-        tvStatus = findViewById(R.id.tvStatus);
-        statusDot = findViewById(R.id.statusDot);
+        tvStatus         = findViewById(R.id.tvStatus);
+        statusDot        = findViewById(R.id.statusDot);
 
         SharedPreferences prefs = getSharedPreferences("teleconnect_prefs", MODE_PRIVATE);
-        String role = prefs.getString("user_role", "");
+        String role      = prefs.getString("user_role", "");
         String firstName = prefs.getString("first_name", "");
-        String lastName = prefs.getString("last_name", "");
+        String lastName  = prefs.getString("last_name", "");
 
         if (firstName != null && !firstName.isEmpty()) {
             tvAgentName.setText(firstName + " " + lastName);
@@ -63,22 +62,17 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
         loadEmployeeStatus();
         setupDashboardCards();
 
-        tvAgentName.setOnClickListener(v -> {
-            Intent intent = new Intent(EmployeeDashboardActivity.this, EmployeeProfileActivity.class);
-            startActivity(intent);
-        });
+        tvAgentName.setOnClickListener(v ->
+                startActivity(new Intent(this, EmployeeProfileActivity.class)));
 
-        if ("Service Technician".equalsIgnoreCase(role)) {
-            BottomNavHelper.setup(this, R.id.nav_home);
-        } else {
-            BottomNavHelper.setup(this, R.id.nav_home);
-        }
+        BottomNavHelper.setup(this, R.id.nav_home);
     }
 
+    // Refresh status and dashboard cards every 30 seconds
     @Override
-    protected void onResume() {
-        super.onResume();
+    protected void onRefresh() {
         loadEmployeeStatus();
+        setupDashboardCards();
     }
 
     private void loadEmployeeStatus() {
@@ -93,16 +87,12 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
         }
 
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
-
         apiService.getMe("Bearer " + token).enqueue(new Callback<MeResponse>() {
             @Override
             public void onResponse(@NonNull Call<MeResponse> call,
                                    @NonNull Response<MeResponse> response) {
-
                 if (response.isSuccessful() && response.body() != null) {
-                    MeResponse me = response.body();
-                    String status = me.getStatus();
-
+                    String status = response.body().getStatus();
                     if ("Active".equalsIgnoreCase(status)) {
                         tvStatus.setText("Active");
                         statusDot.setBackgroundResource(R.drawable.bg_status_dot_green);
@@ -113,19 +103,12 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
                 } else {
                     tvStatus.setText("Unknown");
                     statusDot.setBackgroundResource(R.drawable.bg_status_dot_red);
-                    Toast.makeText(EmployeeDashboardActivity.this,
-                            "Failed to load status: " + response.code(),
-                            Toast.LENGTH_SHORT).show();
                 }
             }
-
             @Override
             public void onFailure(@NonNull Call<MeResponse> call, @NonNull Throwable t) {
                 tvStatus.setText("Unknown");
                 statusDot.setBackgroundResource(R.drawable.bg_status_dot_red);
-                Toast.makeText(EmployeeDashboardActivity.this,
-                        "Error: " + t.getMessage(),
-                        Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -135,7 +118,6 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
         String role = prefs.getString("user_role", "");
 
         rvDashboardCards.setLayoutManager(new GridLayoutManager(this, 2));
-
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
 
         if ("Service Technician".equalsIgnoreCase(role)) {
@@ -143,62 +125,37 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
                 @Override
                 public void onResponse(@NonNull Call<ServiceDashboardSummaryResponse> call,
                                        @NonNull Response<ServiceDashboardSummaryResponse> response) {
-
                     List<DashboardMenuItem> items = new ArrayList<>();
-
                     if (response.isSuccessful() && response.body() != null) {
                         ServiceDashboardSummaryResponse data = response.body();
-
-                        items.add(new DashboardMenuItem(
-                                "📅",
-                                "Jobs",
+                        items.add(new DashboardMenuItem("📅", "Jobs",
                                 data.getTodayAppointments() + " today",
-                                R.drawable.bg_card_top_accent_blue,
-                                R.drawable.bg_icon_blue,
-                                ServiceAppointmentListActivity.class
-                        ));
-
-                        items.add(new DashboardMenuItem(
-                                "🧑‍🤝‍🧑",
-                                "Requests",
+                                R.drawable.bg_card_top_accent_blue, R.drawable.bg_icon_blue,
+                                ServiceAppointmentListActivity.class));
+                        items.add(new DashboardMenuItem("🧑‍🤝‍🧑", "Requests",
                                 data.getOpenRequests() + " open",
-                                R.drawable.bg_card_top_accent_magenta,
-                                R.drawable.bg_icon_lavender,
-                                ServiceRequestListActivity.class
-                        ));
-
-                        items.add(new DashboardMenuItem(
-                                "🛠️",
-                                "Assigned",
+                                R.drawable.bg_card_top_accent_magenta, R.drawable.bg_icon_lavender,
+                                ServiceRequestListActivity.class));
+                        items.add(new DashboardMenuItem("🛠️", "Assigned",
                                 data.getAssignedRequests() + " assigned",
-                                R.drawable.bg_card_top_accent_purple,
-                                R.drawable.bg_icon_lavender,
-                                ServiceRequestListActivity.class
-                        ));
-
-                        items.add(new DashboardMenuItem(
-                                "✅",
-                                "Completed",
+                                R.drawable.bg_card_top_accent_purple, R.drawable.bg_icon_lavender,
+                                ServiceRequestListActivity.class));
+                        items.add(new DashboardMenuItem("✅", "Completed",
                                 data.getCompletedRequests() + " done",
-                                R.drawable.bg_card_top_accent_pink,
-                                R.drawable.bg_icon_pink,
-                                ServiceRequestListActivity.class
-                        ));
-
-                        DashboardMenuAdapter adapter = new DashboardMenuAdapter(EmployeeDashboardActivity.this, items);
-                        rvDashboardCards.setAdapter(adapter);
+                                R.drawable.bg_card_top_accent_pink, R.drawable.bg_icon_pink,
+                                ServiceRequestListActivity.class));
+                        rvDashboardCards.setAdapter(
+                                new DashboardMenuAdapter(EmployeeDashboardActivity.this, items));
                     } else {
                         Toast.makeText(EmployeeDashboardActivity.this,
-                                "Failed to load technician summary",
-                                Toast.LENGTH_SHORT).show();
+                                "Failed to load technician summary", Toast.LENGTH_SHORT).show();
                     }
                 }
-
                 @Override
-                public void onFailure(@NonNull Call<ServiceDashboardSummaryResponse> call, @NonNull Throwable t) {
+                public void onFailure(@NonNull Call<ServiceDashboardSummaryResponse> call,
+                                      @NonNull Throwable t) {
                     Toast.makeText(EmployeeDashboardActivity.this,
-                            "Error: " + t.getMessage(),
-                            Toast.LENGTH_LONG).show();
+                            "Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
                 }
             });
             return;
@@ -208,153 +165,79 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
             @Override
             public void onResponse(@NonNull Call<ManagerSummaryResponse> call,
                                    @NonNull Response<ManagerSummaryResponse> response) {
-
                 List<DashboardMenuItem> items = new ArrayList<>();
-
                 if (response.isSuccessful() && response.body() != null) {
                     ManagerSummaryResponse data = response.body();
 
-                    items.add(new DashboardMenuItem(
-                            "👥",
-                            "Customers",
-                            "Manage customer base",
-                            R.drawable.bg_card_top_accent_blue,
-                            R.drawable.bg_icon_blue,
-                            CustomerListActivity.class
-                    ));
+                    items.add(new DashboardMenuItem("👥", "Customers", "Manage customer base",
+                            R.drawable.bg_card_top_accent_blue, R.drawable.bg_icon_blue, CustomerListActivity.class));
+                    items.add(new DashboardMenuItem("💳", "Invoices", "View and manage invoices",
+                            R.drawable.bg_card_top_accent_red, R.drawable.bg_icon_red, InvoiceListActivity.class));
 
-                    items.add(new DashboardMenuItem(
-                            "💳",
-                            "Invoices",
-                            "View and manage invoices",
-                            R.drawable.bg_card_top_accent_red,
-                            R.drawable.bg_icon_red,
-                            InvoiceListActivity.class
-                    ));
+                    items.add(new DashboardMenuItem("📄", "Quotes", "View customer quotes",
+                            R.drawable.bg_card_top_accent_purple, R.drawable.bg_icon_lavender,
+                            QuoteCustomerListActivity.class));
 
-                    DashboardMenuItem quotesItem = new DashboardMenuItem(
-                            "📄",
-                            "Quotes",
-                            "View customer quotes",
-                            R.drawable.bg_card_top_accent_purple,
-                            R.drawable.bg_icon_lavender,
-                            QuoteCustomerListActivity.class
-                    );
-                    items.add(quotesItem);
-
-                    DashboardMenuItem revenueItem = new DashboardMenuItem(
-                            "💰",
-                            "Monthly Revenue",
+                    DashboardMenuItem revenueItem = new DashboardMenuItem("💰", "Monthly Revenue",
                             String.format("$%.2f", data.getEstimatedMonthlyRevenue()),
-                            R.drawable.bg_card_top_accent_pink,
-                            R.drawable.bg_icon_pink,
-                            InvoiceListActivity.class
-                    );
+                            R.drawable.bg_card_top_accent_pink, R.drawable.bg_icon_pink, InvoiceListActivity.class);
                     revenueItem.setExtra("monthlyRevenueMode", "true");
                     items.add(revenueItem);
 
-                    items.add(new DashboardMenuItem(
-                            "🖥️",
-                            "Subscriptions",
+                    items.add(new DashboardMenuItem("🖥️", "Subscriptions",
                             data.getActiveSubscriptions() + " active",
-                            R.drawable.bg_card_top_accent_pink,
-                            R.drawable.bg_icon_pink,
-                            SubscriptionFormActivity.class
-                    ));
-
-                    items.add(new DashboardMenuItem(
-                            "➕",
-                            "Add-Ons",
+                            R.drawable.bg_card_top_accent_pink, R.drawable.bg_icon_pink,
+                            SubscriptionFormActivity.class));
+                    items.add(new DashboardMenuItem("➕", "Add-Ons",
                             data.getTotalAddons() + " available",
-                            R.drawable.bg_card_top_accent_blue,
-                            R.drawable.bg_icon_blue,
-                            AddOnListActivity.class
-                    ));
-
-                    items.add(new DashboardMenuItem(
-                            "🧩",
-                            "Plan Features",
+                            R.drawable.bg_card_top_accent_blue, R.drawable.bg_icon_blue,
+                            AddOnListActivity.class));
+                    items.add(new DashboardMenuItem("🧩", "Plan Features",
                             data.getTotalPlanFeatures() + " active",
-                            R.drawable.bg_card_top_accent_magenta,
-                            R.drawable.bg_icon_lavender,
-                            PlanFeatureListActivity.class
-                    ));
+                            R.drawable.bg_card_top_accent_magenta, R.drawable.bg_icon_lavender,
+                            PlanFeatureListActivity.class));
+                    items.add(new DashboardMenuItem("🛠️", "Services", "Manage service requests",
+                            R.drawable.bg_card_top_accent_magenta, R.drawable.bg_icon_lavender,
+                            ServiceRequestListActivity.class));
 
-                    items.add(new DashboardMenuItem(
-                            "🛠️",
-                            "Services",
-                            "Manage service requests",
-                            R.drawable.bg_card_top_accent_magenta,
-                            R.drawable.bg_icon_lavender,
-                            ServiceRequestListActivity.class
-                    ));
-
-                    DashboardMenuItem pastDueItem = new DashboardMenuItem(
-                            "⚠️",
-                            "Past Due",
+                    DashboardMenuItem pastDueItem = new DashboardMenuItem("⚠️", "Past Due",
                             data.getPastDue() + " past due",
-                            R.drawable.bg_card_top_accent_red,
-                            R.drawable.bg_icon_red,
-                            InvoiceListActivity.class
-                    );
+                            R.drawable.bg_card_top_accent_red, R.drawable.bg_icon_red, InvoiceListActivity.class);
                     pastDueItem.setExtra("pastDueFilter", "true");
                     items.add(pastDueItem);
 
-                    DashboardMenuItem bundleItem = new DashboardMenuItem(
-                            "📦",
-                            "Custom Bundle",
+                    DashboardMenuItem bundleItem = new DashboardMenuItem("📦", "Custom Bundle",
                             "Create and send bundles",
-                            R.drawable.bg_card_top_accent_purple,
-                            R.drawable.bg_icon_lavender,
-                            CustomBundleActivity.class
-                    );
+                            R.drawable.bg_card_top_accent_purple, R.drawable.bg_icon_lavender,
+                            CustomBundleActivity.class);
                     bundleItem.setExtra("customBundleMode", "true");
                     items.add(bundleItem);
 
-                    items.add(new DashboardMenuItem(
-                            "📊",
-                            "Employee Sales",
-                            "See Agents' Performance",
-                            R.drawable.bg_card_top_accent_pink,
-                            R.drawable.bg_icon_blue,
-                            EmployeeSalesActivity.class
-                    ));
+                    items.add(new DashboardMenuItem("📊", "Employee Sales", "See Agents' Performance",
+                            R.drawable.bg_card_top_accent_pink, R.drawable.bg_icon_blue,
+                            EmployeeSalesActivity.class));
 
                     if ("Manager".equalsIgnoreCase(role)) {
-                        items.add(new DashboardMenuItem(
-                                "🏢",
-                                "Branches\nLocation",
+                        items.add(new DashboardMenuItem("🏢", "Branches\nLocation",
                                 data.getTotalLocations() + " active",
-                                R.drawable.bg_card_top_accent_purple,
-                                R.drawable.bg_icon_lavender,
-                                LocationListActivity.class
-                        ));
-
-                        items.add(new DashboardMenuItem(
-                                "👨‍💼",
-                                "Employee",
+                                R.drawable.bg_card_top_accent_purple, R.drawable.bg_icon_lavender,
+                                LocationListActivity.class));
+                        items.add(new DashboardMenuItem("👨‍💼", "Employee",
                                 data.getTotalEmployees() + " employees",
-                                R.drawable.bg_card_top_accent_blue,
-                                R.drawable.bg_icon_blue,
-                                EmployeeListActivity.class
-                        ));
+                                R.drawable.bg_card_top_accent_blue, R.drawable.bg_icon_blue,
+                                EmployeeListActivity.class));
                     }
-
                 } else {
                     Toast.makeText(EmployeeDashboardActivity.this,
-                            "Failed to load summary",
-                            Toast.LENGTH_SHORT).show();
+                            "Failed to load summary", Toast.LENGTH_SHORT).show();
                 }
-
-                DashboardMenuAdapter adapter = new DashboardMenuAdapter(EmployeeDashboardActivity.this, items);
-                rvDashboardCards.setAdapter(adapter);
+                rvDashboardCards.setAdapter(
+                        new DashboardMenuAdapter(EmployeeDashboardActivity.this, items));
             }
-
             @Override
             public void onFailure(@NonNull Call<ManagerSummaryResponse> call, @NonNull Throwable t) {
                 Toast.makeText(EmployeeDashboardActivity.this,
-                        "Error: " + t.getMessage(),
-                        Toast.LENGTH_LONG).show();
+                        "Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
     }

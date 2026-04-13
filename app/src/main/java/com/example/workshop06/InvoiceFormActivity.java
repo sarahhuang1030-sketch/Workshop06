@@ -25,7 +25,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class InvoiceFormActivity extends AppCompatActivity {
+public class InvoiceFormActivity extends BaseActivity {
+
+    @Override
+    protected void onRefresh() {}
 
     private EditText etCustomerName, etInvoiceNumber, etIssueDate, etDueDate,
             etSubtotal, etTaxTotal, etTotal;

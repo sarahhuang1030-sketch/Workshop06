@@ -36,16 +36,16 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class InvoiceListActivity extends AppCompatActivity {
+public class InvoiceListActivity extends BaseActivity {
 
-    private final Handler refreshHandler = new Handler(Looper.getMainLooper());
-    private final Runnable refreshRunnable = new Runnable() {
-        @Override
-        public void run() {
-            loadInvoices();
-            refreshHandler.postDelayed(this, 30000);
-        }
-    };
+//    private final Handler refreshHandler = new Handler(Looper.getMainLooper());
+//    private final Runnable refreshRunnable = new Runnable() {
+//        @Override
+//        public void run() {
+//            loadInvoices();
+//            refreshHandler.postDelayed(this, 30000);
+//        }
+//    };
 
     private TextView tvHeaderTitle;
     private RecyclerView recyclerView;
@@ -74,16 +74,21 @@ public class InvoiceListActivity extends AppCompatActivity {
                 }
             });
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        refreshHandler.postDelayed(refreshRunnable, 30000);
-    }
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+//        refreshHandler.postDelayed(refreshRunnable, 30000);
+//    }
+//
+//    @Override
+//    protected void onPause() {
+//        super.onPause();
+//        refreshHandler.removeCallbacks(refreshRunnable);
+//    }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        refreshHandler.removeCallbacks(refreshRunnable);
+    protected void onRefresh() {
+        loadInvoices();
     }
 
     @Override

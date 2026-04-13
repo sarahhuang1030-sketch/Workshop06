@@ -33,7 +33,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class SubscriptionListActivity extends AppCompatActivity {
+public class SubscriptionListActivity extends BaseActivity {
+
+    @Override
+    protected void onRefresh() { loadSubscriptions(); }
 
     private RecyclerView recyclerView;
     private ProgressBar progressBar;

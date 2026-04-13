@@ -10,7 +10,9 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-public class NavMapActivity extends AppCompatActivity {
+public class NavMapActivity extends BaseActivity {
+
+    @Override protected void onRefresh() {}
 
     private View infoOverlay;
     private FloatingActionButton fabInfo;

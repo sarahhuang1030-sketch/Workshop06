@@ -22,7 +22,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class LocationFormActivity extends AppCompatActivity {
+public class LocationFormActivity extends BaseActivity {
 
     private EditText etLocationName, etStreet1, etStreet2, etCity,
             etProvince, etPostalCode, etCountry, etPhone;
@@ -32,6 +32,9 @@ public class LocationFormActivity extends AppCompatActivity {
     private Integer locationId = null;
 
     private ImageButton btnBack;
+
+    @Override
+    protected void onRefresh() {}
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

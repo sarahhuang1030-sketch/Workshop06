@@ -32,7 +32,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class LocationListActivity extends AppCompatActivity {
+public class LocationListActivity extends BaseActivity {
 
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
@@ -52,6 +52,11 @@ public class LocationListActivity extends AppCompatActivity {
                     loadLocations();
                 }
             });
+
+    @Override
+    protected void onRefresh() {
+        loadLocations();
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

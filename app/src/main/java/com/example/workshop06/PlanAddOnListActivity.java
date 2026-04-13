@@ -32,7 +32,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class PlanAddOnListActivity extends AppCompatActivity {
+public class PlanAddOnListActivity extends BaseActivity {
+
+    @Override
+    protected void onRefresh() { loadPlanAddOns(); }
 
     private TextView tvTitle;
     private TextView tvSubtitle;

@@ -26,7 +26,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class QuoteCustomerListActivity extends AppCompatActivity {
+public class QuoteCustomerListActivity extends BaseActivity {
 
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
@@ -34,14 +34,17 @@ public class QuoteCustomerListActivity extends AppCompatActivity {
     private ImageButton btnBack;
     private QuoteCustomerAdapter adapter;
 
-    private final Handler refreshHandler = new Handler(Looper.getMainLooper());
-    private final Runnable refreshRunnable = new Runnable() {
-        @Override
-        public void run() {
-            loadQuotes();
-            refreshHandler.postDelayed(this, 30000);
-        }
-    };
+//    private final Handler refreshHandler = new Handler(Looper.getMainLooper());
+//    private final Runnable refreshRunnable = new Runnable() {
+//        @Override
+//        public void run() {
+//            loadQuotes();
+//            refreshHandler.postDelayed(this, 30000);
+//        }
+//    };
+
+    @Override
+    protected void onRefresh() { loadQuotes(); }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -69,17 +72,17 @@ public class QuoteCustomerListActivity extends AppCompatActivity {
         BottomNavHelper.setup(this, 0);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        refreshHandler.postDelayed(refreshRunnable, 30000);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        refreshHandler.removeCallbacks(refreshRunnable);
-    }
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+//        refreshHandler.postDelayed(refreshRunnable, 30000);
+//    }
+//
+//    @Override
+//    protected void onPause() {
+//        super.onPause();
+//        refreshHandler.removeCallbacks(refreshRunnable);
+//    }
 
     private void setupSearch() {
         searchView.setIconifiedByDefault(false);

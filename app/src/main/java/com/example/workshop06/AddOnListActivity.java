@@ -14,7 +14,6 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -35,7 +34,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class AddOnListActivity extends AppCompatActivity {
+public class AddOnListActivity extends BaseActivity {
 
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
@@ -44,34 +43,33 @@ public class AddOnListActivity extends AppCompatActivity {
     private SearchView searchViewAddOns;
     private TextInputEditText etFilterPrice;
     private MaterialAutoCompleteTextView spinnerStatusFilter;
-
     private AddOnAdapter adapter;
-
-    private final List<AddOnResponse> allAddOns = new ArrayList<>();
-    private final List<AddOnResponse> filteredAddOns = new ArrayList<>();
-
-    private String searchText = "";
-    private String selectedStatus = "All";
-    private Double maxPriceFilter = null;
-
     private ImageButton btnBack;
 
+    private final List<AddOnResponse> allAddOns      = new ArrayList<>();
+    private final List<AddOnResponse> filteredAddOns = new ArrayList<>();
+
+    private String searchText      = "";
+    private String selectedStatus  = "All";
+    private Double maxPriceFilter  = null;
+
     private final ActivityResultLauncher<Intent> formLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> loadAddOns());
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                    result -> loadAddOns());
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_addon_list);
 
-        recyclerView = findViewById(R.id.recyclerAddOns);
-        progressBar = findViewById(R.id.progressBar);
-        tvEmpty = findViewById(R.id.tvEmpty);
-        fabAddAddOn = findViewById(R.id.fabAddAddOn);
-        searchViewAddOns = findViewById(R.id.searchViewAddOns);
-        etFilterPrice = findViewById(R.id.etFilterPrice);
+        recyclerView       = findViewById(R.id.recyclerAddOns);
+        progressBar        = findViewById(R.id.progressBar);
+        tvEmpty            = findViewById(R.id.tvEmpty);
+        fabAddAddOn        = findViewById(R.id.fabAddAddOn);
+        searchViewAddOns   = findViewById(R.id.searchViewAddOns);
+        etFilterPrice      = findViewById(R.id.etFilterPrice);
         spinnerStatusFilter = findViewById(R.id.spinnerStatusFilter);
-        btnBack = findViewById(R.id.btnBack);
+        btnBack            = findViewById(R.id.btnBack);
 
         btnBack.setOnClickListener(v -> finish());
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -92,22 +90,24 @@ public class AddOnListActivity extends AppCompatActivity {
 
         recyclerView.setAdapter(adapter);
 
-        fabAddAddOn.setOnClickListener(v -> {
-            Intent intent = new Intent(AddOnListActivity.this, AddOnFormActivity.class);
-            formLauncher.launch(intent);
-        });
+        fabAddAddOn.setOnClickListener(v ->
+                formLauncher.launch(new Intent(AddOnListActivity.this, AddOnFormActivity.class)));
 
         setupFilters();
         BottomNavHelper.setup(this, 0);
         loadAddOns();
     }
 
+    // Auto-refresh list every 30 seconds
+    @Override
+    protected void onRefresh() {
+        loadAddOns();
+    }
+
     private void setupFilters() {
         ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_dropdown_item_1line,
-                new String[]{"All", "Active", "Inactive"}
-        );
+                this, android.R.layout.simple_dropdown_item_1line,
+                new String[]{"All", "Active", "Inactive"});
         spinnerStatusFilter.setAdapter(statusAdapter);
         spinnerStatusFilter.setText("All", false);
 
@@ -133,11 +133,8 @@ public class AddOnListActivity extends AppCompatActivity {
         });
 
         etFilterPrice.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) { }
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
 
             @Override
             public void afterTextChanged(Editable s) {
@@ -166,7 +163,6 @@ public class AddOnListActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<List<AddOnResponse>> call, Response<List<AddOnResponse>> response) {
                 progressBar.setVisibility(View.GONE);
-
                 if (response.isSuccessful() && response.body() != null) {
                     allAddOns.clear();
                     allAddOns.addAll(response.body());
@@ -188,38 +184,26 @@ public class AddOnListActivity extends AppCompatActivity {
 
     private void applyFilters() {
         filteredAddOns.clear();
-
         String q = searchText == null ? "" : searchText.toLowerCase(Locale.US);
 
         for (AddOnResponse item : allAddOns) {
-            String name = item.getAddOnName() != null ? item.getAddOnName().toLowerCase(Locale.US) : "";
+            String name        = item.getAddOnName()  != null ? item.getAddOnName().toLowerCase(Locale.US)  : "";
             String description = item.getDescription() != null ? item.getDescription().toLowerCase(Locale.US) : "";
-            boolean isActive = Boolean.TRUE.equals(item.getIsActive());
+            boolean isActive   = Boolean.TRUE.equals(item.getIsActive());
 
-            boolean matchesSearch = q.isEmpty()
-                    || name.contains(q)
-                    || description.contains(q);
-
-            boolean matchesStatus = "All".equals(selectedStatus)
+            boolean matchesSearch  = q.isEmpty() || name.contains(q) || description.contains(q);
+            boolean matchesStatus  = "All".equals(selectedStatus)
                     || ("Active".equals(selectedStatus) && isActive)
                     || ("Inactive".equals(selectedStatus) && !isActive);
+            boolean matchesPrice   = maxPriceFilter == null
+                    || (item.getMonthlyPrice() != null && item.getMonthlyPrice() <= maxPriceFilter);
 
-            boolean matchesPrice = true;
-            if (maxPriceFilter != null) {
-                double price = item.getMonthlyPrice() != null ? item.getMonthlyPrice() : 0.0;
-                matchesPrice = price <= maxPriceFilter;
-            }
-
-            if (matchesSearch && matchesStatus && matchesPrice) {
-                filteredAddOns.add(item);
-            }
+            if (matchesSearch && matchesStatus && matchesPrice) filteredAddOns.add(item);
         }
 
         adapter.notifyDataSetChanged();
-
-        if (filteredAddOns.isEmpty()) {
-            showEmptyState();
-        } else {
+        if (filteredAddOns.isEmpty()) showEmptyState();
+        else {
             tvEmpty.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
         }
@@ -235,7 +219,6 @@ public class AddOnListActivity extends AppCompatActivity {
             Toast.makeText(this, "Invalid add-on id", Toast.LENGTH_SHORT).show();
             return;
         }
-
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
         apiService.deleteAddOn(addOnId).enqueue(new Callback<Void>() {
             @Override

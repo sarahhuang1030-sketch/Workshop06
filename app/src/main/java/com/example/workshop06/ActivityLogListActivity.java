@@ -8,7 +8,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -24,14 +23,13 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ActivityLogListActivity extends AppCompatActivity {
+public class ActivityLogListActivity extends BaseActivity {
 
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private TextView tvEmpty;
     private SearchView searchViewActivityLog;
     private ImageButton btnBack;
-
     private ActivityLogAdapter adapter;
 
     @Override
@@ -47,6 +45,12 @@ public class ActivityLogListActivity extends AppCompatActivity {
             btnBack.setOnClickListener(v -> finish());
         }
 
+        loadActivityLogs();
+    }
+
+    // Refresh data every 30 seconds via BaseActivity
+    @Override
+    protected void onRefresh() {
         loadActivityLogs();
     }
 
@@ -92,7 +96,8 @@ public class ActivityLogListActivity extends AppCompatActivity {
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
         apiService.getActivityLogs().enqueue(new Callback<List<ActivityLogResponse>>() {
             @Override
-            public void onResponse(Call<List<ActivityLogResponse>> call, Response<List<ActivityLogResponse>> response) {
+            public void onResponse(Call<List<ActivityLogResponse>> call,
+                                   Response<List<ActivityLogResponse>> response) {
                 showLoading(false);
 
                 if (!response.isSuccessful()) {
@@ -115,27 +120,20 @@ public class ActivityLogListActivity extends AppCompatActivity {
     }
 
     private void showLoading(boolean isLoading) {
-        if (progressBar != null) {
+        if (progressBar != null)
             progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
-        }
-
-        if (recyclerView != null) {
+        if (recyclerView != null)
             recyclerView.setVisibility(isLoading ? View.GONE : View.VISIBLE);
-        }
-
-        if (tvEmpty != null && isLoading) {
+        if (tvEmpty != null && isLoading)
             tvEmpty.setVisibility(View.GONE);
-        }
     }
 
     private void showEmpty(boolean isEmpty) {
-        if (tvEmpty != null) {
+        if (tvEmpty != null)
             tvEmpty.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
-        }
-
-        if (recyclerView != null && progressBar != null && progressBar.getVisibility() != View.VISIBLE) {
+        if (recyclerView != null && progressBar != null
+                && progressBar.getVisibility() != View.VISIBLE)
             recyclerView.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
-        }
     }
 
     private void updateEmptyState() {

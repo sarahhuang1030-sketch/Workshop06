@@ -23,7 +23,10 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
-public class UsageActivity extends AppCompatActivity {
+public class UsageActivity extends BaseActivity {
+
+    @Override
+    protected void onRefresh() { loadPlans(); }
 
     private ViewPager2 planPager;
     private BottomNavigationView bottomNavigation;

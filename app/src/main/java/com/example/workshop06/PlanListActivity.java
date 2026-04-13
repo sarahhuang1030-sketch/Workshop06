@@ -35,7 +35,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class PlanListActivity extends AppCompatActivity {
+public class PlanListActivity extends BaseActivity {
+
+    @Override
+    protected void onRefresh() { loadPlans(); }
 
     private List<ServiceTypeResponse> serviceTypes = new ArrayList<>();
 
@@ -56,6 +59,12 @@ public class PlanListActivity extends AppCompatActivity {
                     new ActivityResultContracts.StartActivityForResult(),
                     result -> loadPlans()
             );
+
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+//        loadPlans();
+//    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -362,11 +371,5 @@ public class PlanListActivity extends AppCompatActivity {
         } catch (Exception e) {
             return null;
         }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        loadPlans();
     }
 }

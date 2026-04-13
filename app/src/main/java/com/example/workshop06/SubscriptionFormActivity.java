@@ -37,7 +37,9 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class SubscriptionFormActivity extends AppCompatActivity {
+public class SubscriptionFormActivity extends BaseActivity {
+
+    @Override protected void onRefresh() {}
 
     private MaterialAutoCompleteTextView spinnerCustomer;
     private MaterialAutoCompleteTextView spinnerPlan;
@@ -82,6 +84,7 @@ public class SubscriptionFormActivity extends AppCompatActivity {
         layoutSubscriptionAddOns = findViewById(R.id.layoutSubscriptionAddOns);
         tvSubscriptionAddOns = findViewById(R.id.tvSubscriptionAddOns);
         btnManageSubscriptionAddOns = findViewById(R.id.btnManageSubscriptionAddOns);
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
         loadStatuses();
         setupDatePickers();

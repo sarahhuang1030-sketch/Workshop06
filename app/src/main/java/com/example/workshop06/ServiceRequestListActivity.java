@@ -35,7 +35,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ServiceRequestListActivity extends AppCompatActivity {
+public class ServiceRequestListActivity extends BaseActivity {
+
+    @Override
+    protected void onRefresh() { loadServiceRequests(); }
 
     private RecyclerView recyclerView;
     private ProgressBar progressBar;

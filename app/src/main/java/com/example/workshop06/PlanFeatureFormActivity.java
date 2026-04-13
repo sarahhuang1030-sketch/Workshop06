@@ -27,7 +27,9 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class PlanFeatureFormActivity extends AppCompatActivity {
+public class PlanFeatureFormActivity extends BaseActivity {
+
+    @Override protected void onRefresh() {}
 
     private MaterialAutoCompleteTextView autoPlan;
     private EditText etFeatureName;

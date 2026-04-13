@@ -52,7 +52,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class EmployeeFormActivity extends AppCompatActivity {
+public class EmployeeFormActivity extends BaseActivity {
 
     private EditText etFirstName;
     private EditText etLastName;
@@ -113,6 +113,9 @@ public class EmployeeFormActivity extends AppCompatActivity {
                     Toast.makeText(this, "Camera cancelled", Toast.LENGTH_SHORT).show();
                 }
             });
+
+    @Override
+    protected void onRefresh() {}
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

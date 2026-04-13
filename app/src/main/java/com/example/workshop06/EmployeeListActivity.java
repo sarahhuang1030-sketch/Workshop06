@@ -37,7 +37,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class EmployeeListActivity extends AppCompatActivity {
+public class EmployeeListActivity extends BaseActivity {
 
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
@@ -402,5 +402,11 @@ public class EmployeeListActivity extends AppCompatActivity {
     private void showError(String message) {
         updateEmptyState();
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    }
+
+    // Add this method — auto-refresh employee list
+    @Override
+    protected void onRefresh() {
+        loadEmployees();
     }
 }

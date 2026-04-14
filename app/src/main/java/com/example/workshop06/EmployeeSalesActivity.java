@@ -92,6 +92,11 @@ public class EmployeeSalesActivity extends BaseActivity {
         showLoading(true);
         showEmpty(false);
 
+        // Get current logged-in employee ID from SharedPreferences
+        android.content.SharedPreferences prefs =
+                getSharedPreferences("teleconnect_prefs", MODE_PRIVATE);
+        int currentEmployeeId = prefs.getInt("employee_id", -1);
+
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);
         Call<List<EmployeeSalesResponse>> call = apiService.getEmployeeSales();
 
@@ -102,15 +107,29 @@ public class EmployeeSalesActivity extends BaseActivity {
                 showLoading(false);
 
                 if (!response.isSuccessful()) {
-                    showError("Failed to load employee sales. Code: " + response.code());
+                    showError("Failed to load sales. Code: " + response.code());
                     return;
                 }
 
                 List<EmployeeSalesResponse> body = response.body();
 
                 if (body != null && !body.isEmpty()) {
-                    adapter.setData(body);
-                    showEmpty(false);
+                    // Filter to only show current logged-in employee's data
+                    List<EmployeeSalesResponse> filtered = new java.util.ArrayList<>();
+                    for (EmployeeSalesResponse item : body) {
+                        if (item.getEmployeeId() != null
+                                && item.getEmployeeId() == currentEmployeeId) {
+                            filtered.add(item);
+                        }
+                    }
+
+                    if (!filtered.isEmpty()) {
+                        adapter.setData(filtered);
+                        showEmpty(false);
+                    } else {
+                        adapter.setData(null);
+                        showEmpty(true);
+                    }
                 } else {
                     adapter.setData(null);
                     showEmpty(true);
@@ -121,13 +140,7 @@ public class EmployeeSalesActivity extends BaseActivity {
             public void onFailure(Call<List<EmployeeSalesResponse>> call, Throwable t) {
                 showLoading(false);
                 adapter.setData(null);
-
-                String message = "Unable to load employee sales";
-                if (t != null && t.getMessage() != null && !t.getMessage().trim().isEmpty()) {
-                    message += ": " + t.getMessage();
-                }
-
-                showError(message);
+                showError("Unable to load sales: " + (t != null ? t.getMessage() : ""));
             }
         });
     }

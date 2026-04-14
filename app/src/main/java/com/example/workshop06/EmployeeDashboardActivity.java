@@ -197,23 +197,23 @@ public class EmployeeDashboardActivity extends BaseActivity {
                             data.getTotalAddons() + " available",
                             R.drawable.bg_card_top_accent_blue, R.drawable.bg_icon_blue,
                             AddOnListActivity.class));
-                    items.add(new DashboardMenuItem("🧩", "Plan Features",
-                            data.getTotalPlanFeatures() + " active",
-                            R.drawable.bg_card_top_accent_magenta, R.drawable.bg_icon_lavender,
-                            PlanFeatureListActivity.class));
+//                    items.add(new DashboardMenuItem("🧩", "Plan Features",
+//                            data.getTotalPlanFeatures() + " active",
+//                            R.drawable.bg_card_top_accent_magenta, R.drawable.bg_icon_lavender,
+//                            PlanFeatureListActivity.class));
                     items.add(new DashboardMenuItem("🛠️", "Services", "Manage service requests",
                             R.drawable.bg_card_top_accent_magenta, R.drawable.bg_icon_lavender,
                             ServiceRequestListActivity.class));
 
-                    DashboardMenuItem pastDueItem = new DashboardMenuItem(
-                            "⚠️", "Past Due",
-                            data.getPastDue() + " past due",
-                            R.drawable.bg_card_top_accent_red,
-                            R.drawable.bg_icon_red,
-                            PastDueActivity.class
-                    );
+//                    DashboardMenuItem pastDueItem = new DashboardMenuItem(
+//                            "⚠️", "Past Due",
+//                            data.getPastDue() + " past due",
+//                            R.drawable.bg_card_top_accent_red,
+//                            R.drawable.bg_icon_red,
+//                            PastDueActivity.class
+//                    );
 //                    pastDueItem.setExtra("pastDueFilter", "true");
-                    items.add(pastDueItem);
+//                    items.add(pastDueItem);
 
                     DashboardMenuItem bundleItem = new DashboardMenuItem("📦", "Custom Bundle",
                             "Create and send bundles",

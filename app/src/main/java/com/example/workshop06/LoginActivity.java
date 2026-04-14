@@ -104,6 +104,8 @@ public class LoginActivity extends BaseActivity {
                             .putString("first_name", loginResponse.getFirstName())
                             .putString("last_name", loginResponse.getLastName())
                             .putString("username", loginResponse.getUsername())
+                            .putInt("employee_id", loginResponse.getEmployeeId() != null
+                                    ? loginResponse.getEmployeeId() : -1)
                             .apply();
 
                     Toast.makeText(LoginActivity.this, "Login successful", Toast.LENGTH_SHORT).show();

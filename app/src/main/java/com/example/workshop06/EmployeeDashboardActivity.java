@@ -222,9 +222,18 @@ public class EmployeeDashboardActivity extends BaseActivity {
                     bundleItem.setExtra("customBundleMode", "true");
                     items.add(bundleItem);
 
+//                    items.add(new DashboardMenuItem("📊", "Employee Sales", "See Agents' Performance",
+//                            R.drawable.bg_card_top_accent_pink, R.drawable.bg_icon_blue,
+//                            EmployeeSalesActivity.class));
+
+                    Class<?> employeeSalesTarget =
+                            "Manager".equalsIgnoreCase(role)
+                                    ? ManagerEmployeeSalesActivity.class
+                                    : EmployeeSalesActivity.class;
+
                     items.add(new DashboardMenuItem("📊", "Employee Sales", "See Agents' Performance",
                             R.drawable.bg_card_top_accent_pink, R.drawable.bg_icon_blue,
-                            EmployeeSalesActivity.class));
+                            employeeSalesTarget));
 
                     if ("Manager".equalsIgnoreCase(role)) {
                         items.add(new DashboardMenuItem("🏢", "Branches\nLocation",

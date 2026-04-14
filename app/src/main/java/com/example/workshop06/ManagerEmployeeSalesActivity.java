@@ -43,7 +43,7 @@ public class ManagerEmployeeSalesActivity extends BaseActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_manager_employee_sales);
+        setContentView(R.layout.activity_manager_employeesaless);
 
         recyclerView  = findViewById(R.id.recyclerViewSales);
         progressBar   = findViewById(R.id.progressBar);

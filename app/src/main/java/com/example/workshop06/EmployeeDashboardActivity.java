@@ -174,26 +174,26 @@ public class EmployeeDashboardActivity extends BaseActivity {
                             + " activeSubs=" + data.getActiveSubscriptions()
                             + " revenue=" + data.getEstimatedMonthlyRevenue());
 
-                    items.add(new DashboardMenuItem("👥", "Customers", "Manage customer base",
+                    items.add(new DashboardMenuItem("👥", "Total Customers", "Manage customer base",
                             R.drawable.bg_card_top_accent_blue, R.drawable.bg_icon_blue, CustomerListActivity.class));
                     items.add(new DashboardMenuItem("💳", "Invoices", "View and manage invoices",
                             R.drawable.bg_card_top_accent_red, R.drawable.bg_icon_red, InvoiceListActivity.class));
 
-                    items.add(new DashboardMenuItem("📄", "Quotes", "View customer quotes",
+                    items.add(new DashboardMenuItem("📄", "Pending Quotes", "View customer quotes",
                             R.drawable.bg_card_top_accent_purple, R.drawable.bg_icon_lavender,
                             QuoteCustomerListActivity.class));
 
                     DashboardMenuItem revenueItem = new DashboardMenuItem("💰", "Monthly Revenue",
                             String.format("$%.2f", data.getEstimatedMonthlyRevenue()),
-                            R.drawable.bg_card_top_accent_pink, R.drawable.bg_icon_pink, InvoiceListActivity.class);
+                            R.drawable.bg_card_top_accent_pink, R.drawable.bg_icon_pink, null);
                     revenueItem.setExtra("monthlyRevenueMode", "true");
                     items.add(revenueItem);
 
-                    items.add(new DashboardMenuItem("🖥️", "Subscriptions",
+                    items.add(new DashboardMenuItem("🖥️", "Active Subscriptions",
                             data.getActiveSubscriptions() + " active",
                             R.drawable.bg_card_top_accent_pink, R.drawable.bg_icon_pink,
                             SubscriptionFormActivity.class));
-                    items.add(new DashboardMenuItem("➕", "Add-Ons",
+                    items.add(new DashboardMenuItem("➕", "Total Add-Ons",
                             data.getTotalAddons() + " available",
                             R.drawable.bg_card_top_accent_blue, R.drawable.bg_icon_blue,
                             AddOnListActivity.class));

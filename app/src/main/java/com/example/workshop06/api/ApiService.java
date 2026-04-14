@@ -200,6 +200,9 @@ public interface ApiService {
     @DELETE("/api/invoices/admin/{invoiceNumber}")
     Call<Void> deleteInvoice(@Path("invoiceNumber") String invoiceNumber);
 
+    @GET("/api/invoices/my-sales")
+    Call<List<InvoiceResponse>> getMySalesInvoices();
+
 //    this is for sales report
 @GET("api/manager/reports/employee-sales")
 Call<List<EmployeeSalesResponse>> getEmployeeSales();

@@ -31,7 +31,7 @@ public class AddOnFormActivity extends BaseActivity {
     private Button btnSaveAddOn;
 
     private MaterialAutoCompleteTextView spinnerServiceType;
-    private MaterialAutoCompleteTextView spinnerActive;
+//    private MaterialAutoCompleteTextView spinnerActive;
 
     private Integer addOnId = null;
     private AddOnResponse loadedAddOn = null;
@@ -40,8 +40,10 @@ public class AddOnFormActivity extends BaseActivity {
     private ArrayAdapter<String> serviceTypeAdapter;
     private int selectedServiceTypePosition = -1;
 
-    private ArrayAdapter<String> activeAdapter;
-    private int selectedActivePosition = 0;
+//    private ArrayAdapter<String> activeAdapter;
+//    private int selectedActivePosition = 0;
+
+    private android.widget.CheckBox checkBoxActive;
 
     private ImageButton btnBack;
 
@@ -51,7 +53,7 @@ public class AddOnFormActivity extends BaseActivity {
         setContentView(R.layout.activity_addon_form);
 
         spinnerServiceType = findViewById(R.id.spinnerServiceType);
-        spinnerActive      = findViewById(R.id.spinnerActive);
+//        spinnerActive      = findViewById(R.id.spinnerActive);
         etAddOnName        = findViewById(R.id.etAddOnName);
         etMonthlyPrice     = findViewById(R.id.etMonthlyPrice);
         etDescription      = findViewById(R.id.etDescription);
@@ -69,15 +71,17 @@ public class AddOnFormActivity extends BaseActivity {
             spinnerServiceType.setError(null);
         });
 
-        activeAdapter = new ArrayAdapter<>(
-                this, android.R.layout.simple_dropdown_item_1line, new String[]{"Yes", "No"});
-        spinnerActive.setAdapter(activeAdapter);
-        spinnerActive.setText("Yes", false);
+//        activeAdapter = new ArrayAdapter<>(
+//                this, android.R.layout.simple_dropdown_item_1line, new String[]{"Yes", "No"});
+//        spinnerActive.setAdapter(activeAdapter);
+//        spinnerActive.setText("Yes", false);
+//
+//        spinnerActive.setOnItemClickListener((parent, view, position, id) -> {
+//            selectedActivePosition = position;
+//            spinnerActive.setError(null);
+//        });
 
-        spinnerActive.setOnItemClickListener((parent, view, position, id) -> {
-            selectedActivePosition = position;
-            spinnerActive.setError(null);
-        });
+        checkBoxActive = findViewById(R.id.checkBoxActive);
 
         if (getIntent() != null && getIntent().hasExtra("addOnId")) {
             int id = getIntent().getIntExtra("addOnId", -1);
@@ -107,8 +111,8 @@ public class AddOnFormActivity extends BaseActivity {
                             ? String.valueOf(loadedAddOn.getMonthlyPrice()) : "");
                     etDescription.setText(loadedAddOn.getDescription() != null ? loadedAddOn.getDescription() : "");
                     boolean isActive = Boolean.TRUE.equals(loadedAddOn.getIsActive());
-                    selectedActivePosition = isActive ? 0 : 1;
-                    spinnerActive.setText(isActive ? "Yes" : "No", false);
+//                    selectedActivePosition = isActive ? 0 : 1;
+                    checkBoxActive.setChecked(isActive);
                     setServiceTypeSelectionForLoadedAddOn();
                 } else {
                     Toast.makeText(AddOnFormActivity.this, "Failed to load add-on", Toast.LENGTH_SHORT).show();
@@ -171,12 +175,12 @@ public class AddOnFormActivity extends BaseActivity {
             return;
         }
 
-        String activeText = spinnerActive.getText() != null ? spinnerActive.getText().toString().trim() : "";
-        if (activeText.isEmpty()) {
-            spinnerActive.setError("Please select active status");
-            spinnerActive.requestFocus();
-            return;
-        }
+//        String activeText = spinnerActive.getText() != null ? spinnerActive.getText().toString().trim() : "";
+//        if (activeText.isEmpty()) {
+//            spinnerActive.setError("Please select active status");
+//            spinnerActive.requestFocus();
+//            return;
+//        }
 
         if (name.isEmpty()) {
             etAddOnName.setError("Add-On name is required");
@@ -212,7 +216,7 @@ public class AddOnFormActivity extends BaseActivity {
         }
 
         Integer serviceTypeId = serviceTypes.get(selectedServiceTypePosition).getServiceTypeId();
-        boolean isActive = activeText.equalsIgnoreCase("Yes");
+        boolean isActive = checkBoxActive.isChecked();
 
         AddOnRequest request = new AddOnRequest(serviceTypeId, name, monthlyPrice, description, isActive);
         ApiService apiService = RetrofitClient.getRetrofitInstance(this).create(ApiService.class);

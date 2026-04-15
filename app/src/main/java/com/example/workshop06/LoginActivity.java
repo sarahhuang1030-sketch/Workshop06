@@ -111,12 +111,35 @@ public class LoginActivity extends BaseActivity {
                     Toast.makeText(LoginActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
 
                     Intent intent;
+
                     if (Boolean.TRUE.equals(loginResponse.getMustChangePassword())) {
+
                         intent = new Intent(LoginActivity.this, ChangePasswordFirstLoginActivity.class);
-                    } else if (loginResponse.getEmployeeId() != null) {
-                        intent = new Intent(LoginActivity.this, EmployeeDashboardActivity.class);
+
                     } else {
-                        intent = new Intent(LoginActivity.this, DashboardActivity.class);
+
+                        String role = loginResponse.getRole();
+
+                        if (role != null) {
+                            role = role.toLowerCase();
+                        }
+
+                        if ("manager".equals(role) ||
+                                "sales agent".equals(role) ||
+                                "service technician".equals(role)) {
+
+                            // ✅ ALWAYS treat as employee
+                            intent = new Intent(LoginActivity.this, EmployeeDashboardActivity.class);
+
+                        } else if ("customer".equals(role)) {
+
+                            intent = new Intent(LoginActivity.this, DashboardActivity.class);
+
+                        } else {
+
+                            // fallback safety
+                            intent = new Intent(LoginActivity.this, DashboardActivity.class);
+                        }
                     }
 
                     startActivity(intent);

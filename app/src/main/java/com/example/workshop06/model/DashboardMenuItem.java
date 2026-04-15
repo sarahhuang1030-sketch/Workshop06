@@ -7,8 +7,25 @@ public class DashboardMenuItem {
     private final int backgroundResId;
     private final int iconBackgroundResId;
     private final Class<?> targetActivity;
+    private final String viewMode;
     private String extraKey;
     private String extraValue;
+
+    public DashboardMenuItem(String icon,
+                             String title,
+                             String subtitle,
+                             int backgroundResId,
+                             int iconBackgroundResId,
+                             Class<?> targetActivity,
+                             String viewMode) {
+        this.icon = icon;
+        this.title = title;
+        this.subtitle = subtitle;
+        this.backgroundResId = backgroundResId;
+        this.iconBackgroundResId = iconBackgroundResId;
+        this.targetActivity = targetActivity;
+        this.viewMode = viewMode;
+    }
 
     public DashboardMenuItem(String icon,
                              String title,
@@ -22,6 +39,7 @@ public class DashboardMenuItem {
         this.backgroundResId = backgroundResId;
         this.iconBackgroundResId = iconBackgroundResId;
         this.targetActivity = targetActivity;
+        this.viewMode = "Empty";
     }
 
     public String getIcon() {
@@ -60,4 +78,6 @@ public class DashboardMenuItem {
     public String getExtraValue() {
         return extraValue;
     }
+
+    public String getViewMode(){return viewMode;}
 }

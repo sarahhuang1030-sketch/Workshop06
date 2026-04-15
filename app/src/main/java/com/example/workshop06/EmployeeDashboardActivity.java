@@ -139,11 +139,13 @@ public class EmployeeDashboardActivity extends BaseActivity {
                         items.add(new DashboardMenuItem("🛠️", "Assigned",
                                 data.getAssignedAppointments() + " assigned",
                                 R.drawable.bg_card_top_accent_purple, R.drawable.bg_icon_lavender,
-                                ServiceAppointmentListActivity.class));
+                                ServiceAppointmentListActivity.class,
+                                "Assigned"));
                         items.add(new DashboardMenuItem("✅", "Completed",
                                 data.getCompletedRequests() + " done",
                                 R.drawable.bg_card_top_accent_pink, R.drawable.bg_icon_pink,
-                                ServiceRequestListActivity.class));
+                                ServiceRequestListActivity.class,
+                                "Completed"));
                         rvDashboardCards.setAdapter(
                                 new DashboardMenuAdapter(EmployeeDashboardActivity.this, items));
                     } else {

@@ -36,6 +36,7 @@ import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import android.view.View;
 
 public class EmployeeProfileActivity extends BaseActivity {
 
@@ -55,6 +56,7 @@ public class EmployeeProfileActivity extends BaseActivity {
     private Button btnEditProfile;
 
     private Uri cameraImageUri;
+    private View layoutPersonalInfo;
 
     private final ActivityResultLauncher<String> pickImageLauncher =
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
@@ -81,6 +83,16 @@ public class EmployeeProfileActivity extends BaseActivity {
                 }
             });
 
+    private final ActivityResultLauncher<Intent> editProfileLauncher =
+            registerForActivityResult(
+                    new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        if (result.getResultCode() == RESULT_OK) {
+                            fetchProfileFromBackend();
+                        }
+                    }
+            );
+
 
     @Override
     protected void onRefresh() {
@@ -93,7 +105,7 @@ public class EmployeeProfileActivity extends BaseActivity {
         setContentView(R.layout.activity_employee_profile);
 
         BottomNavHelper.setup(this, R.id.nav_profile);
-
+        layoutPersonalInfo = findViewById(R.id.layoutPersonalInfo);
         bottomNavigation = findViewById(R.id.bottomNavigation);
         tvFirstName = findViewById(R.id.tvFirstName);
         tvUsername = findViewById(R.id.tvUsername);
@@ -105,7 +117,10 @@ public class EmployeeProfileActivity extends BaseActivity {
         imgAvatar = findViewById(R.id.imgAvatar);
         btnLogout = findViewById(R.id.btnLogout);
         btnEditProfile = findViewById(R.id.btnEditProfile);
-
+        layoutPersonalInfo.setOnClickListener(v -> {
+            Intent intent = new Intent(EmployeeProfileActivity.this, EditProfileActivity.class);
+            editProfileLauncher.launch(intent);
+        });
         loadProfile();
         fetchProfileFromBackend();
         setupAvatarActions();

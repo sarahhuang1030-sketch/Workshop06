@@ -341,19 +341,31 @@ public class ServiceAppointmentListActivity extends BaseActivity {
                         a.setCustomerName(w.getCustomerName());
                         a.setRequestType(w.getRequestType());
                         a.setRequestDescription(w.getRequestDescription());
-
+                        List<ServiceAppointmentResponse> toRemove = new ArrayList<>();
+                        String viewMode = getIntent().getStringExtra("ViewMode");
+                        if (viewMode != null && viewMode.equals("Assigned")) {
+                            for (ServiceAppointmentResponse sr : converted) {
+                                if (!"Assigned".equals(sr.getStatus())) {
+                                    toRemove.add(sr);
+                                }
+                            }
+                        }
+                        converted.removeAll(toRemove);
                         converted.add(a);
                     }
-                    
-                    List<ServiceAppointmentResponse> remove = new ArrayList<>();
-                    if(data != null && getIntent().getStringExtra("ViewMode").equals("Assigned")){
-                        data.forEach(sr -> {if(!sr.getStatus().equals("Assigned")) remove.add(sr);});
-                    }
-                    remove.forEach(sr -> data.remove(sr));
 
-                    adapter.setData(converted);
-                    applyFilters();
+                    List<ServiceAppointmentResponse> toRemove = new ArrayList<>();
+                    String viewMode = getIntent().getStringExtra("ViewMode");
+                    if (viewMode != null && viewMode.equals("Assigned")) {
+                        for (ServiceAppointmentResponse sr : converted) {
+                            if (!"Assigned".equals(sr.getStatus())) {
+                                toRemove.add(sr);
+                            }
+                        }
+                    }
+                    converted.removeAll(toRemove);
                 }
+
 
                 @Override
                 public void onFailure(Call<List<ServiceWorkOrderDTO>> call, Throwable t) {

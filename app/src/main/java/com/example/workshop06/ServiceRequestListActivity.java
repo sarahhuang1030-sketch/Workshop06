@@ -2,6 +2,7 @@ package com.example.workshop06;
 
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -13,25 +14,21 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import android.content.SharedPreferences;
 
-import com.example.workshop06.model.ServiceTicketDTO;
 import com.example.workshop06.adapter.ServiceRequestAdapter;
 import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.EmployeeResponse;
 import com.example.workshop06.model.ServiceRequestResponse;
+import com.example.workshop06.model.ServiceTicketDTO;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -40,8 +37,12 @@ import retrofit2.Response;
 public class ServiceRequestListActivity extends BaseActivity {
 
     @Override
-    protected void onRefresh() { loadServiceRequests(); }
+    protected void onRefresh() {
+        loadServiceRequests();
+    }
+
     private boolean isTechnician = false;
+
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private TextView tvEmpty;
@@ -50,23 +51,26 @@ public class ServiceRequestListActivity extends BaseActivity {
     private FloatingActionButton fabAdd;
     private MaterialAutoCompleteTextView spinnerTechnicianFilter;
     private MaterialAutoCompleteTextView spinnerPriorityFilter;
+    private ImageButton btnBack;
 
     private ServiceRequestAdapter adapter;
 
     private String currentSearch = "";
     private String selectedTechnician = "All";
     private String selectedPriority = "All";
-    private ImageButton btnBack;
 
     private final ActivityResultLauncher<Intent> formLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> loadServiceRequests());
+            registerForActivityResult(
+                    new ActivityResultContracts.StartActivityForResult(),
+                    result -> loadServiceRequests()
+            );
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_service_request_list);
-        btnBack = findViewById(R.id.btnBack);
 
+        btnBack = findViewById(R.id.btnBack);
         btnBack.setOnClickListener(v -> finish());
 
         SharedPreferences prefs = getSharedPreferences("teleconnect_prefs", MODE_PRIVATE);
@@ -75,6 +79,7 @@ public class ServiceRequestListActivity extends BaseActivity {
                 "Service Technician".equalsIgnoreCase(role)
                         || "SERVICE_TECHNICIAN".equalsIgnoreCase(role)
                         || "Technician".equalsIgnoreCase(role);
+
         initViews();
         setupRecyclerView();
         setupSearch();
@@ -94,11 +99,14 @@ public class ServiceRequestListActivity extends BaseActivity {
         fabAdd = findViewById(R.id.fabAdd);
         spinnerTechnicianFilter = findViewById(R.id.spinnerTechnicianFilter);
         spinnerPriorityFilter = findViewById(R.id.spinnerPriorityFilter);
-
         txtServiceRequestTitle = findViewById(R.id.txtServiceRequestTitle);
+
         String viewMode = getIntent().getStringExtra("ViewMode");
-        if(!viewMode.equals("Empty"))
+        if (viewMode != null && !viewMode.trim().isEmpty() && !"Empty".equalsIgnoreCase(viewMode)) {
             txtServiceRequestTitle.setText(viewMode + " Requests");
+        } else {
+            txtServiceRequestTitle.setText("Service Requests");
+        }
     }
 
     private void setupRecyclerView() {
@@ -145,7 +153,7 @@ public class ServiceRequestListActivity extends BaseActivity {
                 intent.putExtra("status", item.getStatus());
                 intent.putExtra("assignedTechnicianUserId", item.getAssignedTechnicianUserId());
                 intent.putExtra("technicianName", item.getTechnicianName());
-
+                intent.putExtra("ViewMode", "");
                 startActivity(intent);
             }
         });
@@ -194,6 +202,7 @@ public class ServiceRequestListActivity extends BaseActivity {
                 android.R.layout.simple_dropdown_item_1line,
                 new String[]{"All", "Low", "Medium", "High"}
         );
+
         spinnerPriorityFilter.setAdapter(priorityAdapter);
         spinnerPriorityFilter.setText("All", false);
         spinnerPriorityFilter.setOnItemClickListener((parent, view, position, id) -> {
@@ -222,7 +231,6 @@ public class ServiceRequestListActivity extends BaseActivity {
                         if (role.equalsIgnoreCase("SERVICE_TECHNICIAN")
                                 || role.equalsIgnoreCase("Service Technician")
                                 || role.equalsIgnoreCase("Technician")) {
-
                             if (!fullName.isEmpty() && !technicianList.contains(fullName)) {
                                 technicianList.add(fullName);
                             }
@@ -237,7 +245,12 @@ public class ServiceRequestListActivity extends BaseActivity {
                 );
 
                 spinnerTechnicianFilter.setAdapter(technicianAdapter);
-                spinnerTechnicianFilter.setText(selectedTechnician == null ? "All" : selectedTechnician, false);
+                spinnerTechnicianFilter.setText(
+                        selectedTechnician == null || selectedTechnician.trim().isEmpty()
+                                ? "All"
+                                : selectedTechnician,
+                        false
+                );
 
                 spinnerTechnicianFilter.setOnItemClickListener((parent, view, position, id) -> {
                     selectedTechnician = parent.getItemAtPosition(position).toString();
@@ -277,7 +290,6 @@ public class ServiceRequestListActivity extends BaseActivity {
                     }
 
                     List<ServiceRequestResponse> converted = new ArrayList<>();
-
                     for (ServiceTicketDTO t : response.body()) {
                         ServiceRequestResponse r = new ServiceRequestResponse();
                         r.setRequestId(t.getRequestId());
@@ -316,13 +328,18 @@ public class ServiceRequestListActivity extends BaseActivity {
                     }
 
                     List<ServiceRequestResponse> data = response.body();
+                    String viewMode = getIntent().getStringExtra("ViewMode");
 
-                    List<ServiceRequestResponse> remove = new ArrayList<>();
-                    if(data != null && getIntent().getStringExtra("ViewMode").equals("Completed")){
-                        data.forEach(sr -> {if(!sr.getStatus().equals("Completed")) remove.add(sr);});
+                    if (data != null && "Completed".equalsIgnoreCase(viewMode)) {
+                        List<ServiceRequestResponse> remove = new ArrayList<>();
+                        for (ServiceRequestResponse sr : data) {
+                            if (!"Completed".equalsIgnoreCase(sr.getStatus())) {
+                                remove.add(sr);
+                            }
+                        }
+                        data.removeAll(remove);
                     }
-                    remove.forEach(sr -> data.remove(sr));
-                    
+
                     adapter.setData(data);
                     applyFilters();
                 }

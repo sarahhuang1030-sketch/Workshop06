@@ -121,6 +121,12 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
     private boolean destinationReady = false;
     private boolean currentReady = false;
 
+    private boolean routeRequestInFlight = false;
+    private LatLng lastRouteOrigin;
+    private LatLng lastRouteDestination;
+
+    private static final String GEOCODING_API_URL = "https://maps.googleapis.com/maps/api/geocode/json";
+
     private final OkHttpClient httpClient = new OkHttpClient();
 
     private final ActivityResultLauncher<Intent> editAppointmentLauncher =
@@ -293,42 +299,39 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
     }
 
     private void geocodeAndPinAddress(String fullAddress, String title) {
-        if (googleMap == null) return;
+        if (googleMap == null || fullAddress == null || fullAddress.trim().isEmpty()) {
+            return;
+        }
 
-        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+        showLoading(true);
 
-        try {
-            List<Address> results = geocoder.getFromLocationName(fullAddress, 1);
+        new Thread(() -> {
+            Geocoder geocoder = new Geocoder(NavMapActivity.this, Locale.getDefault());
 
-            if (results != null && !results.isEmpty()) {
-                Address result = results.get(0);
-                destinationLatLng = new LatLng(result.getLatitude(), result.getLongitude());
-                destinationReady = true;
+            try {
+                List<Address> results = geocoder.getFromLocationName(fullAddress, 1);
 
-                if (destinationMarker != null) destinationMarker.remove();
+                if (results != null && !results.isEmpty()) {
+                    Address result = results.get(0);
+                    LatLng latLng = new LatLng(result.getLatitude(), result.getLongitude());
 
-                destinationMarker = googleMap.addMarker(new MarkerOptions()
-                        .position(destinationLatLng)
-                        .title(title)
-                        .snippet(fullAddress)
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)));
-
-                fitMapToBothLocations();
-                maybeDrawRoute();
-            } else {
-                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LOCATION, 10f));
-                Toast.makeText(this, "Could not find this address on map", Toast.LENGTH_SHORT).show();
+                    runOnUiThread(() -> {
+                        showLoading(false);
+                        showDestinationOnMap(latLng, title, fullAddress);
+                    });
+                    return;
+                }
+            } catch (Exception ignored) {
+                // fall through to Google Geocoding API fallback
             }
 
-        } catch (IOException e) {
-            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LOCATION, 10f));
-            Toast.makeText(this, "Failed to load address on map", Toast.LENGTH_SHORT).show();
-        }
+            fallbackGeocodeWithApi(fullAddress, title);
+        }).start();
     }
 
     private void buildLocationRequest() {
-        locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000)
-                .setMinUpdateIntervalMillis(500)
+        locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 3000)
+                .setMinUpdateIntervalMillis(1500)
                 .build();
     }
 
@@ -392,6 +395,23 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
 
     private void maybeDrawRoute() {
         if (currentLatLng == null || destinationLatLng == null) return;
+        if (routeRequestInFlight) return;
+
+        if (lastRouteOrigin != null && lastRouteDestination != null) {
+            float[] results = new float[1];
+            android.location.Location.distanceBetween(
+                    lastRouteOrigin.latitude, lastRouteOrigin.longitude,
+                    currentLatLng.latitude, currentLatLng.longitude,
+                    results
+            );
+
+            if (results[0] < 25) {
+                return; // don't request again unless moved enough
+            }
+        }
+
+        lastRouteOrigin = currentLatLng;
+        lastRouteDestination = destinationLatLng;
         requestRoute(currentLatLng, destinationLatLng);
     }
 
@@ -439,6 +459,8 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
             httpClient.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    routeRequestInFlight = false;   // ✅ ADD THIS
+
                     runOnUiThread(() ->
                             Toast.makeText(NavMapActivity.this, "Failed to load route", Toast.LENGTH_SHORT).show()
                     );
@@ -446,6 +468,8 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
 
                 @Override
                 public void onResponse(@NonNull Call call, @NonNull okhttp3.Response response) throws IOException {
+                    routeRequestInFlight = false;   // ✅ ADD THIS FIRST
+
                     if (!response.isSuccessful() || response.body() == null) {
                         runOnUiThread(() ->
                                 Toast.makeText(NavMapActivity.this, "Route request failed", Toast.LENGTH_SHORT).show()
@@ -694,4 +718,111 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
             maybeDrawRoute();
         });
     }
+
+    private void fallbackGeocodeWithApi(String fullAddress, String title) {
+        try {
+            String url = GEOCODING_API_URL
+                    + "?address=" + java.net.URLEncoder.encode(fullAddress, "UTF-8")
+                    + "&key=" + "AIzaSyD5Tuu3y5QdtwRY02WzIjngDi1ZpnUQc_8";
+
+            Request request = new Request.Builder()
+                    .url(url)
+                    .get()
+                    .build();
+
+            httpClient.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    runOnUiThread(() -> {
+                        showLoading(false);
+                        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LOCATION, 10f));
+                        Toast.makeText(NavMapActivity.this,
+                                "Could not find this address on map",
+                                Toast.LENGTH_SHORT).show();
+                    });
+                }
+
+                @Override
+                public void onResponse(@NonNull Call call, @NonNull okhttp3.Response response) throws IOException {
+                    if (!response.isSuccessful() || response.body() == null) {
+                        runOnUiThread(() -> {
+                            showLoading(false);
+                            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LOCATION, 10f));
+                            Toast.makeText(NavMapActivity.this,
+                                    "Could not find this address on map",
+                                    Toast.LENGTH_SHORT).show();
+                        });
+                        return;
+                    }
+
+                    try {
+                        String json = response.body().string();
+                        JSONObject root = new JSONObject(json);
+
+                        JSONArray results = root.optJSONArray("results");
+                        if (results == null || results.length() == 0) {
+                            runOnUiThread(() -> {
+                                showLoading(false);
+                                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LOCATION, 10f));
+                                Toast.makeText(NavMapActivity.this,
+                                        "Could not find this address on map",
+                                        Toast.LENGTH_SHORT).show();
+                            });
+                            return;
+                        }
+
+                        JSONObject location = results.getJSONObject(0)
+                                .getJSONObject("geometry")
+                                .getJSONObject("location");
+
+                        double lat = location.getDouble("lat");
+                        double lng = location.getDouble("lng");
+                        LatLng latLng = new LatLng(lat, lng);
+
+                        runOnUiThread(() -> {
+                            showLoading(false);
+                            showDestinationOnMap(latLng, title, fullAddress);
+                        });
+
+                    } catch (Exception e) {
+                        runOnUiThread(() -> {
+                            showLoading(false);
+                            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LOCATION, 10f));
+                            Toast.makeText(NavMapActivity.this,
+                                    "Failed to parse address location",
+                                    Toast.LENGTH_SHORT).show();
+                        });
+                    }
+                }
+            });
+
+        } catch (Exception e) {
+            runOnUiThread(() -> {
+                showLoading(false);
+                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LOCATION, 10f));
+                Toast.makeText(NavMapActivity.this,
+                        "Failed to load address on map",
+                        Toast.LENGTH_SHORT).show();
+            });
+        }
+    }
+
+    private void showDestinationOnMap(LatLng latLng, String title, String fullAddress) {
+        destinationLatLng = latLng;
+        destinationReady = true;
+
+        if (destinationMarker != null) {
+            destinationMarker.remove();
+        }
+
+        destinationMarker = googleMap.addMarker(new MarkerOptions()
+                .position(destinationLatLng)
+                .title(title)
+                .snippet(fullAddress)
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)));
+
+        fitMapToBothLocations();
+        maybeDrawRoute();
+    }
+
 }

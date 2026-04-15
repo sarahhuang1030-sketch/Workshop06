@@ -140,7 +140,7 @@ public class EmployeeDashboardActivity extends BaseActivity {
                                 data.getAssignedAppointments() + " assigned",
                                 R.drawable.bg_card_top_accent_purple, R.drawable.bg_icon_lavender,
                                 ServiceAppointmentListActivity.class,
-                                "Assigned"));
+                                "Scheduled"));
                         items.add(new DashboardMenuItem("✅", "Completed",
                                 data.getCompletedRequests() + " done",
                                 R.drawable.bg_card_top_accent_pink, R.drawable.bg_icon_pink,
@@ -194,7 +194,7 @@ public class EmployeeDashboardActivity extends BaseActivity {
                     items.add(new DashboardMenuItem("🖥️", "Active Subscriptions",
                             data.getActiveSubscriptions() + " active",
                             R.drawable.bg_card_top_accent_pink, R.drawable.bg_icon_pink,
-                            SubscriptionFormActivity.class));
+                            SubscriptionListActivity.class));
                     items.add(new DashboardMenuItem("➕", "Total Add-Ons",
                             data.getTotalAddons() + " available",
                             R.drawable.bg_card_top_accent_blue, R.drawable.bg_icon_blue,

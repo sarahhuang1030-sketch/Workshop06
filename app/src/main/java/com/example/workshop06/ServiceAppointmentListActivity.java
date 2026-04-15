@@ -65,10 +65,10 @@ public class ServiceAppointmentListActivity extends BaseActivity {
     private boolean dashboardMode = false;
 
     private ImageButton btnBack;
-
     private String parentCustomerName;
     private String parentRequestType;
     private String parentRequestDescription;
+
 
     private final ActivityResultLauncher<Intent> formLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> loadAppointments());
@@ -96,7 +96,6 @@ public class ServiceAppointmentListActivity extends BaseActivity {
 
         btnBack = findViewById(R.id.btnBack);
         btnBack.setOnClickListener(v -> finish());
-
         initViews();
         setupRecyclerView();
         setupSearch();
@@ -153,9 +152,13 @@ public class ServiceAppointmentListActivity extends BaseActivity {
         spinnerTechnicianFilter = findViewById(R.id.spinnerTechnicianFilter);
 
         txtServiceAppointmentTitle = findViewById(R.id.txtServiceAppointmentTitle);
+
         String viewMode = getIntent().getStringExtra("ViewMode");
-        if(!viewMode.equals("Empty"))
+        if (viewMode != null && !viewMode.trim().isEmpty() && !"Empty".equalsIgnoreCase(viewMode)) {
             txtServiceAppointmentTitle.setText(viewMode + " Requests");
+        } else {
+            txtServiceAppointmentTitle.setText("Service Appointments");
+        }
     }
 
     private void setupRecyclerView() {
@@ -364,6 +367,8 @@ public class ServiceAppointmentListActivity extends BaseActivity {
                         }
                     }
                     converted.removeAll(toRemove);
+                    adapter.setData(converted);
+                    applyFilters();
                 }
 
 

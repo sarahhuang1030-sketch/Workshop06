@@ -45,6 +45,7 @@ public class ServiceAppointmentListActivity extends BaseActivity {
     private ProgressBar progressBar;
     private TextView tvEmpty;
     private TextView tvSubtitle;
+    private TextView txtServiceAppointmentTitle;
     private SearchView searchView;
     private FloatingActionButton fabAdd;
 
@@ -150,6 +151,11 @@ public class ServiceAppointmentListActivity extends BaseActivity {
         spinnerStatusFilter = findViewById(R.id.spinnerStatusFilter);
         spinnerLocationTypeFilter = findViewById(R.id.spinnerLocationTypeFilter);
         spinnerTechnicianFilter = findViewById(R.id.spinnerTechnicianFilter);
+
+        txtServiceAppointmentTitle = findViewById(R.id.txtServiceAppointmentTitle);
+        String viewMode = getIntent().getStringExtra("ViewMode");
+        if(!viewMode.equals("Empty"))
+            txtServiceAppointmentTitle.setText(viewMode + " Requests");
     }
 
     private void setupRecyclerView() {
@@ -338,6 +344,12 @@ public class ServiceAppointmentListActivity extends BaseActivity {
 
                         converted.add(a);
                     }
+                    
+                    List<ServiceAppointmentResponse> remove = new ArrayList<>();
+                    if(data != null && getIntent().getStringExtra("ViewMode").equals("Completed")){
+                        data.forEach(sr -> {if(!sr.getStatus().equals("Completed")) remove.add(sr);});
+                    }
+                    remove.forEach(sr -> data.remove(sr));
 
                     adapter.setData(converted);
                     applyFilters();

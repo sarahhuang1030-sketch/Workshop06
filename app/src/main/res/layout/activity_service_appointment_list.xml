@@ -46,13 +46,14 @@
                     android:paddingStart="18dp">
 
                     <TextView
+                        android:id="@+id/txtServiceAppointmentTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Appointment Requests"
                         android:layout_marginTop="45dp"
+                        android:text="Appointment Requests"
                         android:textColor="#fff"
                         android:textSize="28sp"
-                        android:textStyle="bold"/>
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"

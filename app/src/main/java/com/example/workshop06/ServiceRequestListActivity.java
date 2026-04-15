@@ -45,6 +45,7 @@ public class ServiceRequestListActivity extends BaseActivity {
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private TextView tvEmpty;
+    private TextView txtServiceRequestTitle;
     private SearchView searchViewServiceRequest;
     private FloatingActionButton fabAdd;
     private MaterialAutoCompleteTextView spinnerTechnicianFilter;
@@ -93,6 +94,11 @@ public class ServiceRequestListActivity extends BaseActivity {
         fabAdd = findViewById(R.id.fabAdd);
         spinnerTechnicianFilter = findViewById(R.id.spinnerTechnicianFilter);
         spinnerPriorityFilter = findViewById(R.id.spinnerPriorityFilter);
+
+        txtServiceRequestTitle = findViewById(R.id.txtServiceRequestTitle);
+        String viewMode = getIntent().getStringExtra("ViewMode");
+        if(!viewMode.equals("Empty"))
+            txtServiceRequestTitle.setText(viewMode + " Requests");
     }
 
     private void setupRecyclerView() {
@@ -310,6 +316,13 @@ public class ServiceRequestListActivity extends BaseActivity {
                     }
 
                     List<ServiceRequestResponse> data = response.body();
+
+                    List<ServiceRequestResponse> remove = new ArrayList<>();
+                    if(data != null && getIntent().getStringExtra("ViewMode").equals("Completed")){
+                        data.forEach(sr -> {if(!sr.getStatus().equals("Completed")) remove.add(sr);});
+                    }
+                    remove.forEach(sr -> data.remove(sr));
+                    
                     adapter.setData(data);
                     applyFilters();
                 }

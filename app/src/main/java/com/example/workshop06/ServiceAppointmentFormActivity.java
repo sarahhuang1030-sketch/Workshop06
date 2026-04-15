@@ -8,12 +8,11 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.Toast;
-import com.example.workshop06.model.TechnicianWorkOrderUpdateRequest;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
@@ -22,9 +21,12 @@ import com.example.workshop06.model.EmployeeResponse;
 import com.example.workshop06.model.ServiceAppointmentCreateUpdateRequest;
 import com.example.workshop06.model.ServiceAppointmentResponse;
 import com.example.workshop06.model.ServiceRequestResponse;
+import com.example.workshop06.model.TechnicianWorkOrderUpdateRequest;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -36,7 +38,8 @@ import retrofit2.Response;
 
 public class ServiceAppointmentFormActivity extends BaseActivity {
 
-    @Override protected void onRefresh() {}
+    @Override
+    protected void onRefresh() {}
 
     private TextInputLayout layoutRequestSpinner, layoutTechnicianSpinner, layoutAddressSpinner;
     private TextInputLayout tilScheduledStart, tilScheduledEnd;
@@ -46,14 +49,28 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
 
     private EditText etTechnicianName, etAddressText;
     private EditText etTechnicianUserId, etAddressId, etLocationId, etScheduledStart, etScheduledEnd, etNotes;
+    private EditText etLocationTypeText;
+
+    private TextInputLayout layoutLocationTypeText;
 
     private Button btnSave;
     private ProgressBar progressBar;
+    private ImageButton btnBack;
 
     private boolean technicianLimitedEdit = false;
     private String mode = "add";
     private int requestId = -1;
     private int appointmentId = -1;
+
+    private String originalStatus = "";
+    private String originalScheduledEnd = "";
+    private String originalNotes = "";
+
+    private String originalTechnicianUserId = "";
+    private String originalAddressId = "";
+    private String originalLocationId = "";
+    private String originalLocationType = "";
+    private String originalScheduledStart = "";
 
     private final List<RequestOption> requestOptions = new ArrayList<>();
     private final List<TechnicianOption> technicianOptions = new ArrayList<>();
@@ -78,6 +95,7 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
         } else {
             showAddMode();
             loadServiceRequests();
+            loadTechnicians();
         }
     }
 
@@ -105,8 +123,12 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
         etScheduledEnd = findViewById(R.id.etScheduledEnd);
         etNotes = findViewById(R.id.etNotes);
 
+        layoutLocationTypeText = findViewById(R.id.layoutLocationTypeText);
+        etLocationTypeText = findViewById(R.id.etLocationTypeText);
+
         btnSave = findViewById(R.id.btnSave);
         progressBar = findViewById(R.id.progressBar);
+        btnBack = findViewById(R.id.btnBack);
     }
 
     private void setupDropdowns() {
@@ -116,9 +138,15 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
                 new String[]{"ONSITE", "INSTORE", "REMOTE"}
         );
         spinnerLocationType.setAdapter(locationAdapter);
-        spinnerLocationType.setOnClickListener(v -> spinnerLocationType.showDropDown());
+        spinnerLocationType.setOnClickListener(v -> {
+            if (spinnerLocationType.isEnabled()) {
+                spinnerLocationType.showDropDown();
+            }
+        });
         spinnerLocationType.setOnFocusChangeListener((v, hasFocus) -> {
-            if (hasFocus) spinnerLocationType.showDropDown();
+            if (hasFocus && spinnerLocationType.isEnabled()) {
+                spinnerLocationType.showDropDown();
+            }
         });
 
         ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(
@@ -127,15 +155,22 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
                 new String[]{"Scheduled", "Completed", "Cancelled", "Pending"}
         );
         spinnerStatus.setAdapter(statusAdapter);
-        spinnerStatus.setOnClickListener(v -> spinnerStatus.showDropDown());
+        spinnerStatus.setOnClickListener(v -> {
+            if (spinnerStatus.isEnabled()) {
+                spinnerStatus.showDropDown();
+            }
+        });
         spinnerStatus.setOnFocusChangeListener((v, hasFocus) -> {
-            if (hasFocus) spinnerStatus.showDropDown();
+            if (hasFocus && spinnerStatus.isEnabled()) {
+                spinnerStatus.showDropDown();
+            }
         });
     }
 
     private void loadIntentData() {
         mode = getIntent().getStringExtra("mode");
         if (mode == null) mode = "add";
+
         technicianLimitedEdit = getIntent().getBooleanExtra("technicianLimitedEdit", false);
         requestId = getIntent().getIntExtra("requestId", -1);
         appointmentId = getIntent().getIntExtra("appointmentId", -1);
@@ -168,6 +203,7 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
 
         setDropdownValue(spinnerLocationType, locationType);
         setDropdownValue(spinnerStatus, status);
+        etLocationTypeText.setText(!TextUtils.isEmpty(locationType) ? locationType : "—");
 
         etTechnicianName.setText(!TextUtils.isEmpty(technicianName) ? technicianName : "—");
         etAddressText.setText(!TextUtils.isEmpty(addressText) ? addressText : "—");
@@ -177,6 +213,16 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
         } else {
             spinnerTechnician.setText("", false);
         }
+
+        originalStatus = safeValue(status);
+        originalScheduledEnd = safeValue(scheduledEnd);
+        originalNotes = safeValue(notes);
+
+        originalTechnicianUserId = technicianUserId != Integer.MIN_VALUE ? String.valueOf(technicianUserId) : "";
+        originalAddressId = addressId != Integer.MIN_VALUE ? String.valueOf(addressId) : "";
+        originalLocationId = locationId != Integer.MIN_VALUE ? String.valueOf(locationId) : "";
+        originalLocationType = safeValue(locationType);
+        originalScheduledStart = safeValue(scheduledStart);
     }
 
     private void showAddMode() {
@@ -190,6 +236,88 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
         lockDropdown(spinnerTechnician);
     }
 
+    private void showEditMode() {
+        layoutRequestSpinner.setVisibility(View.GONE);
+        layoutTechnicianSpinner.setVisibility(View.GONE);
+        layoutAddressSpinner.setVisibility(View.GONE);
+
+        etTechnicianName.setVisibility(View.VISIBLE);
+        etAddressText.setVisibility(View.VISIBLE);
+
+        lockEditText(etTechnicianName);
+        lockEditText(etAddressText);
+    }
+
+    private void showTechnicianLimitedEditMode() {
+        layoutRequestSpinner.setVisibility(View.GONE);
+        layoutTechnicianSpinner.setVisibility(View.GONE);
+        layoutAddressSpinner.setVisibility(View.GONE);
+
+        etTechnicianName.setVisibility(View.VISIBLE);
+        etAddressText.setVisibility(View.VISIBLE);
+
+        spinnerLocationType.setVisibility(View.VISIBLE);
+        layoutLocationTypeText.setVisibility(View.GONE);
+        etLocationTypeText.setVisibility(View.GONE);
+
+        lockEditText(etTechnicianName);
+        lockEditText(etAddressText);
+        lockEditText(etTechnicianUserId);
+        lockEditText(etAddressId);
+        lockEditText(etLocationId);
+        lockEditText(etScheduledStart);
+
+        lockDropdown(spinnerLocationType);
+
+        spinnerStatus.setEnabled(true);
+        spinnerStatus.setFocusable(false);
+        spinnerStatus.setFocusableInTouchMode(false);
+        spinnerStatus.setClickable(true);
+        spinnerStatus.setLongClickable(false);
+        spinnerStatus.setCursorVisible(false);
+        spinnerStatus.setAlpha(1f);
+        spinnerStatus.setOnClickListener(v -> spinnerStatus.showDropDown());
+
+        etScheduledEnd.setEnabled(true);
+        etScheduledEnd.setFocusable(false);
+        etScheduledEnd.setFocusableInTouchMode(false);
+        etScheduledEnd.setClickable(true);
+        etScheduledEnd.setCursorVisible(false);
+        etScheduledEnd.setAlpha(1f);
+
+        etNotes.setEnabled(true);
+        etNotes.setFocusableInTouchMode(true);
+        etNotes.setFocusable(true);
+        etNotes.setClickable(true);
+        etNotes.setCursorVisible(true);
+        etNotes.setAlpha(1f);
+    }
+
+    private void setupButtons() {
+        btnBack.setOnClickListener(v -> {
+            setResult(RESULT_CANCELED);
+            getOnBackPressedDispatcher().onBackPressed();
+        });
+
+        btnSave.setOnClickListener(v -> saveAppointment());
+
+        etScheduledStart.setOnClickListener(v -> {
+            if (!technicianLimitedEdit) {
+                showDateTimePicker(etScheduledStart);
+            }
+        });
+
+        etScheduledEnd.setOnClickListener(v -> showDateTimePicker(etScheduledEnd));
+
+        tilScheduledStart.setEndIconOnClickListener(v -> {
+            if (!technicianLimitedEdit) {
+                showDateTimePicker(etScheduledStart);
+            }
+        });
+
+        tilScheduledEnd.setEndIconOnClickListener(v -> showDateTimePicker(etScheduledEnd));
+    }
+
     private void lockDropdown(MaterialAutoCompleteTextView field) {
         field.setEnabled(false);
         field.setFocusable(false);
@@ -200,16 +328,6 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
         field.setLongClickable(false);
         field.setAlpha(0.85f);
     }
-    private void showEditMode() {
-        layoutRequestSpinner.setVisibility(View.GONE);
-        layoutTechnicianSpinner.setVisibility(View.GONE);
-        layoutAddressSpinner.setVisibility(View.GONE);
-
-        etTechnicianName.setVisibility(View.VISIBLE);
-        etAddressText.setVisibility(View.VISIBLE);
-
-        lockEditText(etTechnicianName);
-    }
 
     private void lockEditText(EditText field) {
         field.setEnabled(false);
@@ -217,6 +335,8 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
         field.setFocusableInTouchMode(false);
         field.setCursorVisible(false);
         field.setKeyListener(null);
+        field.setClickable(false);
+        field.setLongClickable(false);
         field.setAlpha(0.85f);
     }
 
@@ -225,14 +345,60 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
         dropdown.setText(value, false);
     }
 
-    private void setupButtons() {
-        btnSave.setOnClickListener(v -> saveAppointment());
+    private void clearValidationErrors() {
+        etScheduledStart.setError(null);
+        etScheduledEnd.setError(null);
+        spinnerLocationType.setError(null);
+        spinnerStatus.setError(null);
+    }
 
-        etScheduledStart.setOnClickListener(v -> showDateTimePicker(etScheduledStart));
-        etScheduledEnd.setOnClickListener(v -> showDateTimePicker(etScheduledEnd));
+    private LocalDateTime parseDateTimeOrShowError(EditText field, String value, String errorMessage) {
+        try {
+            return LocalDateTime.parse(value);
+        } catch (DateTimeParseException e) {
+            field.setError(errorMessage);
+            field.requestFocus();
+            return null;
+        }
+    }
 
-        tilScheduledStart.setEndIconOnClickListener(v -> showDateTimePicker(etScheduledStart));
-        tilScheduledEnd.setEndIconOnClickListener(v -> showDateTimePicker(etScheduledEnd));
+    private boolean validateDateRange(String startText, String endText) {
+
+        if (TextUtils.isEmpty(startText)) {
+            etScheduledStart.setError("Start is required");
+            etScheduledStart.requestFocus();
+            return false;
+        }
+
+        try {
+            LocalDateTime startDate = LocalDateTime.parse(startText);
+
+            if (!TextUtils.isEmpty(endText)) {
+                LocalDateTime endDate = LocalDateTime.parse(endText);
+
+                if (endDate.isBefore(startDate)) {
+
+                    // ✅ TOAST ALERT
+                    Toast.makeText(
+                            this,
+                            "End date cannot be before start date",
+                            Toast.LENGTH_LONG
+                    ).show();
+
+                    // ✅ FIELD ERROR
+                    etScheduledEnd.setError("End date must be after start");
+                    etScheduledEnd.requestFocus();
+
+                    return false;
+                }
+            }
+
+        } catch (Exception e) {
+            Toast.makeText(this, "Invalid date format", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        return true;
     }
 
     private void showDateTimePicker(EditText target) {
@@ -299,12 +465,9 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
                     for (int i = 0; i < requestOptions.size(); i++) {
                         if (requestOptions.get(i).requestId == requestId) {
                             spinnerRequest.setText(requestOptions.get(i).label, false);
-
-                            // 🔒 lock the request (read-only)
                             spinnerRequest.setEnabled(false);
                             spinnerRequest.setFocusable(false);
                             spinnerRequest.setClickable(false);
-
                             loadAddressesForCustomer(requestOptions.get(i).customerId);
                             break;
                         }
@@ -403,9 +566,7 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
                     String addressLabel = buildAddressLabel(address);
                     String type = address.getAddressType() != null ? address.getAddressType().trim() : "";
 
-                    String fullLabel = type.isEmpty()
-                            ? addressLabel
-                            : type + " - " + addressLabel;
+                    String fullLabel = type.isEmpty() ? addressLabel : type + " - " + addressLabel;
 
                     addressOptions.add(new AddressOption(address.getAddressId(), fullLabel));
                     labels.add(fullLabel);
@@ -512,6 +673,34 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
         return sb.length() == 0 ? "Address #" + a.getAddressId() : sb.toString();
     }
 
+    private String safeValue(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private boolean hasTechnicianChanges(String status, String endText, String notes) {
+        return !safeValue(status).equals(originalStatus)
+                || !safeValue(endText).equals(originalScheduledEnd)
+                || !safeValue(notes).equals(originalNotes);
+    }
+
+    private boolean hasFullEditChanges(String technicianText,
+                                       String addressTextId,
+                                       String locationText,
+                                       String locationType,
+                                       String startText,
+                                       String endText,
+                                       String status,
+                                       String notes) {
+        return !safeValue(technicianText).equals(originalTechnicianUserId)
+                || !safeValue(addressTextId).equals(originalAddressId)
+                || !safeValue(locationText).equals(originalLocationId)
+                || !safeValue(locationType).equals(originalLocationType)
+                || !safeValue(startText).equals(originalScheduledStart)
+                || !safeValue(endText).equals(originalScheduledEnd)
+                || !safeValue(status).equals(originalStatus)
+                || !safeValue(notes).equals(originalNotes);
+    }
+
     private void saveAppointment() {
         if (requestId <= 0) {
             Toast.makeText(this, "Please select a service request", Toast.LENGTH_LONG).show();
@@ -531,6 +720,8 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
         String status = spinnerStatus.getText() != null
                 ? spinnerStatus.getText().toString().trim()
                 : "";
+
+        clearValidationErrors();
 
         if ("add".equalsIgnoreCase(mode)) {
             if (TextUtils.isEmpty(technicianText)) {
@@ -555,10 +746,35 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
             return;
         }
 
-        if (TextUtils.isEmpty(startText)) {
-            etScheduledStart.setError("Start is required");
-            etScheduledStart.requestFocus();
+        if (!validateDateRange(startText, endText)) {
             return;
+        }
+
+        if ("edit".equalsIgnoreCase(mode) && appointmentId > 0) {
+            if (technicianLimitedEdit) {
+                if (!hasTechnicianChanges(status, endText, notes)) {
+                    Toast.makeText(getApplicationContext(), "No changes to update", Toast.LENGTH_SHORT).show();
+                    setResult(RESULT_CANCELED);
+                    finish();
+                    return;
+                }
+            } else {
+                if (!hasFullEditChanges(
+                        technicianText,
+                        addressTextId,
+                        locationText,
+                        locationType,
+                        startText,
+                        endText,
+                        status,
+                        notes
+                )) {
+                    Toast.makeText(getApplicationContext(), "No changes to update", Toast.LENGTH_SHORT).show();
+                    setResult(RESULT_CANCELED);
+                    finish();
+                    return;
+                }
+            }
         }
 
         Integer technicianUserId = TextUtils.isEmpty(technicianText) ? null : Integer.parseInt(technicianText);
@@ -673,6 +889,7 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
     private void showLoading(boolean isLoading) {
         progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         btnSave.setEnabled(!isLoading);
+        btnBack.setEnabled(!isLoading);
     }
 
     private static class RequestOption {
@@ -705,44 +922,5 @@ public class ServiceAppointmentFormActivity extends BaseActivity {
             this.addressId = addressId;
             this.label = label;
         }
-    }
-
-    private void showTechnicianLimitedEditMode() {
-        layoutRequestSpinner.setVisibility(View.GONE);
-        layoutTechnicianSpinner.setVisibility(View.GONE);
-        layoutAddressSpinner.setVisibility(View.GONE);
-
-        etTechnicianName.setVisibility(View.VISIBLE);
-        etAddressText.setVisibility(View.VISIBLE);
-
-        lockEditText(etTechnicianName);
-        lockEditText(etAddressText);
-        lockEditText(etTechnicianUserId);
-        lockEditText(etAddressId);
-        lockEditText(etLocationId);
-        lockDropdown(spinnerLocationType);
-        lockEditText(etScheduledStart);
-
-        // keep these editable for technician
-        spinnerStatus.setEnabled(true);
-        spinnerStatus.setFocusable(false);
-        spinnerStatus.setFocusableInTouchMode(false);
-        spinnerStatus.setClickable(true);
-        spinnerStatus.setLongClickable(false);
-        spinnerStatus.setCursorVisible(false);
-        spinnerStatus.setAlpha(1f);
-        spinnerStatus.setOnClickListener(v -> spinnerStatus.showDropDown());
-
-        etScheduledEnd.setEnabled(true);
-        etScheduledEnd.setFocusable(false);
-        etScheduledEnd.setFocusableInTouchMode(false);
-        etScheduledEnd.setClickable(true);
-        etScheduledEnd.setCursorVisible(false);
-        etScheduledEnd.setAlpha(1f);
-
-        etNotes.setEnabled(true);
-        etNotes.setFocusableInTouchMode(true);
-        etNotes.setCursorVisible(true);
-        etNotes.setAlpha(1f);
     }
 }

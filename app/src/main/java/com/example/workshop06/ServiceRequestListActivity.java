@@ -138,7 +138,10 @@ public class ServiceRequestListActivity extends BaseActivity {
                 if (item.getRequestId() == null) return;
 
                 Intent intent = new Intent(ServiceRequestListActivity.this, ServiceAppointmentListActivity.class);
+                intent.putExtra("customerId", item.getCustomerId());//fix for the customer dropdown being uneditable
                 intent.putExtra("requestId", item.getRequestId());
+                intent.putExtra("createdByUserId", item.getCreatedByUserId());
+                intent.putExtra("createdByName", item.getCreatedByName());
                 intent.putExtra("customerName", item.getCustomerName());
                 intent.putExtra("requestType", item.getRequestType());
                 intent.putExtra("description", item.getDescription());
@@ -292,6 +295,13 @@ public class ServiceRequestListActivity extends BaseActivity {
                         converted.add(r);
                     }
 
+                    List<ServiceRequestResponse> remove = new ArrayList<>();
+                    if(converted != null && getIntent().getStringExtra("ViewMode").equals("Completed")){
+                        converted.forEach(sr -> {if(!sr.getStatus().equalsIgnoreCase("Completed")) remove.add(sr);});
+                    }
+                    remove.forEach(sr -> converted.remove(sr));
+
+
                     adapter.setData(converted);
                     applyFilters();
                 }
@@ -319,7 +329,7 @@ public class ServiceRequestListActivity extends BaseActivity {
 
                     List<ServiceRequestResponse> remove = new ArrayList<>();
                     if(data != null && getIntent().getStringExtra("ViewMode").equals("Completed")){
-                        data.forEach(sr -> {if(!sr.getStatus().equals("Completed")) remove.add(sr);});
+                        data.forEach(sr -> {if(!sr.getStatus().equalsIgnoreCase("Completed")) remove.add(sr);});
                     }
                     remove.forEach(sr -> data.remove(sr));
                     

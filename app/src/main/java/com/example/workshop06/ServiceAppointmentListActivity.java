@@ -138,6 +138,11 @@ public class ServiceAppointmentListActivity extends BaseActivity {
             return;
         }
 
+//        txtServiceAppointmentTitle = findViewById(R.id.txtServiceAppointmentTitle);
+//        String viewMode = getIntent().getStringExtra("ViewMode");
+//        if(!viewMode.equals("Empty"))
+//            txtServiceAppointmentTitle.setText(viewMode + " Requests");
+
         loadAppointments();
     }
 
@@ -151,11 +156,6 @@ public class ServiceAppointmentListActivity extends BaseActivity {
         spinnerStatusFilter = findViewById(R.id.spinnerStatusFilter);
         spinnerLocationTypeFilter = findViewById(R.id.spinnerLocationTypeFilter);
         spinnerTechnicianFilter = findViewById(R.id.spinnerTechnicianFilter);
-
-        txtServiceAppointmentTitle = findViewById(R.id.txtServiceAppointmentTitle);
-        String viewMode = getIntent().getStringExtra("ViewMode");
-        if(!viewMode.equals("Empty"))
-            txtServiceAppointmentTitle.setText(viewMode + " Requests");
     }
 
     private void setupRecyclerView() {
@@ -341,31 +341,19 @@ public class ServiceAppointmentListActivity extends BaseActivity {
                         a.setCustomerName(w.getCustomerName());
                         a.setRequestType(w.getRequestType());
                         a.setRequestDescription(w.getRequestDescription());
-                        List<ServiceAppointmentResponse> toRemove = new ArrayList<>();
-                        String viewMode = getIntent().getStringExtra("ViewMode");
-                        if (viewMode != null && viewMode.equals("Assigned")) {
-                            for (ServiceAppointmentResponse sr : converted) {
-                                if (!"Assigned".equals(sr.getStatus())) {
-                                    toRemove.add(sr);
-                                }
-                            }
-                        }
-                        converted.removeAll(toRemove);
+
                         converted.add(a);
                     }
+                    
+                    List<ServiceAppointmentResponse> remove = new ArrayList<>();
+                    if(converted != null && getIntent().getStringExtra("ViewMode").equals("Assigned")){
+                        converted.forEach(sr -> {if(sr.getStatus().equals("Completed")) remove.add(sr);});
+                    }//Hide completed SRs from Assigned
+                    remove.forEach(sr -> converted.remove(sr));
 
-                    List<ServiceAppointmentResponse> toRemove = new ArrayList<>();
-                    String viewMode = getIntent().getStringExtra("ViewMode");
-                    if (viewMode != null && viewMode.equals("Assigned")) {
-                        for (ServiceAppointmentResponse sr : converted) {
-                            if (!"Assigned".equals(sr.getStatus())) {
-                                toRemove.add(sr);
-                            }
-                        }
-                    }
-                    converted.removeAll(toRemove);
+                    adapter.setData(converted);
+                    applyFilters();
                 }
-
 
                 @Override
                 public void onFailure(Call<List<ServiceWorkOrderDTO>> call, Throwable t) {

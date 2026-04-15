@@ -406,20 +406,22 @@ public class ServiceRequestFormActivity extends BaseActivity {
 
     private void saveServiceRequest() {
         String customerIdText = etCustomerId.getText().toString().trim();
+        String customerNameText = etCustomerName.getText().toString().trim();
         String createdByUserIdText = etCreatedByUserId.getText().toString().trim();
+        String createdByNameText = etCreatedByName.getText().toString().trim();
         String assignedTechnicianUserIdText = etAssignedTechnicianUserId.getText().toString().trim();
         String requestType = spinnerRequestType.getText().toString().trim();
         String description = etDescription.getText().toString().trim();
         String priority = spinnerPriority.getText().toString().trim();
         String status = spinnerStatus.getText().toString().trim();
 
-        if (TextUtils.isEmpty(customerIdText)) {
+        if (TextUtils.isEmpty(customerNameText)) {
             etCustomerName.setError("Select a customer");
             etCustomerName.requestFocus();
             return;
         }
 
-        if (TextUtils.isEmpty(createdByUserIdText)) {
+        if (TextUtils.isEmpty(createdByNameText)) {
             layoutCreatedByName.setError("Created by is missing");
             etCreatedByName.requestFocus();
             return;
@@ -443,9 +445,9 @@ public class ServiceRequestFormActivity extends BaseActivity {
             return;
         }
 
-        Integer customerId = Integer.parseInt(customerIdText);
-        Integer createdByUserId = Integer.parseInt(createdByUserIdText);
-        Integer assignedTechnicianUserId = TextUtils.isEmpty(assignedTechnicianUserIdText)
+        Integer customerId = Integer.parseInt(customerIdText.isBlank() ? getIntent().getStringExtra("customerId") : customerIdText);
+        Integer createdByUserId = Integer.parseInt(createdByUserIdText.isBlank() ? getIntent().getStringExtra("createdByUserId") : createdByUserIdText);
+        Integer assignedTechnicianUserId = TextUtils.isEmpty(assignedTechnicianUserIdText.isBlank() ? getIntent().getStringExtra("assignedTechnicianUserId") : assignedTechnicianUserIdText)
                 ? null
                 : Integer.parseInt(assignedTechnicianUserIdText);
 

@@ -12,6 +12,17 @@ public class LoginResponse {
     private String role;
     private Boolean mustChangePassword;
 
+    private String employeeStatus;
+
+    private Boolean employeeActive;
+
+    public Boolean getEmployeeActive() {
+        return employeeActive;
+    }
+
+    public void setEmployeeActive(Boolean employeeActive) {
+        this.employeeActive = employeeActive;
+    }
 
     public Boolean getMustChangePassword() { return mustChangePassword; }
     public String getToken() {
@@ -68,5 +79,13 @@ public class LoginResponse {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getEmployeeStatus() {
+        return employeeStatus;
+    }
+
+    public void setEmployeeStatus(String employeeStatus) {
+        this.employeeStatus = employeeStatus;
     }
 }

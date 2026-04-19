@@ -92,8 +92,23 @@ public class LoginActivity extends BaseActivity {
             @Override
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
+
                     LoginResponse loginResponse = response.body();
 
+                    // 🚨 BLOCK INACTIVE EMPLOYEE (ANDROID ONLY)
+                    if (loginResponse.getEmployeeId() != null
+                            && Boolean.FALSE.equals(loginResponse.getEmployeeActive())) {
+
+                        new AlertDialog.Builder(LoginActivity.this)
+                                .setTitle("Login Blocked")
+                                .setMessage("Your employee account is inactive. You cannot log in on the mobile app.")
+                                .setPositiveButton("OK", null)
+                                .show();
+
+                        return; // ❗ STOP here (no login)
+                    }
+
+                    // ✅ SAVE TOKEN ONLY IF ACTIVE
                     SessionManager sessionManager = new SessionManager(LoginActivity.this);
                     sessionManager.saveToken(loginResponse.getToken());
 
@@ -113,22 +128,16 @@ public class LoginActivity extends BaseActivity {
                     Intent intent;
 
                     if (Boolean.TRUE.equals(loginResponse.getMustChangePassword())) {
-
                         intent = new Intent(LoginActivity.this, ChangePasswordFirstLoginActivity.class);
 
                     } else {
-
                         String role = loginResponse.getRole();
-
-                        if (role != null) {
-                            role = role.toLowerCase();
-                        }
+                        if (role != null) role = role.toLowerCase();
 
                         if ("manager".equals(role) ||
                                 "sales agent".equals(role) ||
                                 "service technician".equals(role)) {
 
-                            // ✅ ALWAYS treat as employee
                             intent = new Intent(LoginActivity.this, EmployeeDashboardActivity.class);
 
                         } else if ("customer".equals(role)) {
@@ -137,7 +146,6 @@ public class LoginActivity extends BaseActivity {
 
                         } else {
 
-                            // fallback safety
                             intent = new Intent(LoginActivity.this, DashboardActivity.class);
                         }
                     }
@@ -146,7 +154,8 @@ public class LoginActivity extends BaseActivity {
                     finish();
 
                 } else if (response.code() == 403) {
-                    String message = "Your profile is inactive now, so you can't access your dashboard.";
+
+                    String message = "Your account is inactive. You cannot log in.";
 
                     try {
                         if (response.errorBody() != null) {

@@ -13,11 +13,11 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.workshop06.api.ApiService;
 import com.example.workshop06.api.RetrofitClient;
 import com.example.workshop06.model.MeResponse;
@@ -93,7 +93,6 @@ public class EmployeeProfileActivity extends BaseActivity {
                     }
             );
 
-
     @Override
     protected void onRefresh() {
         fetchProfileFromBackend();
@@ -105,6 +104,7 @@ public class EmployeeProfileActivity extends BaseActivity {
         setContentView(R.layout.activity_employee_profile);
 
         BottomNavHelper.setup(this, R.id.nav_profile);
+
         layoutPersonalInfo = findViewById(R.id.layoutPersonalInfo);
         bottomNavigation = findViewById(R.id.bottomNavigation);
         tvFirstName = findViewById(R.id.tvFirstName);
@@ -117,15 +117,23 @@ public class EmployeeProfileActivity extends BaseActivity {
         imgAvatar = findViewById(R.id.imgAvatar);
         btnLogout = findViewById(R.id.btnLogout);
         btnEditProfile = findViewById(R.id.btnEditProfile);
+
         layoutPersonalInfo.setOnClickListener(v -> {
             Intent intent = new Intent(EmployeeProfileActivity.this, EditProfileActivity.class);
             editProfileLauncher.launch(intent);
         });
+
         loadProfile();
         fetchProfileFromBackend();
         setupAvatarActions();
         setupNav();
         setupLogout();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        fetchProfileFromBackend();
     }
 
     private void setupAvatarActions() {
@@ -233,25 +241,25 @@ public class EmployeeProfileActivity extends BaseActivity {
     }
 
     private void loadAvatar(String avatarUrl) {
-
-        String BASE_URL = "http://10.0.2.2:8080";
-        String DEFAULT_AVATAR = "/uploads/avatars/default.jpg";
-
         String finalUrl;
 
         if (avatarUrl == null || avatarUrl.trim().isEmpty()) {
-            finalUrl = BASE_URL + DEFAULT_AVATAR;
-        } else if (avatarUrl.startsWith("http")) {   // ✅ THIS FIX
+            finalUrl = BASE_URL + DEFAULT_AVATAR_PATH;
+        } else if (avatarUrl.startsWith("http://") || avatarUrl.startsWith("https://")) {
             finalUrl = avatarUrl;
         } else {
             finalUrl = BASE_URL + avatarUrl;
         }
 
+        String cacheBustedUrl = finalUrl + (finalUrl.contains("?") ? "&" : "?") + "t=" + System.currentTimeMillis();
+
         Glide.with(this)
-                .load(finalUrl)
+                .load(cacheBustedUrl)
                 .circleCrop()
                 .placeholder(R.drawable.ic_user_placeholder)
                 .error(R.drawable.ic_user_placeholder)
+                .skipMemoryCache(true)
+                .diskCacheStrategy(DiskCacheStrategy.NONE)
                 .into(imgAvatar);
     }
 
@@ -295,16 +303,15 @@ public class EmployeeProfileActivity extends BaseActivity {
                                     avatarUrl = DEFAULT_AVATAR_PATH;
                                 }
 
-                                loadAvatar(avatarUrl);
-
                                 SharedPreferences prefs = getSharedPreferences("teleconnect_prefs", MODE_PRIVATE);
                                 prefs.edit().putString("avatarUrl", avatarUrl).apply();
+
+                                loadAvatar(avatarUrl);
+                                fetchProfileFromBackend();
 
                                 Toast.makeText(EmployeeProfileActivity.this,
                                         "Profile photo updated",
                                         Toast.LENGTH_SHORT).show();
-
-                                fetchProfileFromBackend();
                             } else {
                                 Toast.makeText(EmployeeProfileActivity.this,
                                         "Upload failed",
@@ -342,16 +349,15 @@ public class EmployeeProfileActivity extends BaseActivity {
             @Override
             public void onResponse(Call<Map<String, Boolean>> call, Response<Map<String, Boolean>> response) {
                 if (response.isSuccessful()) {
-                    loadAvatar(DEFAULT_AVATAR_PATH);
-
                     SharedPreferences prefs = getSharedPreferences("teleconnect_prefs", MODE_PRIVATE);
                     prefs.edit().putString("avatarUrl", DEFAULT_AVATAR_PATH).apply();
+
+                    loadAvatar(DEFAULT_AVATAR_PATH);
+                    fetchProfileFromBackend();
 
                     Toast.makeText(EmployeeProfileActivity.this,
                             "Profile photo removed",
                             Toast.LENGTH_SHORT).show();
-
-                    fetchProfileFromBackend();
                 } else {
                     Toast.makeText(EmployeeProfileActivity.this,
                             "Failed to delete photo",
@@ -377,6 +383,7 @@ public class EmployeeProfileActivity extends BaseActivity {
             buffer.write(data, 0, nRead);
         }
 
+        inputStream.close();
         return buffer.toByteArray();
     }
 
@@ -455,5 +462,4 @@ public class EmployeeProfileActivity extends BaseActivity {
             Toast.makeText(this, "Unable to open camera", Toast.LENGTH_SHORT).show();
         }
     }
-
 }

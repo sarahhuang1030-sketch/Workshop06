@@ -346,7 +346,8 @@ public class ServiceAppointmentListActivity extends BaseActivity {
                     }
                     
                     List<ServiceAppointmentResponse> remove = new ArrayList<>();
-                    if(converted != null && getIntent().getStringExtra("ViewMode").equals("Assigned")){
+                    String viewMode = getIntent().getStringExtra("ViewMode");
+                    if(converted != null && "Assigned".equals(viewMode)){
                         converted.forEach(sr -> {if(sr.getStatus().equals("Completed")) remove.add(sr);});
                     }//Hide completed SRs from Assigned
                     remove.forEach(sr -> converted.remove(sr));

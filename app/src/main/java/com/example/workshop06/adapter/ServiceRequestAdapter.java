@@ -1,5 +1,6 @@
 package com.example.workshop06.adapter;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,26 +19,44 @@ import java.util.Locale;
 
 public class ServiceRequestAdapter extends RecyclerView.Adapter<ServiceRequestAdapter.ViewHolder> {
 
+    // -------------------------------------------------------------------------
+    // Listener interface — implemented by the host Activity
+    // -------------------------------------------------------------------------
+
     public interface OnRequestActionListener {
         void onEdit(ServiceRequestResponse item);
         void onDelete(ServiceRequestResponse item);
         void onAppointments(ServiceRequestResponse item);
     }
 
-    private final List<ServiceRequestResponse> fullList = new ArrayList<>();
+    private final List<ServiceRequestResponse> fullList     = new ArrayList<>();
     private final List<ServiceRequestResponse> filteredList = new ArrayList<>();
     private final OnRequestActionListener listener;
 
+    /**
+     * When true, the Edit and Delete buttons are hidden on every card.
+     * The Appointments (calendar) button is always visible regardless of this flag.
+     * Set to true for SERVICE_TECHNICIAN users in ServiceRequestListActivity.
+     */
     private boolean readOnlyMode = false;
 
     public ServiceRequestAdapter(OnRequestActionListener listener) {
         this.listener = listener;
     }
 
+    /**
+     * Toggle read-only mode.
+     * Call adapter.setReadOnlyMode(true) for technicians so they can only
+     * view requests and open appointments — not edit or delete them.
+     */
     public void setReadOnlyMode(boolean readOnlyMode) {
         this.readOnlyMode = readOnlyMode;
         notifyDataSetChanged();
     }
+
+    // -------------------------------------------------------------------------
+    // Data
+    // -------------------------------------------------------------------------
 
     public void setData(List<ServiceRequestResponse> data) {
         fullList.clear();
@@ -51,37 +70,46 @@ public class ServiceRequestAdapter extends RecyclerView.Adapter<ServiceRequestAd
         notifyDataSetChanged();
     }
 
+    // -------------------------------------------------------------------------
+    // Filtering
+    // -------------------------------------------------------------------------
+
+    /**
+     * Apply all three filter criteria simultaneously.
+     *
+     * @param keyword          Text typed in the SearchView.
+     *                         Matches against customer name AND address text.
+     * @param technicianFilter Name chosen in the Technician spinner ("All" = no filter).
+     * @param priorityFilter   Priority chosen in the Priority spinner  ("All" = no filter).
+     */
     public void applyFilters(String keyword, String technicianFilter, String priorityFilter) {
         filteredList.clear();
 
-        String q = keyword == null ? "" : keyword.toLowerCase(Locale.US).trim();
+        String q          = keyword          == null ? "" : keyword.toLowerCase(Locale.US).trim();
         String technician = technicianFilter == null ? "All" : technicianFilter.trim();
-        String priority = priorityFilter == null ? "All" : priorityFilter.trim();
+        String priority   = priorityFilter   == null ? "All" : priorityFilter.trim();
 
         for (ServiceRequestResponse item : fullList) {
+
+            // Search filter: match customer name OR address
             String customerName = item.getCustomerName() != null
-                    ? item.getCustomerName().toLowerCase(Locale.US).trim()
-                    : "";
-
+                    ? item.getCustomerName().toLowerCase(Locale.US).trim() : "";
             String address = item.getAddressText() != null
-                    ? item.getAddressText().toLowerCase(Locale.US).trim()
-                    : "";
-
-            String technicianName = item.getTechnicianName() != null
-                    ? item.getTechnicianName().trim()
-                    : "";
-
-            String itemPriority = item.getPriority() != null
-                    ? item.getPriority().trim()
-                    : "";
+                    ? item.getAddressText().toLowerCase(Locale.US).trim() : "";
 
             boolean matchesSearch = q.isEmpty()
                     || customerName.contains(q)
                     || address.contains(q);
 
+            // Technician filter
+            String techName = item.getTechnicianName() != null
+                    ? item.getTechnicianName().trim() : "";
             boolean matchesTechnician = technician.equalsIgnoreCase("All")
-                    || technicianName.equalsIgnoreCase(technician);
+                    || techName.equalsIgnoreCase(technician);
 
+            // Priority filter
+            String itemPriority = item.getPriority() != null
+                    ? item.getPriority().trim() : "";
             boolean matchesPriority = priority.equalsIgnoreCase("All")
                     || itemPriority.equalsIgnoreCase(priority);
 
@@ -93,37 +121,62 @@ public class ServiceRequestAdapter extends RecyclerView.Adapter<ServiceRequestAd
         notifyDataSetChanged();
     }
 
+    // -------------------------------------------------------------------------
+    // RecyclerView.Adapter
+    // -------------------------------------------------------------------------
+
     @NonNull
     @Override
-    public ServiceRequestAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_service_request, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ServiceRequestAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         ServiceRequestResponse item = filteredList.get(position);
 
         holder.tvRequestId.setText(item.getRequestId() != null
                 ? "Request #" + item.getRequestId()
                 : "Request #-");
 
-        holder.tvCustomerName.setText(item.getCustomerName() != null && !item.getCustomerName().trim().isEmpty()
-                ? item.getCustomerName()
-                : "Unknown Customer");
+        holder.tvCustomerName.setText(
+                item.getCustomerName() != null && !item.getCustomerName().trim().isEmpty()
+                        ? item.getCustomerName()
+                        : "Unknown Customer");
 
-        holder.tvRequestType.setText(item.getRequestType() != null ? item.getRequestType() : "-");
-        holder.tvStatus.setText(item.getStatus() != null ? item.getStatus() : "-");
-        holder.tvPriority.setText(item.getPriority() != null ? item.getPriority() : "-");
-        holder.tvTechnician.setText(item.getTechnicianName() != null ? item.getTechnicianName() : "—");
-        holder.tvAddress.setText(item.getAddressText() != null ? item.getAddressText() : "—");
-        holder.tvDescription.setText(item.getDescription() != null ? item.getDescription() : "—");
-        holder.tvCreatedAt.setText(item.getCreatedAt() != null ? item.getCreatedAt() : "—");
+        holder.tvRequestType.setText(item.getRequestType() != null
+                ? item.getRequestType() : "-");
+        holder.tvStatus.setText(item.getStatus()      != null
+                ? item.getStatus()      : "-");
+        holder.tvPriority.setText(item.getPriority()  != null
+                ? item.getPriority()    : "-");
 
-        holder.btnEdit.setVisibility(readOnlyMode ? View.GONE : View.VISIBLE);
+        // Technician name — populated from ServiceTicketDTO.technicianName (technician path)
+        // or from ServiceRequestResponse.technicianName (manager path)
+        holder.tvTechnician.setText(item.getTechnicianName() != null
+                ? item.getTechnicianName() : "—");
+
+        // Address — populated from ServiceTicketDTO.addressText (technician path)
+        // or from ServiceRequestResponse.addressText (manager path)
+        holder.tvAddress.setText(item.getAddressText() != null
+                ? item.getAddressText() : "—");
+
+        // Debug log — remove after confirming address displays correctly
+        Log.d("ADDR_DEBUG", "requestId=" + item.getRequestId()
+                + " addressText=" + item.getAddressText());
+
+        holder.tvDescription.setText(item.getDescription() != null
+                ? item.getDescription() : "—");
+        holder.tvCreatedAt.setText(item.getCreatedAt()    != null
+                ? item.getCreatedAt()   : "—");
+
+        // FIX: show Edit and Delete only for managers/employees (readOnlyMode = false).
+        //      Technicians (readOnlyMode = true) see only the Appointments button.
+        holder.btnEdit.setVisibility(readOnlyMode   ? View.GONE : View.VISIBLE);
         holder.btnDelete.setVisibility(readOnlyMode ? View.GONE : View.VISIBLE);
-        holder.btnAppointments.setVisibility(View.VISIBLE);
+        holder.btnAppointments.setVisibility(View.VISIBLE); // always visible
 
         holder.btnEdit.setOnClickListener(v -> {
             if (!readOnlyMode && listener != null) listener.onEdit(item);
@@ -143,25 +196,29 @@ public class ServiceRequestAdapter extends RecyclerView.Adapter<ServiceRequestAd
         return filteredList.size();
     }
 
+    // -------------------------------------------------------------------------
+    // ViewHolder
+    // -------------------------------------------------------------------------
+
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvRequestId, tvCustomerName, tvRequestType, tvStatus, tvPriority,
+        TextView    tvRequestId, tvCustomerName, tvRequestType, tvStatus, tvPriority,
                 tvTechnician, tvAddress, tvDescription, tvCreatedAt;
         ImageButton btnEdit, btnDelete, btnAppointments;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvRequestId = itemView.findViewById(R.id.tvRequestId);
+            tvRequestId    = itemView.findViewById(R.id.tvRequestId);
             tvCustomerName = itemView.findViewById(R.id.tvCustomerName);
-            tvRequestType = itemView.findViewById(R.id.tvRequestType);
-            tvStatus = itemView.findViewById(R.id.tvStatus);
-            tvPriority = itemView.findViewById(R.id.tvPriority);
-            tvTechnician = itemView.findViewById(R.id.tvTechnician);
-            tvAddress = itemView.findViewById(R.id.tvAddress);
-            tvDescription = itemView.findViewById(R.id.tvDescription);
-            tvCreatedAt = itemView.findViewById(R.id.tvCreatedAt);
-            btnEdit = itemView.findViewById(R.id.btnEdit);
-            btnDelete = itemView.findViewById(R.id.btnDelete);
-            btnAppointments = itemView.findViewById(R.id.btnAppointments);
+            tvRequestType  = itemView.findViewById(R.id.tvRequestType);
+            tvStatus       = itemView.findViewById(R.id.tvStatus);
+            tvPriority     = itemView.findViewById(R.id.tvPriority);
+            tvTechnician   = itemView.findViewById(R.id.tvTechnician);
+            tvAddress      = itemView.findViewById(R.id.tvAddress);
+            tvDescription  = itemView.findViewById(R.id.tvDescription);
+            tvCreatedAt    = itemView.findViewById(R.id.tvCreatedAt);
+            btnEdit        = itemView.findViewById(R.id.btnEdit);
+            btnDelete      = itemView.findViewById(R.id.btnDelete);
+            btnAppointments= itemView.findViewById(R.id.btnAppointments);
         }
     }
 }

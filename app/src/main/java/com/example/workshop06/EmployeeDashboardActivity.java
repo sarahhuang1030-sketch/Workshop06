@@ -128,10 +128,10 @@ public class EmployeeDashboardActivity extends BaseActivity {
                     List<DashboardMenuItem> items = new ArrayList<>();
                     if (response.isSuccessful() && response.body() != null) {
                         ServiceDashboardSummaryResponse data = response.body();
-                        items.add(new DashboardMenuItem("📅", "Jobs",
-                                data.getTodayAppointments() + " today",
-                                R.drawable.bg_card_top_accent_blue, R.drawable.bg_icon_blue,
-                                ServiceAppointmentListActivity.class));
+//                        items.add(new DashboardMenuItem("📅", "Jobs",
+//                                data.getTodayAppointments() + " today",
+//                                R.drawable.bg_card_top_accent_blue, R.drawable.bg_icon_blue,
+//                                ServiceAppointmentListActivity.class));
                         items.add(new DashboardMenuItem("🧑‍🤝‍🧑", "Requests",
                                 data.getOpenRequests() + " open",
                                 R.drawable.bg_card_top_accent_magenta, R.drawable.bg_icon_lavender,

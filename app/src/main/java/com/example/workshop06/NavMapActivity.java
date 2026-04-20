@@ -65,7 +65,6 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
 
     private View infoOverlay;
     private FloatingActionButton fabInfo;
-    private FloatingActionButton fabMyLocation;
     private MaterialButton btnCloseOverlay;
     private BottomNavigationView bottomNavigation;
     private ProgressBar progressBar;
@@ -80,6 +79,7 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
     private TextView tvOverlayRequestType;
     private TextView tvOverlayRequestDescription;
     private TextView tvOverlayNotes;
+    private TextView tvOverlayCustomerName;
     private ImageButton btnEditOverlayAppointment;
 
     private GoogleMap googleMap;
@@ -91,12 +91,10 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
     private Marker carMarker;
     private Polyline routePolyline;
 
-    private TextView tvOverlayCustomerName;
-    private String customerName;
-
     private LatLng currentLatLng;
     private LatLng destinationLatLng;
 
+    private String customerName;
     private String addressLine;
     private String markerTitle;
 
@@ -116,16 +114,11 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
     private String requestDescription;
 
     private boolean technicianLimitedEdit = false;
-
     private boolean firstCameraFitDone = false;
-    private boolean destinationReady = false;
-    private boolean currentReady = false;
 
     private boolean routeRequestInFlight = false;
     private LatLng lastRouteOrigin;
     private LatLng lastRouteDestination;
-
-    private static final String GEOCODING_API_URL = "https://maps.googleapis.com/maps/api/geocode/json";
 
     private final OkHttpClient httpClient = new OkHttpClient();
 
@@ -141,6 +134,7 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                 if (isGranted) {
                     enableMyLocation();
+                    fetchLastKnownLocation();
                     startLiveLocationUpdates();
                 } else {
                     Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show();
@@ -154,7 +148,6 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
 
         infoOverlay = findViewById(R.id.infoOverlay);
         fabInfo = findViewById(R.id.fabInfo);
-//        fabMyLocation = findViewById(R.id.fabMyLocation);
         progressBar = findViewById(R.id.progressBar);
         bottomNavigation = findViewById(R.id.bottomNavigation);
 
@@ -168,11 +161,12 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
         tvOverlayRequestType = findViewById(R.id.tvOverlayRequestType);
         tvOverlayRequestDescription = findViewById(R.id.tvOverlayRequestDescription);
         tvOverlayNotes = findViewById(R.id.tvOverlayNotes);
+        tvOverlayCustomerName = findViewById(R.id.tvOverlayCustomerName);
         btnEditOverlayAppointment = findViewById(R.id.btnEditOverlayAppointment);
         btnCloseOverlay = findViewById(R.id.btnCloseOverlay);
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        tvOverlayCustomerName = findViewById(R.id.tvOverlayCustomerName);
+
         readIntentData();
         bindOverlayData();
 
@@ -181,17 +175,18 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
 
         setupOverlay();
         setupBottomNavigation();
-        setupActions();
         setupMap();
     }
 
     private void readIntentData() {
         Intent intent = getIntent();
+
         customerName = intent.getStringExtra("customerName");
         requestType = intent.getStringExtra("requestType");
         requestDescription = intent.getStringExtra("requestDescription");
         addressLine = intent.getStringExtra("address_line");
         markerTitle = intent.getStringExtra("job_title");
+
         if (markerTitle == null || markerTitle.trim().isEmpty()) {
             markerTitle = "Job Location";
         }
@@ -208,8 +203,6 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
         scheduledEnd = intent.getStringExtra("scheduledEnd");
         appointmentStatus = intent.getStringExtra("status");
         appointmentNotes = intent.getStringExtra("notes");
-        requestType = intent.getStringExtra("requestType");
-        requestDescription = intent.getStringExtra("requestDescription");
 
         technicianLimitedEdit = intent.getBooleanExtra("technicianLimitedEdit", false);
     }
@@ -221,45 +214,16 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
             );
         }
 
-        if (tvOverlayTechnician != null) {
-            tvOverlayTechnician.setText(valueOrDash(technicianName));
-        }
-
-        if (tvOverlayLocationType != null) {
-            tvOverlayLocationType.setText(valueOrDash(locationType));
-        }
-
-        if (tvOverlayAddress != null) {
-            tvOverlayAddress.setText(valueOrDash(addressLine));
-        }
-
-        if (tvOverlayScheduledStart != null) {
-            tvOverlayScheduledStart.setText(valueOrDash(scheduledStart));
-        }
-
-        if (tvOverlayScheduledEnd != null) {
-            tvOverlayScheduledEnd.setText(valueOrDash(scheduledEnd));
-        }
-
-        if (tvOverlayStatus != null) {
-            tvOverlayStatus.setText(valueOrDash(appointmentStatus));
-        }
-
-        if (tvOverlayRequestType != null) {
-            tvOverlayRequestType.setText(valueOrDash(requestType));
-        }
-
-        if (tvOverlayRequestDescription != null) {
-            tvOverlayRequestDescription.setText(valueOrDash(requestDescription));
-        }
-
-        if (tvOverlayNotes != null) {
-            tvOverlayNotes.setText(valueOrDash(appointmentNotes));
-        }
-
-        if (tvOverlayCustomerName != null) {
-            tvOverlayCustomerName.setText(valueOrDash(customerName));
-        }
+        if (tvOverlayTechnician != null) tvOverlayTechnician.setText(valueOrDash(technicianName));
+        if (tvOverlayLocationType != null) tvOverlayLocationType.setText(valueOrDash(locationType));
+        if (tvOverlayAddress != null) tvOverlayAddress.setText(valueOrDash(addressLine));
+        if (tvOverlayScheduledStart != null) tvOverlayScheduledStart.setText(valueOrDash(scheduledStart));
+        if (tvOverlayScheduledEnd != null) tvOverlayScheduledEnd.setText(valueOrDash(scheduledEnd));
+        if (tvOverlayStatus != null) tvOverlayStatus.setText(valueOrDash(appointmentStatus));
+        if (tvOverlayRequestType != null) tvOverlayRequestType.setText(valueOrDash(requestType));
+        if (tvOverlayRequestDescription != null) tvOverlayRequestDescription.setText(valueOrDash(requestDescription));
+        if (tvOverlayNotes != null) tvOverlayNotes.setText(valueOrDash(appointmentNotes));
+        if (tvOverlayCustomerName != null) tvOverlayCustomerName.setText(valueOrDash(customerName));
     }
 
     private String valueOrDash(String value) {
@@ -306,27 +270,52 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
         showLoading(true);
 
         new Thread(() -> {
-            Geocoder geocoder = new Geocoder(NavMapActivity.this, Locale.getDefault());
-
             try {
+                Geocoder geocoder = new Geocoder(NavMapActivity.this, Locale.getDefault());
                 List<Address> results = geocoder.getFromLocationName(fullAddress, 1);
 
-                if (results != null && !results.isEmpty()) {
-                    Address result = results.get(0);
-                    LatLng latLng = new LatLng(result.getLatitude(), result.getLongitude());
+                runOnUiThread(() -> {
+                    showLoading(false);
 
-                    runOnUiThread(() -> {
-                        showLoading(false);
+                    if (results != null && !results.isEmpty()) {
+                        Address result = results.get(0);
+                        LatLng latLng = new LatLng(result.getLatitude(), result.getLongitude());
                         showDestinationOnMap(latLng, title, fullAddress);
-                    });
-                    return;
-                }
-            } catch (Exception ignored) {
-                // fall through to Google Geocoding API fallback
-            }
+                    } else {
+                        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LOCATION, 10f));
+                        Toast.makeText(NavMapActivity.this,
+                                "Could not find this address on map",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
 
-            fallbackGeocodeWithApi(fullAddress, title);
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    showLoading(false);
+                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LOCATION, 10f));
+                    Toast.makeText(NavMapActivity.this,
+                            "Could not find this address on map",
+                            Toast.LENGTH_SHORT).show();
+                });
+            }
         }).start();
+    }
+
+    private void showDestinationOnMap(LatLng latLng, String title, String fullAddress) {
+        destinationLatLng = latLng;
+
+        if (destinationMarker != null) {
+            destinationMarker.remove();
+        }
+
+        destinationMarker = googleMap.addMarker(new MarkerOptions()
+                .position(destinationLatLng)
+                .title(title)
+                .snippet(fullAddress)
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)));
+
+        fitMapToBothLocations();
+        maybeDrawRoute();
     }
 
     private void buildLocationRequest() {
@@ -345,10 +334,15 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
                         locationResult.getLastLocation().getLatitude(),
                         locationResult.getLastLocation().getLongitude()
                 );
-                currentReady = true;
 
                 updateCarMarker(currentLatLng);
-                fitMapToBothLocations();
+
+                if (destinationLatLng == null) {
+                    googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f));
+                } else if (!firstCameraFitDone) {
+                    fitMapToBothLocations();
+                }
+
                 maybeDrawRoute();
             }
         };
@@ -364,12 +358,6 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
                     .build();
 
             googleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 180));
-            firstCameraFitDone = true;
-            return;
-        }
-
-        if (!firstCameraFitDone && currentLatLng != null) {
-            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f));
             firstCameraFitDone = true;
             return;
         }
@@ -394,8 +382,13 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
     }
 
     private void maybeDrawRoute() {
-        if (currentLatLng == null || destinationLatLng == null) return;
-        if (routeRequestInFlight) return;
+        if (googleMap == null || currentLatLng == null || destinationLatLng == null) {
+            return;
+        }
+
+        if (routeRequestInFlight) {
+            return;
+        }
 
         if (lastRouteOrigin != null && lastRouteDestination != null) {
             float[] results = new float[1];
@@ -405,8 +398,10 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
                     results
             );
 
-            if (results[0] < 25) {
-                return; // don't request again unless moved enough
+            if (results[0] < 25f &&
+                    Math.abs(lastRouteDestination.latitude - destinationLatLng.latitude) < 0.00001 &&
+                    Math.abs(lastRouteDestination.longitude - destinationLatLng.longitude) < 0.00001) {
+                return;
             }
         }
 
@@ -416,6 +411,8 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
     }
 
     private void requestRoute(LatLng origin, LatLng destination) {
+        routeRequestInFlight = true;
+
         try {
             JSONObject payload = new JSONObject();
 
@@ -453,14 +450,13 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
                     .post(body)
                     .addHeader("Content-Type", "application/json")
                     .addHeader("X-Goog-Api-Key", "AIzaSyD5Tuu3y5QdtwRY02WzIjngDi1ZpnUQc_8")
-                    .addHeader("X-Goog-FieldMask", "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline")
+                    .addHeader("X-Goog-FieldMask", "routes.polyline.encodedPolyline")
                     .build();
 
             httpClient.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                    routeRequestInFlight = false;   // ✅ ADD THIS
-
+                    routeRequestInFlight = false;
                     runOnUiThread(() ->
                             Toast.makeText(NavMapActivity.this, "Failed to load route", Toast.LENGTH_SHORT).show()
                     );
@@ -468,7 +464,7 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
 
                 @Override
                 public void onResponse(@NonNull Call call, @NonNull okhttp3.Response response) throws IOException {
-                    routeRequestInFlight = false;   // ✅ ADD THIS FIRST
+                    routeRequestInFlight = false;
 
                     if (!response.isSuccessful() || response.body() == null) {
                         runOnUiThread(() ->
@@ -481,7 +477,13 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
                         String json = response.body().string();
                         JSONObject root = new JSONObject(json);
                         JSONArray routes = root.optJSONArray("routes");
-                        if (routes == null || routes.length() == 0) return;
+
+                        if (routes == null || routes.length() == 0) {
+                            runOnUiThread(() ->
+                                    Toast.makeText(NavMapActivity.this, "No route found", Toast.LENGTH_SHORT).show()
+                            );
+                            return;
+                        }
 
                         JSONObject firstRoute = routes.getJSONObject(0);
                         JSONObject polyline = firstRoute.getJSONObject("polyline");
@@ -490,6 +492,7 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
                         List<LatLng> points = decodePolyline(encoded);
 
                         runOnUiThread(() -> drawRoute(points));
+
                     } catch (Exception e) {
                         runOnUiThread(() ->
                                 Toast.makeText(NavMapActivity.this, "Failed to parse route", Toast.LENGTH_SHORT).show()
@@ -499,6 +502,7 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
             });
 
         } catch (Exception e) {
+            routeRequestInFlight = false;
             Toast.makeText(this, "Unable to build route request", Toast.LENGTH_SHORT).show();
         }
     }
@@ -512,7 +516,7 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
 
         routePolyline = googleMap.addPolyline(new PolylineOptions()
                 .addAll(points)
-                .width(14f)
+                .width(12f)
                 .geodesic(true)
                 .jointType(JointType.ROUND));
 
@@ -521,26 +525,34 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
 
     private List<LatLng> decodePolyline(String encoded) {
         List<LatLng> poly = new ArrayList<>();
-        int index = 0, len = encoded.length();
-        int lat = 0, lng = 0;
+        int index = 0;
+        int len = encoded.length();
+        int lat = 0;
+        int lng = 0;
 
         while (index < len) {
-            int b, shift = 0, result = 0;
+            int b;
+            int shift = 0;
+            int result = 0;
+
             do {
                 b = encoded.charAt(index++) - 63;
                 result |= (b & 0x1f) << shift;
                 shift += 5;
             } while (b >= 0x20);
+
             int dlat = ((result & 1) != 0) ? ~(result >> 1) : (result >> 1);
             lat += dlat;
 
             shift = 0;
             result = 0;
+
             do {
                 b = encoded.charAt(index++) - 63;
                 result |= (b & 0x1f) << shift;
                 shift += 5;
             } while (b >= 0x20);
+
             int dlng = ((result & 1) != 0) ? ~(result >> 1) : (result >> 1);
             lng += dlng;
 
@@ -559,6 +571,22 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
         } else {
             locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
         }
+    }
+
+    private void fetchLastKnownLocation() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
+            if (location == null) return;
+
+            currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+            updateCarMarker(currentLatLng);
+            fitMapToBothLocations();
+            maybeDrawRoute();
+        });
     }
 
     private void startLiveLocationUpdates() {
@@ -614,12 +642,12 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
             });
         }
 
-        View overlayCard = findViewById(R.id.tvOverlayAppointmentTitle);
-        if (overlayCard != null) {
-            View parent = (View) overlayCard.getParent().getParent();
+        View overlayCardAnchor = findViewById(R.id.tvOverlayAppointmentTitle);
+        if (overlayCardAnchor != null && overlayCardAnchor.getParent() != null) {
+            View parent = (View) ((View) overlayCardAnchor.getParent()).getParent();
             if (parent != null) {
                 parent.setOnClickListener(v -> {
-                    // prevent closing when tapping inside the card
+                    // keep overlay open when tapping inside
                 });
             }
         }
@@ -682,147 +710,9 @@ public class NavMapActivity extends BaseActivity implements OnMapReadyCallback {
         });
     }
 
-    private void setupActions() {
-        if (fabMyLocation != null) {
-            fabMyLocation.setOnClickListener(v -> {
-                if (currentLatLng != null && googleMap != null) {
-                    googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 16f));
-                } else {
-                    enableMyLocation();
-                    startLiveLocationUpdates();
-                }
-            });
-        }
-    }
-
     private void showLoading(boolean show) {
         if (progressBar != null) {
             progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
         }
     }
-
-    private void fetchLastKnownLocation() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-
-        fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
-            if (location == null) return;
-
-            currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
-            currentReady = true;
-
-            updateCarMarker(currentLatLng);
-            fitMapToBothLocations();
-            maybeDrawRoute();
-        });
-    }
-
-    private void fallbackGeocodeWithApi(String fullAddress, String title) {
-        try {
-            String url = GEOCODING_API_URL
-                    + "?address=" + java.net.URLEncoder.encode(fullAddress, "UTF-8")
-                    + "&key=" + "AIzaSyD5Tuu3y5QdtwRY02WzIjngDi1ZpnUQc_8";
-
-            Request request = new Request.Builder()
-                    .url(url)
-                    .get()
-                    .build();
-
-            httpClient.newCall(request).enqueue(new Callback() {
-                @Override
-                public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                    runOnUiThread(() -> {
-                        showLoading(false);
-                        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LOCATION, 10f));
-                        Toast.makeText(NavMapActivity.this,
-                                "Could not find this address on map",
-                                Toast.LENGTH_SHORT).show();
-                    });
-                }
-
-                @Override
-                public void onResponse(@NonNull Call call, @NonNull okhttp3.Response response) throws IOException {
-                    if (!response.isSuccessful() || response.body() == null) {
-                        runOnUiThread(() -> {
-                            showLoading(false);
-                            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LOCATION, 10f));
-                            Toast.makeText(NavMapActivity.this,
-                                    "Could not find this address on map",
-                                    Toast.LENGTH_SHORT).show();
-                        });
-                        return;
-                    }
-
-                    try {
-                        String json = response.body().string();
-                        JSONObject root = new JSONObject(json);
-
-                        JSONArray results = root.optJSONArray("results");
-                        if (results == null || results.length() == 0) {
-                            runOnUiThread(() -> {
-                                showLoading(false);
-                                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LOCATION, 10f));
-                                Toast.makeText(NavMapActivity.this,
-                                        "Could not find this address on map",
-                                        Toast.LENGTH_SHORT).show();
-                            });
-                            return;
-                        }
-
-                        JSONObject location = results.getJSONObject(0)
-                                .getJSONObject("geometry")
-                                .getJSONObject("location");
-
-                        double lat = location.getDouble("lat");
-                        double lng = location.getDouble("lng");
-                        LatLng latLng = new LatLng(lat, lng);
-
-                        runOnUiThread(() -> {
-                            showLoading(false);
-                            showDestinationOnMap(latLng, title, fullAddress);
-                        });
-
-                    } catch (Exception e) {
-                        runOnUiThread(() -> {
-                            showLoading(false);
-                            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LOCATION, 10f));
-                            Toast.makeText(NavMapActivity.this,
-                                    "Failed to parse address location",
-                                    Toast.LENGTH_SHORT).show();
-                        });
-                    }
-                }
-            });
-
-        } catch (Exception e) {
-            runOnUiThread(() -> {
-                showLoading(false);
-                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LOCATION, 10f));
-                Toast.makeText(NavMapActivity.this,
-                        "Failed to load address on map",
-                        Toast.LENGTH_SHORT).show();
-            });
-        }
-    }
-
-    private void showDestinationOnMap(LatLng latLng, String title, String fullAddress) {
-        destinationLatLng = latLng;
-        destinationReady = true;
-
-        if (destinationMarker != null) {
-            destinationMarker.remove();
-        }
-
-        destinationMarker = googleMap.addMarker(new MarkerOptions()
-                .position(destinationLatLng)
-                .title(title)
-                .snippet(fullAddress)
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)));
-
-        fitMapToBothLocations();
-        maybeDrawRoute();
-    }
-
 }
